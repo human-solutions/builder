@@ -1,18 +1,8 @@
-[package]
-authors = ["henrik akesson"]
-description = "Command line tool for building web assets, wasm and mobile libs"
-edition = "2021"
-license = "MIT"
-name = "builder"
-repository = "https://github.com/human-solutions/builder"
-version = "0.0.1"
 
-[dependencies]
-clap = { version = "4.4.4", features = ["derive"] }
-grass = "0.13.1"
-ignore = "0.4.20"
-lightningcss = { version = "1.0.0-alpha.57", features = ["browserslist"] }
-thiserror = "1.0.48"
+[workspace]
+resolver = "2"
+
+members = ["cmd"]
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
@@ -22,17 +12,14 @@ lto = "thin"
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.5.0"
+cargo-dist-version = "0.15.1"
 # CI backends to support
-ci = ["github"]
+ci = "github"
 # The installers to generate for each app
 installers = ["shell"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = [
-    "x86_64-unknown-linux-gnu",
-    "aarch64-apple-darwin",
-    "x86_64-apple-darwin",
-    "x86_64-pc-windows-msvc",
-]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
+# Whether to install an updater program
+install-updater = false
