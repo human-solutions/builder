@@ -1,0 +1,25 @@
+[package]
+name = "playground"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[package.metadata.builder]
+code-gen-dir = "src/gen"
+
+[package.metadata.builder.mobile.release]
+sass = [{ file = "style/main.scss", optimize = true, out = { brotli = true } }]
+
+[package.metadata.builder.mobile.debug]
+sass = [{ file = "style/main.scss", out = { uncompressed = true } }]
+
+[package.metadata.builder.web.debug]
+sass = [
+    { file = "style/main.scss", out = { uncompressed = true, checksum = true } },
+]
+
+[package.metadata.builder.web.release]
+sass = [
+    { file = "style/main.scss", optimize = true, out = { brotli = true, gzip = true, checksum = true } },
+]

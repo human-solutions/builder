@@ -9,8 +9,16 @@ repository = "https://github.com/human-solutions/builder"
 version = "0.0.1"
 
 [dependencies]
-clap = { version = "4.4.4", features = ["derive"] }
-grass = "0.13.1"
-ignore = "0.4.20"
+grass = "0.13"
+# ignore = "0.4"
 lightningcss = { version = "1.0.0-alpha.57", features = ["browserslist"] }
-thiserror = "1.0.48"
+# thiserror = "1.0"
+camino = "1.1"
+toml_edit = "0.22"
+anyhow = "1.0"
+fs-err = "2.11"
+which = "6.0"
+seahash = "4.1"
+base64 = "0.22"
+brotli = "6.0"
+flate2 = "1.0"
