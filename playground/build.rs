@@ -19,26 +19,22 @@ fn try_main() -> Result<ExitCode, String> {
     let out_dir = env("OUT_DIR")?;
     let pkg_name = env("CARGO_PKG_NAME")?;
 
-    if false {
-        let output = Command::new("builder")
-            .env("BUILDER_PKG_NAME", pkg_name)
-            .env("BUILDER_PROFILE", build_profile)
-            .env("BUILDER_MANIFEST_DIR", manifest_dir)
-            .env("BUILDER_OUT_DIR", out_dir)
-            .output()
-            .map_err(|e| e.to_string())?;
+    let output = Command::new("builder")
+        .env("BUILDER_PKG_NAME", pkg_name)
+        .env("BUILDER_PROFILE", build_profile)
+        .env("BUILDER_MANIFEST_DIR", manifest_dir)
+        .env("BUILDER_OUT_DIR", out_dir)
+        .output()
+        .map_err(|e| e.to_string())?;
 
-        // forward builder output to cargo
-        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
-        println!("{}", String::from_utf8_lossy(&output.stdout));
-        Ok(if output.status.success() {
-            ExitCode::SUCCESS
-        } else {
-            ExitCode::FAILURE
-        })
+    // forward builder output to cargo
+    eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+    println!("{}", String::from_utf8_lossy(&output.stdout));
+    Ok(if output.status.success() {
+        ExitCode::SUCCESS
     } else {
-        Ok(ExitCode::SUCCESS)
-    }
+        ExitCode::FAILURE
+    })
 }
 
 fn env(key: &str) -> Result<String, String> {
