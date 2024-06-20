@@ -11,9 +11,14 @@ pub struct Generator {
 }
 
 impl Generator {
+    pub fn watched(&self) -> String {
+        "gen".to_string()
+    }
+
     pub fn add_asset(&mut self, asset: Asset) {
         self.assets.push(asset);
     }
+
     pub fn write(&self, module: &str, info: &RuntimeInfo) -> Result<()> {
         let module = module.to_rust_module();
         let text = self.text(&module);
@@ -40,6 +45,8 @@ impl Generator {
         let matching = self.match_list();
         format!(
             r#"
+/// This is a generated file. Do not edit. It is updated depending on the build profile used (i.e. dev, release).
+/// Instead it should be included with an include! macro: `include!("../gen/{module}.rs");`
 pub mod {module} {{
     #![allow(dead_code)]
 {constants}

@@ -60,4 +60,8 @@ impl Sass {
             Ok(grass::from_string(sass_string, &Default::default())?)
         }
     }
+
+    pub fn watched(&self) -> String {
+        self.file.to_string()
+    }
 }

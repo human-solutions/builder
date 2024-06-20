@@ -5,9 +5,6 @@ edition = "2021"
 
 [dependencies]
 
-[package.metadata.builder]
-code-gen-dir = "src/gen"
-
 [package.metadata.builder.mobile.release]
 sass = [{ file = "style/main.scss", optimize = true, out = { brotli = true } }]
 

@@ -9,7 +9,6 @@ use super::Sass;
 
 #[derive(Debug)]
 pub struct Manifest {
-    pub code_gen_dir: Option<String>,
     pub assemblies: Vec<Assembly>,
 }
 
@@ -29,22 +28,14 @@ impl Manifest {
             "Could not find assembly name. Expected package.metadata.builder.<assembly>",
         )?;
 
-        let mut code_gen_dir = None;
         let mut assemblies = Vec::new();
         for (name, value) in names {
-            if name == "code-gen-dir" {
-                code_gen_dir = Some(value.to_string());
-            } else {
-                for (profile, toml) in value.as_table().unwrap() {
-                    let ass = Assembly::try_parse(name, profile, toml)?;
-                    assemblies.push(ass)
-                }
+            for (profile, toml) in value.as_table().unwrap() {
+                let ass = Assembly::try_parse(name, profile, toml)?;
+                assemblies.push(ass)
             }
         }
-        Ok(Self {
-            code_gen_dir,
-            assemblies,
-        })
+        Ok(Self { assemblies })
     }
 }
 
