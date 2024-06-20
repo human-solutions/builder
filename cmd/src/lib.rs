@@ -1,5 +1,6 @@
 mod config;
 mod ext;
+mod generate;
 mod process;
 mod runtime_info;
 

@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
-use toml_edit::InlineTable;
+use toml_edit::TableLike;
 
 use crate::ext::TomlValueExt;
 
@@ -12,11 +12,12 @@ pub struct Sass {
     pub optimize: bool,
     pub out: Out,
 }
-impl Sass {
-    pub fn try_parse(table: &InlineTable) -> Result<Self> {
-        let mut me = Sass::default();
 
-        for (key, value) in table {
+impl Sass {
+    pub fn try_parse(table: &dyn TableLike) -> Result<Self> {
+        let mut me = Sass::default();
+        for (key, value) in table.iter() {
+            let value = value.as_value().unwrap();
             match key {
                 "file" => me.file = value.try_path()?,
                 "optimize" => me.optimize = value.try_bool()?,

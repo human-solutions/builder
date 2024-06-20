@@ -11,7 +11,7 @@ pub struct Out {
     pub uncompressed: bool,
     pub checksum: bool,
     /// sub-folder in generated site
-    pub site_folder: Option<Utf8PathBuf>,
+    pub folder: Option<Utf8PathBuf>,
 }
 
 impl Out {
@@ -24,11 +24,26 @@ impl Out {
                 "gzip" => me.gzip = value.try_bool()?,
                 "uncompressed" => me.uncompressed = value.try_bool()?,
                 "checksum" => me.checksum = value.try_bool()?,
-                "site-folder" => me.site_folder = Some(value.try_path()?),
+                "folder" => me.folder = Some(value.try_path()?),
                 _ => bail!("Unexpected key: '{key}' with value: '{value}'"),
             }
         }
 
         Ok(me)
+    }
+
+    /// Encodings according to https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
+    pub fn encodings(&self) -> Vec<String> {
+        let mut encodings = vec![];
+        if self.brotli {
+            encodings.push("br".to_string());
+        }
+        if self.gzip {
+            encodings.push("gzip".to_string());
+        }
+        if self.uncompressed {
+            encodings.push("identity".to_string());
+        }
+        encodings
     }
 }

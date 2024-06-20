@@ -24,7 +24,6 @@ impl Sass {
         }
         let sass_string = fs::read_to_string(&file)?;
 
-        println!("opt: {}", self.optimize);
         if self.optimize {
             let css_style = grass::from_string(sass_string, &Default::default())?;
 

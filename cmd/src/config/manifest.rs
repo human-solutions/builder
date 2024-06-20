@@ -1,5 +1,5 @@
 use fs_err as fs;
-use toml_edit::{DocumentMut, InlineTable, Item};
+use toml_edit::{DocumentMut, Item, TableLike};
 
 use anyhow::{bail, Context, Result};
 
@@ -79,15 +79,22 @@ impl Assembly {
     }
 }
 
-fn parse_vec<T, F: Fn(&InlineTable) -> Result<T>>(item: &Item, f: F) -> Result<Vec<T>> {
-    let arr = item.as_array().context("Expected an array")?;
+fn parse_vec<T, F: Fn(&dyn TableLike) -> Result<T>>(item: &Item, f: F) -> Result<Vec<T>> {
     let mut vals = Vec::new();
-    for entry in arr {
-        let table = entry
-            .as_inline_table()
-            .context("Expected an inline table")?;
+    if let Some(arr) = item.as_array() {
+        for entry in arr {
+            let table = entry
+                .as_inline_table()
+                .context("Expected an inline table")?;
 
-        vals.push(f(table)?)
+            vals.push(f(table)?)
+        }
+    } else if let Some(arr_tbl) = item.as_array_of_tables() {
+        for table in arr_tbl {
+            vals.push(f(table)?)
+        }
+    } else {
+        bail!("Expected an array of tables or an array")
     }
     Ok(vals)
 }

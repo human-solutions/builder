@@ -1,4 +1,6 @@
 use anyhow::{Context, Result};
+use base64::engine::general_purpose::URL_SAFE;
+use base64::prelude::*;
 use camino::Utf8PathBuf;
 use toml_edit::{InlineTable, Value};
 
@@ -24,5 +26,46 @@ impl TomlValueExt for Value {
     fn try_table(&self) -> Result<&InlineTable> {
         self.as_inline_table()
             .with_context(|| format!("Expected a table {{ }}, not '{self}'"))
+    }
+}
+
+pub trait ByteVecExt {
+    fn base64_checksum(&self) -> String;
+}
+
+impl ByteVecExt for [u8] {
+    fn base64_checksum(&self) -> String {
+        let hash = seahash::hash(self);
+        URL_SAFE.encode(hash.to_be_bytes())
+    }
+}
+
+pub trait RustNaming {
+    fn to_rust_module(&self) -> String;
+    fn to_rust_const(&self) -> String;
+}
+
+impl RustNaming for str {
+    fn to_rust_module(&self) -> String {
+        self.replace('-', "_")
+    }
+
+    fn to_rust_const(&self) -> String {
+        let mut s = String::with_capacity(self.len());
+        for (i, char) in self.chars().enumerate() {
+            if char == '.' {
+                s.push('_');
+                continue;
+            } else if !char.is_ascii_alphanumeric() {
+                panic!("Only ascii chars and '.' allowed in rust constant names, not {char}")
+            }
+            if char.is_ascii_uppercase() && i != 0 {
+                s.push('_');
+                s.push(char);
+            } else {
+                s.push(char.to_ascii_uppercase());
+            }
+        }
+        s
     }
 }

@@ -16,10 +16,10 @@ sass = [{ file = "style/main.scss", out = { uncompressed = true } }]
 
 [package.metadata.builder.web.debug]
 sass = [
-    { file = "style/main.scss", out = { uncompressed = true, checksum = true } },
+    { file = "style/main.scss", out = { uncompressed = true, checksum = true, folder = "static" } },
 ]
 
-[package.metadata.builder.web.release]
-sass = [
-    { file = "style/main.scss", optimize = true, out = { brotli = true, gzip = true, checksum = true } },
-]
+[[package.metadata.builder.web.release.sass]]
+file = "style/main.scss"
+optimize = true
+out = { brotli = true, gzip = true, checksum = true, folder = "static" }

@@ -1,9 +1,8 @@
 use std::io::{Cursor, Write};
 
 use crate::config::Out;
+use crate::ext::ByteVecExt;
 use anyhow::Result;
-use base64::engine::general_purpose::URL_SAFE;
-use base64::prelude::*;
 use brotli::enc::BrotliEncoderParams;
 use brotli::BrotliCompress;
 use camino::Utf8Path;
@@ -11,20 +10,24 @@ use flate2::{Compression, GzBuilder};
 use fs_err as fs;
 
 impl Out {
-    pub fn write_file(&self, contents: Vec<u8>, dir: &Utf8Path, filename: &str) -> Result<()> {
-        let prefix = if self.checksum {
-            let hash = seahash::hash(&contents);
-            let hash_str = URL_SAFE.encode(hash.to_be_bytes());
-            format!("{hash_str}.")
-        } else {
-            "".to_string()
-        };
+    pub fn write_file(
+        &self,
+        contents: Vec<u8>,
+        dir: &Utf8Path,
+        filename: &str,
+    ) -> Result<Option<String>> {
+        let hash = self.checksum.then(|| contents.base64_checksum());
+        let prefix = hash.as_deref().unwrap_or_default();
 
-        let dir = if let Some(folder) = &self.site_folder {
+        let dir = if let Some(folder) = &self.folder {
             dir.join(folder)
         } else {
             dir.to_path_buf()
         };
+
+        if !dir.exists() {
+            fs::create_dir_all(&dir)?;
+        }
 
         if self.uncompressed {
             let path = dir.join(format!("{prefix}{filename}"));
@@ -52,6 +55,6 @@ impl Out {
             gz.finish()?;
         }
 
-        Ok(())
+        Ok(hash)
     }
 }

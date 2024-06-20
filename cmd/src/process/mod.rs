@@ -1,7 +1,11 @@
 mod out;
 mod sass;
 
-use crate::{config::Assembly, Manifest, RuntimeInfo};
+use crate::{
+    config::Assembly,
+    generate::{Asset, Generator},
+    Manifest, RuntimeInfo,
+};
 use anyhow::Result;
 use fs_err as fs;
 
@@ -23,13 +27,16 @@ impl Assembly {
             fs::remove_dir_all(&site_dir)?;
         }
         fs::create_dir_all(&site_dir)?;
-        println!("site: {site_dir}");
+        // println!("site: {site_dir}");
 
+        let mut generator = Generator::default();
         for sass in &self.sass {
             let css = sass.process(info)?;
             let filename = sass.file.file_name().unwrap();
-            sass.out.write_file(css.into_bytes(), &site_dir, filename)?;
+            let hash = sass.out.write_file(css.into_bytes(), &site_dir, filename)?;
+            generator.add_asset(Asset::from_sass(sass, hash));
         }
+        generator.write(&self.name, info)?;
         Ok(())
     }
 }
