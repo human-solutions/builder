@@ -81,6 +81,7 @@ impl OutputOptions {
         &self,
         dir: &Utf8Path,
         filename: &str,
+        ext: &str,
         variants: Vec<(LanguageIdentifier, Vec<u8>)>,
     ) -> Result<Option<String>> {
         let dir = self.full_created_dir(dir)?;
@@ -98,7 +99,7 @@ impl OutputOptions {
 
         for (langid, content) in variants {
             let lang = langid.to_string();
-            let filename = format!("{filename}.{lang}");
+            let filename = format!("{filename}.{ext}.{lang}");
             self.compress_and_write(content, &filename, &dir)?;
         }
         Ok(hash)

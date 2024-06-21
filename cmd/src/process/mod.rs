@@ -83,9 +83,10 @@ impl Assembly {
             let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
 
             let filename = localized.path.iter().last().unwrap();
+            let ext = &localized.file_ext;
             let hash = localized
                 .out
-                .write_localized(&site_dir, filename, variants)?;
+                .write_localized(&site_dir, filename, ext, variants)?;
 
             generator.add_asset(name, Asset::from_localized(localized, hash, localizations));
             watched.push(localized.path.to_string());
