@@ -5,7 +5,7 @@ use anyhow::{bail, Context, Result};
 
 use crate::RuntimeInfo;
 
-use super::Sass;
+use super::{localized::Localized, Sass};
 
 #[derive(Debug)]
 pub struct Manifest {
@@ -44,6 +44,7 @@ pub struct Assembly {
     pub name: String,
     pub profile: String,
     pub sass: Vec<Sass>,
+    pub localized: Vec<Localized>,
 }
 
 impl Assembly {
@@ -53,19 +54,25 @@ impl Assembly {
         let table = toml.as_table().context("no content")?;
 
         let mut sass = Vec::new();
+        let mut localized = Vec::new();
         for (process, toml) in table {
             match process {
                 "sass" => {
                     sass =
                         parse_vec(toml, Sass::try_parse).context("Could not parse sass values")?;
                 }
-                _ => bail!("Invalid processing type: {name}"),
+                "localized" => {
+                    localized = parse_vec(toml, Localized::try_parse)
+                        .context("Could not parse localized values")?
+                }
+                _ => bail!("Invalid processing type: {process}"),
             }
         }
         Ok(Self {
             name,
             profile,
             sass,
+            localized,
         })
     }
 }

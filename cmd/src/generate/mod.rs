@@ -78,7 +78,11 @@ pub mod {module} {{
             } else {
                 format!("Some(&{const_name}_ENC)")
             };
-            let langs = "None";
+            let langs = if asset.localizations.is_empty() {
+                "None".to_string()
+            } else {
+                format!("Some(&{const_name}_LANGS)")
+            };
             matches.push(format!(
                 r#"            "{url}" => Some(AssetOptions {{
                 langs: {langs},
@@ -101,6 +105,14 @@ pub mod {module} {{
                 let count = asset.encodings.len();
                 constants.push(format!(
                     r#"    pub const {name}_ENC: [&str; {count}] = [{encodings}];"#,
+                ));
+            }
+
+            let (count, langs) = asset.quoted_lang_list();
+            if count > 0 {
+                let count = asset.localizations.len();
+                constants.push(format!(
+                    r#"    pub const {name}_LANGS: [&str; {count}] = [{langs}];"#,
                 ));
             }
         }

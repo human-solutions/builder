@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
-use camino::Utf8PathBuf;
+use anyhow::{bail, Context, Result};
+use camino::{Utf8Path, Utf8PathBuf};
 
 pub struct RuntimeInfo {
     pub manifest_dir: Utf8PathBuf,
@@ -35,6 +35,19 @@ impl RuntimeInfo {
             .join(&self.package)
             .join(assembly)
             .join(&self.profile)
+    }
+
+    pub fn existing_manifest_dir_path(&self, path: &Utf8Path) -> Result<Utf8PathBuf> {
+        let file = if path.is_relative() {
+            self.manifest_dir.join(path)
+        } else {
+            bail!("The path {path} must be relative to the manifest directory")
+        };
+
+        if !file.exists() {
+            bail!("The path {file} doesn't exist");
+        }
+        Ok(file)
     }
 }
 

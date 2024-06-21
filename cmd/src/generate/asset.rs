@@ -1,4 +1,6 @@
-use crate::config::Sass;
+use unic_langid::LanguageIdentifier;
+
+use crate::config::{Localized, Sass};
 
 #[derive(Debug)]
 pub struct Asset {
@@ -7,21 +9,29 @@ pub struct Asset {
     /// the name of the asset
     pub name: String,
     pub encodings: Vec<String>,
+    pub localizations: Vec<LanguageIdentifier>,
 }
 
 impl Asset {
     pub fn from_sass(sass: &Sass, checksum: Option<String>) -> Self {
-        let folder = if let Some(folder) = sass.out.folder.as_ref() {
-            format!("/{folder}")
-        } else {
-            "".to_string()
-        };
-        let filename = sass.file.file_name().unwrap();
-        let url = format!("{folder}/{}{filename}", checksum.unwrap_or_default());
         Self {
-            url,
+            url: sass.url(checksum),
             name: sass.file.file_name().unwrap().to_string(),
             encodings: sass.out.encodings(),
+            localizations: Vec::new(),
+        }
+    }
+
+    pub fn from_localized(
+        localized: &Localized,
+        checksum: Option<String>,
+        localizations: Vec<LanguageIdentifier>,
+    ) -> Self {
+        Self {
+            url: localized.url(checksum),
+            name: localized.path.iter().last().unwrap().to_string(),
+            encodings: localized.out.encodings(),
+            localizations,
         }
     }
 
@@ -34,5 +44,16 @@ impl Asset {
             .collect::<Vec<_>>()
             .join(", ");
         (count, encodings)
+    }
+
+    pub fn quoted_lang_list(&self) -> (usize, String) {
+        let count = self.localizations.len();
+        let langs = self
+            .localizations
+            .iter()
+            .map(|l| format!(r#""{l}""#))
+            .collect::<Vec<_>>()
+            .join(", ");
+        (count, langs)
     }
 }

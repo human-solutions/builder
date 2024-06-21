@@ -1,3 +1,4 @@
+mod localized;
 mod out;
 mod sass;
 
@@ -42,10 +43,24 @@ impl Assembly {
             let css = sass.process(info)?;
             let filename = sass.file.file_name().unwrap();
             let hash = sass.out.write_file(css.into_bytes(), &site_dir, filename)?;
+
             generator.add_asset(Asset::from_sass(sass, hash));
             watched.push(sass.watched());
         }
+        for localized in &self.localized {
+            let variants = localized.process(info)?;
+            let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
+
+            let filename = localized.path.iter().last().unwrap();
+            let hash = localized
+                .out
+                .write_localized(&site_dir, filename, variants)?;
+
+            generator.add_asset(Asset::from_localized(localized, hash, localizations));
+            watched.push(localized.path.to_string());
+        }
         generator.write(&self.name, info)?;
+
         Ok(watched)
     }
 }

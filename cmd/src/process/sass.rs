@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use fs_err as fs;
 
 use lightningcss::{
@@ -14,14 +14,9 @@ use crate::{config::Sass, RuntimeInfo};
 
 impl Sass {
     pub fn process(&self, info: &RuntimeInfo) -> Result<String> {
-        let file = if self.file.is_relative() {
-            info.manifest_dir.join(&self.file)
-        } else {
-            self.file.clone()
-        };
-        if !file.exists() {
-            bail!("The sass file {file} doesn't exist");
-        }
+        let file = info
+            .existing_manifest_dir_path(&self.file)
+            .context("sass file not found")?;
         let sass_string = fs::read_to_string(&file)?;
 
         if self.optimize {

@@ -5,16 +5,31 @@ edition = "2021"
 
 [dependencies]
 
+##### MOBILE DEBUG AND RELEASE #####
+
+[package.metadata.builder.mobile.debug]
+sass = [{ file = "style/main.scss" }]
+
 [package.metadata.builder.mobile.release]
 sass = [{ file = "style/main.scss", optimize = true, out = { brotli = true } }]
 
-[package.metadata.builder.mobile.debug]
-sass = [{ file = "style/main.scss", out = { uncompressed = true } }]
+##### WEB DEBUG #####
 
 [package.metadata.builder.web.debug]
 sass = [
-    { file = "style/main.scss", out = { uncompressed = true, checksum = true, folder = "static" } },
+    { file = "style/main.scss", out = { checksum = true, folder = "static" } },
 ]
+localized = [
+    { path = "img/apple_store", file-extension = "svg", out = { folder = "static/badge", checksum = true } },
+]
+
+##### WEB RELEASE #####
+
+[[package.metadata.builder.web.release.localized]]
+path = "img/apple_store"
+file-extension = "svg"
+out = { folder = "static/badge", checksum = true, brotli = true, gzip = true }
+
 
 [[package.metadata.builder.web.release.sass]]
 file = "style/main.scss"

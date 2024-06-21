@@ -7,20 +7,23 @@ use crate::ext::TomlValueExt;
 use super::OutputOptions;
 
 #[derive(Debug, Default)]
-pub struct Sass {
-    pub file: Utf8PathBuf,
-    pub optimize: bool,
+pub struct Localized {
+    /// the path to the folder containing the localised files
+    pub path: Utf8PathBuf,
+    /// The file extension (file type)
+    pub file_ext: String,
+    /// output options
     pub out: OutputOptions,
 }
 
-impl Sass {
+impl Localized {
     pub fn try_parse(table: &dyn TableLike) -> Result<Self> {
-        let mut me = Sass::default();
+        let mut me = Localized::default();
         for (key, value) in table.iter() {
             let value = value.as_value().unwrap();
             match key {
-                "file" => me.file = value.try_path()?,
-                "optimize" => me.optimize = value.try_bool()?,
+                "path" => me.path = value.try_path()?,
+                "file-extension" => me.file_ext = value.try_string()?,
                 "out" => me.out = OutputOptions::try_parse(value)?,
                 _ => bail!("Invalid key: {key} (value: '{value}'"),
             }
@@ -34,7 +37,9 @@ impl Sass {
         } else {
             "".to_string()
         };
-        let filename = self.file.file_name().unwrap();
-        format!("{folder}/{}{filename}", checksum.unwrap_or_default())
+        let filename = self.path.iter().last().unwrap();
+        let ext = &self.file_ext;
+        let checksum = checksum.unwrap_or_default();
+        format!("{folder}/{checksum}{filename}.{ext}")
     }
 }

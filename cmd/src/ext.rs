@@ -8,6 +8,7 @@ pub trait TomlValueExt {
     fn try_path(&self) -> Result<Utf8PathBuf>;
     fn try_bool(&self) -> Result<bool>;
     fn try_table(&self) -> Result<&InlineTable>;
+    fn try_string(&self) -> Result<String>;
 }
 
 impl TomlValueExt for Value {
@@ -26,6 +27,11 @@ impl TomlValueExt for Value {
     fn try_table(&self) -> Result<&InlineTable> {
         self.as_inline_table()
             .with_context(|| format!("Expected a table {{ }}, not '{self}'"))
+    }
+    fn try_string(&self) -> Result<String> {
+        self.as_str()
+            .map(|s| s.to_string())
+            .with_context(|| format!("Expected a string, not '{self}'"))
     }
 }
 
@@ -56,6 +62,8 @@ impl RustNaming for str {
             if char == '.' {
                 s.push('_');
                 continue;
+            } else if char == '_' {
+                // allowed
             } else if !char.is_ascii_alphanumeric() {
                 panic!("Only ascii chars and '.' allowed in rust constant names, not {char}")
             }

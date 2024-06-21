@@ -5,7 +5,7 @@ use toml_edit::Value;
 use crate::ext::TomlValueExt;
 
 #[derive(Default, Debug)]
-pub struct Out {
+pub struct OutputOptions {
     pub brotli: bool,
     pub gzip: bool,
     pub uncompressed: bool,
@@ -14,9 +14,9 @@ pub struct Out {
     pub folder: Option<Utf8PathBuf>,
 }
 
-impl Out {
+impl OutputOptions {
     pub fn try_parse(toml: &Value) -> Result<Self> {
-        let mut me = Out::default();
+        let mut me = OutputOptions::default();
 
         for (key, value) in toml.try_table()? {
             match key {
