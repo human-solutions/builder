@@ -16,6 +16,9 @@ use fs_err as fs;
 impl Manifest {
     pub fn process(&self, info: &RuntimeInfo) -> Result<()> {
         let mut watched = HashSet::new();
+        watched.insert("Cargo.toml".to_string());
+        watched.insert("src".to_string());
+
         let mut assembly_names = HashSet::new();
 
         if let Some(ff) = self.fontforge.as_ref() {

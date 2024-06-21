@@ -59,7 +59,7 @@ impl OutputOptions {
             let mut cursor = Cursor::new(&contents);
 
             let params = BrotliEncoderParams {
-                quality: 8,
+                quality: 10,
                 ..Default::default()
             };
             BrotliCompress(&mut cursor, &mut file, &params)?;

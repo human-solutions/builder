@@ -33,15 +33,17 @@ impl FontForge {
         let woff_path = info.manifest_dir.join(self.file.with_extension(""));
         let woff_old = woff_path.with_extension("woff2");
         let woff_new = woff_path.with_extension("new.woff2");
-        let woff_old_checksum = seahash::hash(&fs::read(&woff_old)?);
-        let woff_new_checksum = seahash::hash(&fs::read(&woff_new)?);
-
         let otf_file = info.manifest_dir.join(otf);
 
-        if woff_old_checksum == woff_new_checksum {
-            fs::remove_file(woff_new)?;
-            fs::remove_file(&otf_file)?;
-            return Ok(());
+        if woff_old.exists() {
+            let woff_old_checksum = seahash::hash(&fs::read(&woff_old)?);
+            let woff_new_checksum = seahash::hash(&fs::read(&woff_new)?);
+
+            if woff_old_checksum == woff_new_checksum {
+                fs::remove_file(woff_new)?;
+                fs::remove_file(&otf_file)?;
+                return Ok(());
+            }
         }
 
         fs::rename(woff_new, woff_old)?;

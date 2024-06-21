@@ -6,13 +6,11 @@ edition = "2021"
 license = "MIT"
 name = "builder"
 repository = "https://github.com/human-solutions/builder"
-version = "0.0.1"
+version = "0.0.2"
 
 [dependencies]
 grass = "0.13"
-# ignore = "0.4"
 lightningcss = { version = "1.0.0-alpha.57", features = ["browserslist"] }
-# thiserror = "1.0"
 camino = "1.1"
 toml_edit = "0.22"
 anyhow = "1.0"
