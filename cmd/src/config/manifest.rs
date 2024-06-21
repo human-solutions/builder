@@ -5,11 +5,12 @@ use anyhow::{bail, Context, Result};
 
 use crate::RuntimeInfo;
 
-use super::{localized::Localized, Sass};
+use super::{fontforge::FontForge, localized::Localized, Sass};
 
 #[derive(Debug)]
 pub struct Manifest {
     pub assemblies: Vec<Assembly>,
+    pub fontforge: Option<FontForge>,
 }
 
 impl Manifest {
@@ -29,13 +30,22 @@ impl Manifest {
         )?;
 
         let mut assemblies = Vec::new();
+        let mut fontforge = None;
         for (name, value) in names {
+            if name == "fontforge" {
+                fontforge = Some(FontForge::try_parse(value)?);
+                continue;
+            }
+
             for (profile, toml) in value.as_table().unwrap() {
                 let ass = Assembly::try_parse(name, profile, toml)?;
                 assemblies.push(ass)
             }
         }
-        Ok(Self { assemblies })
+        Ok(Self {
+            assemblies,
+            fontforge,
+        })
     }
 }
 

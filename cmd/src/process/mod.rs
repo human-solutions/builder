@@ -1,3 +1,4 @@
+mod fontforge;
 mod localized;
 mod out;
 mod sass;
@@ -20,6 +21,10 @@ impl Manifest {
                 let change = assembly.process(info)?;
                 watched.extend(change.into_iter());
             }
+        }
+        if let Some(ff) = self.fontforge.as_ref() {
+            ff.process(info)?;
+            watched.insert(ff.file.to_string());
         }
         for change in watched {
             println!("cargo::rerun-if-changed={}", change);

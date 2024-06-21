@@ -5,6 +5,10 @@ edition = "2021"
 
 [dependencies]
 
+[package.metadata.builder]
+# auto update the iconfont if fontforge is installed
+fontforge = "iconfont/polyglot.sfd"
+
 ##### MOBILE DEBUG AND RELEASE #####
 
 [package.metadata.builder.mobile.debug]
