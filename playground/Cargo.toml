@@ -5,6 +5,9 @@ edition = "2021"
 
 [dependencies]
 
+[build-dependencies]
+which = "6.0"
+
 [package.metadata.builder]
 # auto update the iconfont if fontforge is installed
 fontforge = "iconfont/polyglot.sfd"

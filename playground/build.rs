@@ -3,6 +3,8 @@ use std::{
     process::{Command, ExitCode},
 };
 
+use which::which;
+
 fn main() -> ExitCode {
     match try_main() {
         Ok(code) => code,
@@ -18,6 +20,10 @@ fn try_main() -> Result<ExitCode, String> {
     let manifest_dir = env("CARGO_MANIFEST_DIR")?;
     let out_dir = env("OUT_DIR")?;
     let pkg_name = env("CARGO_PKG_NAME")?;
+    if which("builder").is_err() {
+        println!("cargo::warning=builder command not found, skipping");
+        return Ok(ExitCode::SUCCESS);
+    }
 
     let output = Command::new("builder")
         .env("BUILDER_PKG_NAME", pkg_name)
