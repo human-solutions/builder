@@ -9,8 +9,16 @@ edition = "2021"
 # auto update the iconfont if fontforge is installed
 fontforge = "iconfont/polyglot.sfd"
 
-##### MOBILE DEBUG AND RELEASE #####
+[package.metadata.builder."*".debug]
+files = [
+    { path = "iconfont/polyglot.woff2", out = { folder = "static", checksum = true } },
+]
+[package.metadata.builder."*".release]
+files = [
+    { path = "iconfont/polyglot.woff2", out = { folder = "static", checksum = true, brotli = true, gzip = true } },
+]
 
+##### MOBILE DEBUG AND RELEASE #####
 [package.metadata.builder.mobile.debug]
 sass = [{ file = "style/main.scss" }]
 

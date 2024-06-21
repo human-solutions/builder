@@ -46,4 +46,13 @@ impl OutputOptions {
         }
         encodings
     }
+
+    pub fn url(&self, filename: &str, checksum: Option<String>) -> String {
+        let folder = if let Some(folder) = self.folder.as_ref() {
+            format!("/{folder}")
+        } else {
+            "".to_string()
+        };
+        format!("{folder}/{}{filename}", checksum.unwrap_or_default(),)
+    }
 }

@@ -1,6 +1,6 @@
 use unic_langid::LanguageIdentifier;
 
-use crate::config::{Localized, Sass};
+use crate::config::{File, Localized, Sass};
 
 #[derive(Debug)]
 pub struct Asset {
@@ -32,6 +32,15 @@ impl Asset {
             name: localized.path.iter().last().unwrap().to_string(),
             encodings: localized.out.encodings(),
             localizations,
+        }
+    }
+
+    pub fn from_file(file: &File, checksum: Option<String>) -> Self {
+        Self {
+            url: file.url(checksum),
+            name: file.path.iter().last().unwrap().to_string(),
+            encodings: file.out.encodings(),
+            localizations: Vec::new(),
         }
     }
 

@@ -1,9 +1,11 @@
+mod file;
 mod fontforge;
 mod localized;
 mod manifest;
 mod out;
 mod sass;
 
+pub use file::File;
 pub use fontforge::FontForge;
 pub use localized::Localized;
 pub use manifest::Assembly;

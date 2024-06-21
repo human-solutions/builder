@@ -5,7 +5,7 @@ use anyhow::{bail, Context, Result};
 
 use crate::RuntimeInfo;
 
-use super::{fontforge::FontForge, localized::Localized, Sass};
+use super::{fontforge::FontForge, localized::Localized, File, Sass};
 
 #[derive(Debug)]
 pub struct Manifest {
@@ -51,20 +51,25 @@ impl Manifest {
 
 #[derive(Debug)]
 pub struct Assembly {
-    pub name: String,
+    pub name: Option<String>,
     pub profile: String,
     pub sass: Vec<Sass>,
     pub localized: Vec<Localized>,
+    pub files: Vec<File>,
 }
 
 impl Assembly {
     fn try_parse(name: &str, profile: &str, toml: &Item) -> Result<Self> {
         let name = name.to_string();
+        let name = (name != "*").then_some(name);
+
         let profile = profile.to_string();
         let table = toml.as_table().context("no content")?;
 
         let mut sass = Vec::new();
         let mut localized = Vec::new();
+        let mut files = Vec::new();
+
         for (process, toml) in table {
             match process {
                 "sass" => {
@@ -75,6 +80,10 @@ impl Assembly {
                     localized = parse_vec(toml, Localized::try_parse)
                         .context("Could not parse localized values")?
                 }
+                "files" => {
+                    files =
+                        parse_vec(toml, File::try_parse).context("Could not parse file value")?;
+                }
                 _ => bail!("Invalid processing type: {process}"),
             }
         }
@@ -83,6 +92,7 @@ impl Assembly {
             profile,
             sass,
             localized,
+            files,
         })
     }
 }

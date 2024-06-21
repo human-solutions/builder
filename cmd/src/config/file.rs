@@ -1,29 +1,23 @@
+use crate::ext::TomlValueExt;
+
+use super::OutputOptions;
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use toml_edit::TableLike;
 
-use crate::ext::TomlValueExt;
-
-use super::OutputOptions;
-
 #[derive(Debug, Default)]
-pub struct Localized {
-    /// the path to the folder containing the localised files
+pub struct File {
     pub path: Utf8PathBuf,
-    /// The file extension (file type)
-    pub file_ext: String,
-    /// output options
     pub out: OutputOptions,
 }
 
-impl Localized {
+impl File {
     pub fn try_parse(table: &dyn TableLike) -> Result<Self> {
-        let mut me = Localized::default();
+        let mut me = Self::default();
         for (key, value) in table.iter() {
             let value = value.as_value().unwrap();
             match key {
                 "path" => me.path = value.try_path()?,
-                "file-extension" => me.file_ext = value.try_string()?,
                 "out" => me.out = OutputOptions::try_parse(value)?,
                 _ => bail!("Invalid key: {key} (value: '{value}'"),
             }
@@ -32,8 +26,7 @@ impl Localized {
     }
 
     pub fn url(&self, checksum: Option<String>) -> String {
-        let ext = &self.file_ext;
-        let filename = format!("{}.{ext}", self.path.iter().last().unwrap());
-        self.out.url(&filename, checksum)
+        let filename = self.path.file_name().unwrap();
+        self.out.url(filename, checksum)
     }
 }

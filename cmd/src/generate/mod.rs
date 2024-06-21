@@ -1,5 +1,7 @@
 mod asset;
 
+use std::collections::HashMap;
+
 use crate::{ext::RustNaming, RuntimeInfo};
 use anyhow::Result;
 pub use asset::Asset;
@@ -7,7 +9,7 @@ use fs_err as fs;
 
 #[derive(Default)]
 pub struct Generator {
-    assets: Vec<Asset>,
+    assets: HashMap<String, Vec<Asset>>,
 }
 
 impl Generator {
@@ -15,13 +17,22 @@ impl Generator {
         "gen".to_string()
     }
 
-    pub fn add_asset(&mut self, asset: Asset) {
-        self.assets.push(asset);
+    pub fn add_asset(&mut self, assembly: &str, asset: Asset) {
+        self.assets
+            .entry(assembly.to_string())
+            .or_default()
+            .push(asset);
+    }
+    pub fn write(&self, info: &RuntimeInfo) -> Result<()> {
+        for (module, assets) in &self.assets {
+            self.write_assembly(module, info, assets)?;
+        }
+        Ok(())
     }
 
-    pub fn write(&self, module: &str, info: &RuntimeInfo) -> Result<()> {
+    pub fn write_assembly(&self, module: &str, info: &RuntimeInfo, assets: &[Asset]) -> Result<()> {
         let module = module.to_rust_module();
-        let text = self.text(&module);
+        let text = self.text(&module, assets);
         let dir = info.manifest_dir.join("gen");
         if !dir.exists() {
             fs::create_dir_all(&dir)?;
@@ -40,9 +51,9 @@ impl Generator {
         Ok(())
     }
 
-    pub fn text(&self, module: &str) -> String {
-        let constants = self.constants();
-        let matching = self.match_list();
+    pub fn text(&self, module: &str, assets: &[Asset]) -> String {
+        let constants = self.constants(assets);
+        let matching = self.match_list(assets);
         format!(
             r#"
 /// This is a generated file. Do not edit. It is updated depending on the build profile used (i.e. dev, release).
@@ -68,9 +79,9 @@ pub mod {module} {{
         )
     }
 
-    fn match_list(&self) -> String {
+    fn match_list(&self, assets: &[Asset]) -> String {
         let mut matches = vec![];
-        for asset in &self.assets {
+        for asset in assets {
             let url = &asset.url;
             let const_name = asset.name.to_rust_const();
             let encodings = if asset.encodings.is_empty() {
@@ -93,9 +104,9 @@ pub mod {module} {{
         matches.join("\n")
     }
 
-    fn constants(&self) -> String {
+    fn constants(&self, assets: &[Asset]) -> String {
         let mut constants = vec![];
-        for asset in &self.assets {
+        for asset in assets {
             let name = asset.name.to_rust_const();
             let url = &asset.url;
             constants.push(format!(r#"    pub const {name}_URL: &str = "{url}";"#,));

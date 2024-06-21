@@ -16,16 +16,36 @@ use fs_err as fs;
 impl Manifest {
     pub fn process(&self, info: &RuntimeInfo) -> Result<()> {
         let mut watched = HashSet::new();
-        for assembly in &self.assemblies {
-            if info.profile == assembly.profile {
-                let change = assembly.process(info)?;
-                watched.extend(change.into_iter());
-            }
-        }
+        let mut assembly_names = HashSet::new();
+
         if let Some(ff) = self.fontforge.as_ref() {
             ff.process(info)?;
             watched.insert(ff.file.to_string());
         }
+        let mut generator = Generator::default();
+
+        // go through all named assemblies
+        for assembly in &self.assemblies {
+            let Some(name) = assembly.name.as_ref() else {
+                continue;
+            };
+            assembly_names.insert(name.to_string());
+            if info.profile == assembly.profile {
+                let change = assembly.process(info, &mut generator, name, true)?;
+                watched.extend(change.into_iter());
+            }
+        }
+
+        // go through wildcard assemblies
+        for assembly in self.assemblies.iter().filter(|a| a.name.is_none()) {
+            for name in &assembly_names {
+                if info.profile == assembly.profile {
+                    let change = assembly.process(info, &mut generator, name, false)?;
+                    watched.extend(change.into_iter());
+                }
+            }
+        }
+        generator.write(info)?;
         for change in watched {
             println!("cargo::rerun-if-changed={}", change);
         }
@@ -34,14 +54,20 @@ impl Manifest {
 }
 
 impl Assembly {
-    pub fn process(&self, info: &RuntimeInfo) -> Result<Vec<String>> {
-        let site_dir = info.site_dir(&self.name);
-        if site_dir.exists() {
-            fs::remove_dir_all(&site_dir)?;
+    pub fn process(
+        &self,
+        info: &RuntimeInfo,
+        generator: &mut Generator,
+        name: &str,
+        clean: bool,
+    ) -> Result<Vec<String>> {
+        let site_dir = info.site_dir(name);
+        if clean {
+            if site_dir.exists() {
+                fs::remove_dir_all(&site_dir)?;
+            }
+            fs::create_dir_all(&site_dir)?;
         }
-        fs::create_dir_all(&site_dir)?;
-
-        let mut generator = Generator::default();
         let mut watched = vec![generator.watched()];
 
         for sass in &self.sass {
@@ -49,7 +75,7 @@ impl Assembly {
             let filename = sass.file.file_name().unwrap();
             let hash = sass.out.write_file(css.into_bytes(), &site_dir, filename)?;
 
-            generator.add_asset(Asset::from_sass(sass, hash));
+            generator.add_asset(name, Asset::from_sass(sass, hash));
             watched.push(sass.watched());
         }
         for localized in &self.localized {
@@ -61,10 +87,18 @@ impl Assembly {
                 .out
                 .write_localized(&site_dir, filename, variants)?;
 
-            generator.add_asset(Asset::from_localized(localized, hash, localizations));
+            generator.add_asset(name, Asset::from_localized(localized, hash, localizations));
             watched.push(localized.path.to_string());
         }
-        generator.write(&self.name, info)?;
+        for file in &self.files {
+            let path = info.manifest_dir.join(&file.path);
+            let contents = fs::read(&path)?;
+            let filename = file.path.file_name().unwrap();
+            let hash = file.out.write_file(contents, &site_dir, filename)?;
+
+            generator.add_asset(name, Asset::from_file(file, hash));
+            watched.push(file.path.to_string());
+        }
 
         Ok(watched)
     }
