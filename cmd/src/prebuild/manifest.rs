@@ -24,7 +24,7 @@ impl Manifest {
             .context("Could not find package section in manifest")?
             .get("metadata")
             .context("Could not find package.metadata section in manifest")?
-            .get("builder")
+            .get("pre-build")
             .context("Could not find package.metadata.builder section in manifest")?;
 
         let names = val.as_table().context(

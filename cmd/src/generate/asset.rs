@@ -1,6 +1,6 @@
 use unic_langid::LanguageIdentifier;
 
-use crate::config::{File, Localized, Sass};
+use crate::prebuild::{File, Localized, Sass};
 
 #[derive(Debug)]
 pub struct Asset {
