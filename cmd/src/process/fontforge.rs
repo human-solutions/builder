@@ -1,4 +1,4 @@
-use crate::{config::FontForge, RuntimeInfo};
+use crate::{config::FontForge, util::filehash, RuntimeInfo};
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use fs_err as fs;
@@ -7,13 +7,42 @@ use which::which;
 
 impl FontForge {
     pub fn process(&self, info: &RuntimeInfo) -> Result<()> {
+        let sum_file = info.manifest_dir.join(self.file.with_extension("sfd.hash"));
+        let sfd_file = info.manifest_dir.join(&self.file);
+
+        // check if sfd file exists
+        if !sfd_file.exists() {
+            bail!("sfd file not found: {sfd_file}");
+        }
+
+        let hash = filehash(&sfd_file)?;
+
+        if !sum_file.exists() {
+            fs::write(&sum_file, hash.as_bytes())?;
+            return Ok(());
+        }
+
+        let current_hash = fs::read_to_string(&sum_file)?;
+
+        // only update if changed (cargo detects changes by file modification time)
+        // but we need to check the hash of the fontforge file in order to detect changes
+        // so that we don't unnecessarily update the woff2 file. Note that the woff2 file
+        // changes everytime it is generated, so we can't use it to detect changes.
+        if hash != current_hash {
+            self.generate(info)?;
+            Ok(fs::write(&sum_file, hash.as_bytes())?)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn generate(&self, info: &RuntimeInfo) -> Result<()> {
         let Ok(command) = which("fontforge") else {
             println!("cargo::warning=fontforge command not found, skipping woff2 update");
             return Ok(());
         };
-
         let name = self.file.to_string();
-        let woff = self.file.with_extension("new.woff2");
+        let woff = self.file.with_extension("woff2");
         let otf = self.file.with_extension("otf");
         let ff = format!("Open('{name}'); Generate('{woff}'); Generate('{otf}')");
 
@@ -29,24 +58,7 @@ impl FontForge {
             bail!("installed binary fontforge failed with error: {err}{out}")
         }
 
-        // only update if changed (cargo detects changes by file modification time)
-        let woff_path = info.manifest_dir.join(self.file.with_extension(""));
-        let woff_old = woff_path.with_extension("woff2");
-        let woff_new = woff_path.with_extension("new.woff2");
         let otf_file = info.manifest_dir.join(otf);
-
-        if woff_old.exists() {
-            let woff_old_checksum = seahash::hash(&fs::read(&woff_old)?);
-            let woff_new_checksum = seahash::hash(&fs::read(&woff_new)?);
-
-            if woff_old_checksum == woff_new_checksum {
-                fs::remove_file(woff_new)?;
-                fs::remove_file(&otf_file)?;
-                return Ok(());
-            }
-        }
-
-        fs::rename(woff_new, woff_old)?;
 
         // copy otf file to font directory (only macos)
         if cfg!(target_os = "macos") {
