@@ -1,14 +1,14 @@
+mod assembly;
 mod file;
 mod fontforge;
 mod localized;
 mod manifest;
-mod out;
+mod output;
 mod sass;
 
+pub use assembly::Assembly;
 pub use file::File;
-pub use fontforge::FontForge;
 pub use localized::Localized;
-pub use manifest::Assembly;
 pub use manifest::Manifest;
-pub use out::OutputOptions;
+pub use output::Output;
 pub use sass::Sass;

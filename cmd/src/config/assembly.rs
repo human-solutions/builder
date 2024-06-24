@@ -1,62 +1,60 @@
-mod fontforge;
-mod localized;
-mod out;
-mod sass;
-
-use std::collections::HashSet;
-
+use super::{File, Localized, Sass};
 use crate::{
-    config::Assembly,
     generate::{Asset, Generator},
-    Manifest, RuntimeInfo,
+    util::parse_vec,
+    RuntimeInfo,
 };
-use anyhow::Result;
+use anyhow::{bail, Context, Result};
 use fs_err as fs;
+use toml_edit::Item;
 
-impl Manifest {
-    pub fn process(&self, info: &RuntimeInfo) -> Result<()> {
-        let mut watched = HashSet::new();
-        watched.insert("Cargo.toml".to_string());
-        watched.insert("src".to_string());
-
-        let mut assembly_names = HashSet::new();
-
-        if let Some(ff) = self.fontforge.as_ref() {
-            ff.process(info)?;
-            watched.insert(ff.file.to_string());
-        }
-        let mut generator = Generator::default();
-
-        // go through all named assemblies
-        for assembly in &self.assemblies {
-            let Some(name) = assembly.name.as_ref() else {
-                continue;
-            };
-            assembly_names.insert(name.to_string());
-            if info.profile == assembly.profile {
-                let change = assembly.process(info, &mut generator, name, true)?;
-                watched.extend(change.into_iter());
-            }
-        }
-
-        // go through wildcard assemblies
-        for assembly in self.assemblies.iter().filter(|a| a.name.is_none()) {
-            for name in &assembly_names {
-                if info.profile == assembly.profile {
-                    let change = assembly.process(info, &mut generator, name, false)?;
-                    watched.extend(change.into_iter());
-                }
-            }
-        }
-        generator.write(info)?;
-        for change in watched {
-            println!("cargo::rerun-if-changed={}", change);
-        }
-        Ok(())
-    }
+#[derive(Debug)]
+pub struct Assembly {
+    pub name: Option<String>,
+    pub profile: String,
+    pub sass: Vec<Sass>,
+    pub localized: Vec<Localized>,
+    pub files: Vec<File>,
 }
 
 impl Assembly {
+    pub fn try_parse(name: &str, profile: &str, toml: &Item) -> Result<Self> {
+        let name = name.to_string();
+        let name = (name != "*").then_some(name);
+
+        let profile = profile.to_string();
+        let table = toml.as_table().context("no content")?;
+
+        let mut sass = Vec::new();
+        let mut localized = Vec::new();
+        let mut files = Vec::new();
+
+        for (process, toml) in table {
+            match process {
+                "sass" => {
+                    sass =
+                        parse_vec(toml, Sass::try_parse).context("Could not parse sass values")?;
+                }
+                "localized" => {
+                    localized = parse_vec(toml, Localized::try_parse)
+                        .context("Could not parse localized values")?
+                }
+                "files" => {
+                    files =
+                        parse_vec(toml, File::try_parse).context("Could not parse file value")?;
+                }
+                _ => bail!("Invalid processing type: {process}"),
+            }
+        }
+        Ok(Self {
+            name,
+            profile,
+            sass,
+            localized,
+            files,
+        })
+    }
+
     pub fn process(
         &self,
         info: &RuntimeInfo,

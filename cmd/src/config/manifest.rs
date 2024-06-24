@@ -1,11 +1,13 @@
+use std::collections::HashSet;
+
 use fs_err as fs;
-use toml_edit::{DocumentMut, Item, TableLike};
+use toml_edit::DocumentMut;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 
-use crate::RuntimeInfo;
+use crate::{generate::Generator, RuntimeInfo};
 
-use super::{fontforge::FontForge, localized::Localized, File, Sass};
+use super::{fontforge::FontForge, Assembly};
 
 #[derive(Debug)]
 pub struct Manifest {
@@ -49,70 +51,45 @@ impl Manifest {
     }
 }
 
-#[derive(Debug)]
-pub struct Assembly {
-    pub name: Option<String>,
-    pub profile: String,
-    pub sass: Vec<Sass>,
-    pub localized: Vec<Localized>,
-    pub files: Vec<File>,
-}
+impl Manifest {
+    pub fn process(&self, info: &RuntimeInfo) -> Result<()> {
+        let mut watched = HashSet::new();
+        watched.insert("Cargo.toml".to_string());
+        watched.insert("src".to_string());
 
-impl Assembly {
-    fn try_parse(name: &str, profile: &str, toml: &Item) -> Result<Self> {
-        let name = name.to_string();
-        let name = (name != "*").then_some(name);
+        let mut assembly_names = HashSet::new();
 
-        let profile = profile.to_string();
-        let table = toml.as_table().context("no content")?;
+        if let Some(ff) = self.fontforge.as_ref() {
+            ff.process(info)?;
+            watched.insert(ff.file.to_string());
+        }
+        let mut generator = Generator::default();
 
-        let mut sass = Vec::new();
-        let mut localized = Vec::new();
-        let mut files = Vec::new();
-
-        for (process, toml) in table {
-            match process {
-                "sass" => {
-                    sass =
-                        parse_vec(toml, Sass::try_parse).context("Could not parse sass values")?;
-                }
-                "localized" => {
-                    localized = parse_vec(toml, Localized::try_parse)
-                        .context("Could not parse localized values")?
-                }
-                "files" => {
-                    files =
-                        parse_vec(toml, File::try_parse).context("Could not parse file value")?;
-                }
-                _ => bail!("Invalid processing type: {process}"),
+        // go through all named assemblies
+        for assembly in &self.assemblies {
+            let Some(name) = assembly.name.as_ref() else {
+                continue;
+            };
+            assembly_names.insert(name.to_string());
+            if info.profile == assembly.profile {
+                let change = assembly.process(info, &mut generator, name, true)?;
+                watched.extend(change.into_iter());
             }
         }
-        Ok(Self {
-            name,
-            profile,
-            sass,
-            localized,
-            files,
-        })
-    }
-}
 
-fn parse_vec<T, F: Fn(&dyn TableLike) -> Result<T>>(item: &Item, f: F) -> Result<Vec<T>> {
-    let mut vals = Vec::new();
-    if let Some(arr) = item.as_array() {
-        for entry in arr {
-            let table = entry
-                .as_inline_table()
-                .context("Expected an inline table")?;
-
-            vals.push(f(table)?)
+        // go through wildcard assemblies
+        for assembly in self.assemblies.iter().filter(|a| a.name.is_none()) {
+            for name in &assembly_names {
+                if info.profile == assembly.profile {
+                    let change = assembly.process(info, &mut generator, name, false)?;
+                    watched.extend(change.into_iter());
+                }
+            }
         }
-    } else if let Some(arr_tbl) = item.as_array_of_tables() {
-        for table in arr_tbl {
-            vals.push(f(table)?)
+        generator.write(info)?;
+        for change in watched {
+            println!("cargo::rerun-if-changed={}", change);
         }
-    } else {
-        bail!("Expected an array of tables or an array")
+        Ok(())
     }
-    Ok(vals)
 }

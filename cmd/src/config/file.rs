@@ -1,6 +1,6 @@
 use crate::ext::TomlValueExt;
 
-use super::OutputOptions;
+use super::Output;
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use toml_edit::TableLike;
@@ -8,7 +8,7 @@ use toml_edit::TableLike;
 #[derive(Debug, Default)]
 pub struct File {
     pub path: Utf8PathBuf,
-    pub out: OutputOptions,
+    pub out: Output,
 }
 
 impl File {
@@ -18,7 +18,7 @@ impl File {
             let value = value.as_value().unwrap();
             match key {
                 "path" => me.path = value.try_path()?,
-                "out" => me.out = OutputOptions::try_parse(value)?,
+                "out" => me.out = Output::try_parse(value)?,
                 _ => bail!("Invalid key: {key} (value: '{value}'"),
             }
         }
