@@ -25,10 +25,10 @@ impl Manifest {
             .get("metadata")
             .context("Could not find package.metadata section in manifest")?
             .get("pre-build")
-            .context("Could not find package.metadata.builder section in manifest")?;
+            .context("Could not find package.metadata.pre-build section in manifest")?;
 
         let names = val.as_table().context(
-            "Could not find assembly name. Expected package.metadata.builder.<assembly>",
+            "Could not find assembly name. Expected package.metadata.pre-build.<assembly>",
         )?;
 
         let mut assemblies = Vec::new();

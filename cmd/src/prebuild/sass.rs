@@ -1,6 +1,5 @@
-use super::Output;
-use crate::ext::TomlValueExt;
 use crate::RuntimeInfo;
+use crate::{ext::TomlValueExt, generate::Output};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use fs_err as fs;
