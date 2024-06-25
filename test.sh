@@ -6,4 +6,4 @@ export BUILDER_PKG_NAME="playground"
 export BUILDER_PROFILE=debug
 export BUILDER_PROFILE=release
 
-cargo run --bin=builder
+cargo run --bin=builder -- prebuild

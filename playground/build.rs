@@ -26,6 +26,7 @@ fn try_main() -> Result<ExitCode, String> {
     }
 
     let output = Command::new("builder")
+        .arg("prebuild")
         .env("BUILDER_PKG_NAME", pkg_name)
         .env("BUILDER_PROFILE", build_profile)
         .env("BUILDER_MANIFEST_DIR", manifest_dir)

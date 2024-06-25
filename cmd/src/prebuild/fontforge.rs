@@ -1,10 +1,12 @@
-use crate::{util::filehash, RuntimeInfo};
+use crate::util::filehash;
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use fs_err as fs;
 use std::process::Command;
 use toml_edit::Item;
 use which::which;
+
+use super::PrebuildArgs;
 
 #[derive(Debug, Default)]
 pub struct FontForge {
@@ -18,7 +20,7 @@ impl FontForge {
         Ok(Self { file: path })
     }
 
-    pub fn process(&self, info: &RuntimeInfo) -> Result<()> {
+    pub fn process(&self, info: &PrebuildArgs) -> Result<()> {
         let sum_file = info.manifest_dir.join(self.file.with_extension("sfd.hash"));
         let sfd_file = info.manifest_dir.join(&self.file);
 
@@ -48,7 +50,7 @@ impl FontForge {
         }
     }
 
-    fn generate(&self, info: &RuntimeInfo) -> Result<()> {
+    fn generate(&self, info: &PrebuildArgs) -> Result<()> {
         let Ok(command) = which("fontforge") else {
             println!("cargo::warning=fontforge command not found, skipping woff2 update");
             return Ok(());

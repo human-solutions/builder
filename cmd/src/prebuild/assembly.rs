@@ -1,8 +1,7 @@
-use super::{File, Localized, Sass};
+use super::{File, Localized, PrebuildArgs, Sass};
 use crate::{
     generate::{Asset, Generator},
     util::parse_vec,
-    RuntimeInfo,
 };
 use anyhow::{bail, Context, Result};
 use fs_err as fs;
@@ -57,7 +56,7 @@ impl Assembly {
 
     pub fn process(
         &self,
-        info: &RuntimeInfo,
+        info: &PrebuildArgs,
         generator: &mut Generator,
         name: &str,
         clean: bool,

@@ -5,30 +5,30 @@ use toml_edit::DocumentMut;
 
 use anyhow::{Context, Result};
 
-use crate::{generate::Generator, RuntimeInfo};
+use crate::generate::Generator;
 
-use super::{fontforge::FontForge, Assembly};
+use super::{fontforge::FontForge, Assembly, PrebuildArgs};
 
 #[derive(Debug)]
-pub struct Manifest {
+pub struct PrebuildManifest {
     pub assemblies: Vec<Assembly>,
     pub fontforge: Option<FontForge>,
 }
 
-impl Manifest {
-    pub fn try_parse(info: &RuntimeInfo) -> Result<Self> {
-        let manifest_str = fs::read_to_string(info.manifest_dir.join("Cargo.toml"))?;
+impl PrebuildManifest {
+    pub fn try_parse(info: &PrebuildArgs) -> Result<Self> {
+        let manifest_str = fs::read_to_string(info.manifest_dir.join("CPrebuildArgs.toml"))?;
         let manifest = manifest_str.parse::<DocumentMut>()?;
         let val = &manifest
             .get("package")
             .context("Could not find package section in manifest")?
             .get("metadata")
             .context("Could not find package.metadata section in manifest")?
-            .get("pre-build")
-            .context("Could not find package.metadata.pre-build section in manifest")?;
+            .get("prebuild")
+            .context("Could not find package.metadata.prebuild section in manifest")?;
 
         let names = val.as_table().context(
-            "Could not find assembly name. Expected package.metadata.pre-build.<assembly>",
+            "Could not find assembly name. Expected package.metadata.prebuild.<assembly>",
         )?;
 
         let mut assemblies = Vec::new();
@@ -51,8 +51,8 @@ impl Manifest {
     }
 }
 
-impl Manifest {
-    pub fn process(&self, info: &RuntimeInfo) -> Result<()> {
+impl PrebuildManifest {
+    pub fn process(&self, info: &PrebuildArgs) -> Result<()> {
         let mut watched = HashSet::new();
         watched.insert("Cargo.toml".to_string());
         watched.insert("src".to_string());

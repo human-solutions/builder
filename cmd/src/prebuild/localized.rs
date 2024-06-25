@@ -1,12 +1,14 @@
 use fs_err as fs;
 use unic_langid::LanguageIdentifier;
 
-use crate::{generate::Output, RuntimeInfo};
+use crate::generate::Output;
 use anyhow::{bail, Context, Result};
 use camino::Utf8PathBuf;
 use toml_edit::TableLike;
 
 use crate::ext::TomlValueExt;
+
+use super::PrebuildArgs;
 
 #[derive(Debug, Default)]
 pub struct Localized {
@@ -39,7 +41,7 @@ impl Localized {
         self.out.url(&filename, checksum)
     }
 
-    pub fn process(&self, info: &RuntimeInfo) -> Result<Vec<(LanguageIdentifier, Vec<u8>)>> {
+    pub fn process(&self, info: &PrebuildArgs) -> Result<Vec<(LanguageIdentifier, Vec<u8>)>> {
         let folder = info
             .existing_manifest_dir_path(&self.path)
             .context("localized path not found")?;

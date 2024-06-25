@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{ext::RustNaming, RuntimeInfo};
+use crate::{ext::RustNaming, prebuild::PrebuildArgs};
 use anyhow::Result;
 use fs_err as fs;
 
@@ -22,14 +22,19 @@ impl Generator {
             .or_default()
             .push(asset);
     }
-    pub fn write(&self, info: &RuntimeInfo) -> Result<()> {
+    pub fn write(&self, info: &PrebuildArgs) -> Result<()> {
         for (module, assets) in &self.assets {
             self.write_assembly(module, info, assets)?;
         }
         Ok(())
     }
 
-    pub fn write_assembly(&self, module: &str, info: &RuntimeInfo, assets: &[Asset]) -> Result<()> {
+    pub fn write_assembly(
+        &self,
+        module: &str,
+        info: &PrebuildArgs,
+        assets: &[Asset],
+    ) -> Result<()> {
         let module = module.to_rust_module();
         let text = self.text(&module, assets);
         let dir = info.manifest_dir.join("gen");

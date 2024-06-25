@@ -1,4 +1,3 @@
-use crate::RuntimeInfo;
 use crate::{ext::TomlValueExt, generate::Output};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
@@ -11,6 +10,8 @@ use lightningcss::{
 use std::process::Command;
 use toml_edit::TableLike;
 use which::which;
+
+use super::PrebuildArgs;
 
 #[derive(Debug, Default)]
 pub struct Sass {
@@ -44,7 +45,7 @@ impl Sass {
         format!("{folder}/{}{filename}", checksum.unwrap_or_default())
     }
 
-    pub fn process(&self, info: &RuntimeInfo) -> Result<String> {
+    pub fn process(&self, info: &PrebuildArgs) -> Result<String> {
         let file = info
             .existing_manifest_dir_path(&self.file)
             .context("sass file not found")?;
