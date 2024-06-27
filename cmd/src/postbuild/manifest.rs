@@ -1,12 +1,14 @@
 use fs_err as fs;
 use toml_edit::DocumentMut;
 
-use anyhow::{Context, Result};
+use crate::anyhow::{Context, Result};
 
-use super::PostbuildArgs;
+use super::{assembly::Assembly, PostbuildArgs};
 
 #[derive(Debug)]
-pub struct PostbuildManifest {}
+pub struct PostbuildManifest {
+    assemblies: Vec<Assembly>,
+}
 
 impl PostbuildManifest {
     pub fn try_parse(info: &PostbuildArgs) -> Result<Self> {
@@ -24,9 +26,22 @@ impl PostbuildManifest {
             "Could not find assembly name. Expected package.metadata.postbuild.<assembly>",
         )?;
 
-        // let mut assemblies = Vec::new();
-        // let mut fontforge = None;
-        for (_name, _value) in names {}
-        Ok(Self {})
+        let mut assemblies = Vec::new();
+        for (name, value) in names {
+            for (profile, toml) in value.as_table().unwrap() {
+                let ass = Assembly::try_parse(name, profile, toml)?;
+                assemblies.push(ass)
+            }
+        }
+        Ok(Self { assemblies })
+    }
+
+    pub fn process(&self, info: &PostbuildArgs) -> Result<()> {
+        for assembly in &self.assemblies {
+            if assembly.profile == info.profile {
+                assembly.process(info)?;
+            }
+        }
+        Ok(())
     }
 }

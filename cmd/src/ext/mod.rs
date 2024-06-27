@@ -1,7 +1,9 @@
-use anyhow::{Context, Result};
+pub mod anyhow;
+
+use crate::anyhow::{Context, Result};
 use base64::engine::general_purpose::URL_SAFE;
 use base64::prelude::*;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use toml_edit::{InlineTable, Value};
 
 pub trait TomlValueExt {
@@ -75,5 +77,18 @@ impl RustNaming for str {
             }
         }
         s
+    }
+}
+
+pub trait Utf8PathExt {
+    fn push_ext(&self, ext: &str) -> Utf8PathBuf;
+}
+
+impl Utf8PathExt for Utf8Path {
+    fn push_ext(&self, ext: &str) -> Utf8PathBuf {
+        let mut s = self.to_string();
+        s.push('.');
+        s.push_str(ext);
+        Utf8PathBuf::from(s)
     }
 }

@@ -1,9 +1,14 @@
 #/bin/sh
 
-export BUILDER_MANIFEST_DIR="${PWD}/playground/"
-export BUILDER_OUT_DIR="${PWD}/target/debug/build/playground-6b78a4df1c8142e7/out"
-export BUILDER_PKG_NAME="playground"
-export BUILDER_PROFILE=debug
-export BUILDER_PROFILE=release
+export CARGO_MANIFEST_DIR="${PWD}/playground/"
+export OUT_DIR="${PWD}/target"
+export CARGO_PKG_NAME="playground"
+export PROFILE=dev
+# export BUILDER_PROFILE=release
 
-cargo run --bin=builder -- prebuild
+cargo run --bin=builder -- prebuild --manifest-dir="${CARGO_MANIFEST_DIR}" --profile="${PROFILE}" --package="${CARGO_PKG_NAME}" --out-dir="${OUT_DIR}"
+
+cargo build -p playground --target=wasm32-unknown-unknown --profile="${PROFILE}"
+
+cargo run --bin=builder -- postbuild --manifest-dir="${CARGO_MANIFEST_DIR}" --profile="${PROFILE}" --package="${CARGO_PKG_NAME}" --target-dir="target"
+

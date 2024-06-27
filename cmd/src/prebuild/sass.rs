@@ -1,5 +1,5 @@
+use crate::anyhow::{anyhow, bail, Context, Result};
 use crate::{ext::TomlValueExt, generate::Output};
-use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use fs_err as fs;
 use lightningcss::{
@@ -11,7 +11,7 @@ use std::process::Command;
 use toml_edit::TableLike;
 use which::which;
 
-use super::PrebuildArgs;
+use super::args::PrebuildArgs;
 
 #[derive(Debug, Default)]
 pub struct Sass {

@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use fs_err as fs;
 use toml_edit::DocumentMut;
 
-use anyhow::{Context, Result};
+use crate::anyhow::{Context, Result};
 
 use crate::generate::Generator;
 
@@ -17,7 +17,16 @@ pub struct PrebuildManifest {
 
 impl PrebuildManifest {
     pub fn try_parse(info: &PrebuildArgs) -> Result<Self> {
-        let manifest_str = fs::read_to_string(info.manifest_dir.join("CPrebuildArgs.toml"))?;
+        Self::_try_parse(info).with_context(|| {
+            format!(
+                "Failed to parse prebuild manifest at: {}",
+                info.manifest_dir
+            )
+        })
+    }
+
+    pub fn _try_parse(info: &PrebuildArgs) -> Result<Self> {
+        let manifest_str = fs::read_to_string(info.manifest_dir.join("Cargo.toml"))?;
         let manifest = manifest_str.parse::<DocumentMut>()?;
         let val = &manifest
             .get("package")

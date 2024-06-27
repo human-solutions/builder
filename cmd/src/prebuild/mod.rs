@@ -6,7 +6,7 @@ mod localized;
 mod manifest;
 mod sass;
 
-pub use args::PrebuildArgs;
+pub use args::{PrebuildArgs, RawPrebuildArgs};
 pub use assembly::Assembly;
 pub use file::File;
 pub use localized::Localized;

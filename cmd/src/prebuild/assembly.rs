@@ -1,9 +1,10 @@
-use super::{File, Localized, PrebuildArgs, Sass};
+use super::args::PrebuildArgs;
+use super::{File, Localized, Sass};
+use crate::anyhow::{bail, Context, Result};
 use crate::{
     generate::{Asset, Generator},
     util::parse_vec,
 };
-use anyhow::{bail, Context, Result};
 use fs_err as fs;
 use toml_edit::Item;
 
@@ -67,13 +68,14 @@ impl Assembly {
                 fs::remove_dir_all(&site_dir)?;
             }
             fs::create_dir_all(&site_dir)?;
+            println!("Cleaned: {site_dir}");
         }
         let mut watched = vec![generator.watched()];
 
         for sass in &self.sass {
             let css = sass.process(info)?;
             let filename = sass.file.file_name().unwrap();
-            let hash = sass.out.write_file(css.into_bytes(), &site_dir, filename)?;
+            let hash = sass.out.write_file(css.as_bytes(), &site_dir, filename)?;
 
             generator.add_asset(name, Asset::from_sass(sass, hash));
             watched.push(sass.watched());
@@ -95,7 +97,7 @@ impl Assembly {
             let path = info.manifest_dir.join(&file.path);
             let contents = fs::read(&path)?;
             let filename = file.path.file_name().unwrap();
-            let hash = file.out.write_file(contents, &site_dir, filename)?;
+            let hash = file.out.write_file(&contents, &site_dir, filename)?;
 
             generator.add_asset(name, Asset::from_file(file, hash));
             watched.push(file.path.to_string());

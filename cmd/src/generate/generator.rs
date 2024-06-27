@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
+use crate::anyhow::Result;
 use crate::{ext::RustNaming, prebuild::PrebuildArgs};
-use anyhow::Result;
 use fs_err as fs;
 
 use super::Asset;

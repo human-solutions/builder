@@ -22,3 +22,6 @@ brotli = "6.0"
 flate2 = "1.0"
 unic-langid = "0.9"
 clap = { version = "4.5", features = ["derive", "env"] }
+wasm-bindgen-cli-support = "0.2"
+tempfile = "3.10"
+wasm-opt = "0.116.1"

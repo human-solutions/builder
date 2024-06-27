@@ -1,6 +1,6 @@
 use crate::{ext::TomlValueExt, generate::Output};
 
-use anyhow::{bail, Result};
+use crate::anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use toml_edit::TableLike;
 

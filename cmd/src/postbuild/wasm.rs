@@ -1,0 +1,140 @@
+use std::collections::HashMap;
+use std::io::{Read, Write};
+
+use crate::anyhow::Result;
+use crate::ext::TomlValueExt;
+use crate::generate::Output;
+use crate::util::timehash;
+use crate::PostbuildArgs;
+use anyhow::bail;
+use camino::Utf8Path;
+use tempfile::NamedTempFile;
+use toml_edit::TableLike;
+use wasm_bindgen_cli_support::Bindgen;
+
+#[derive(Debug, Default)]
+pub struct WasmBindgen {
+    optimize_wasm: bool,
+    minify_js: bool,
+    out: Output,
+}
+
+impl WasmBindgen {
+    pub fn try_parse(table: &dyn TableLike) -> Result<Self> {
+        let mut me = Self::default();
+        for (key, value) in table.iter() {
+            let value = value.as_value().unwrap();
+            match key {
+                "optimize-wasm" => me.optimize_wasm = value.try_bool()?,
+                "minify-js" => me.minify_js = value.try_bool()?,
+                "out" => me.out = Output::try_parse(value)?,
+                _ => bail!("Invalid key: {key} (value: '{value}'"),
+            }
+        }
+        Ok(me)
+    }
+    pub fn process(&self, info: &PostbuildArgs, assembly: &str) -> Result<()> {
+        let hash = timehash();
+        let debug = info.profile != "release";
+        let profile = if info.profile == "dev" {
+            "debug"
+        } else {
+            &info.profile
+        };
+        let input = info
+            .target_dir
+            .join("wasm32-unknown-unknown")
+            .join(profile)
+            .join(&info.package)
+            .with_extension("wasm");
+
+        let mut output = Bindgen::new()
+            .input_path(input)
+            .browser(true)?
+            .debug(debug)
+            .keep_debug(debug)
+            .out_name(&format!("{hash}{}", info.package))
+            .generate_output()?;
+
+        let site_dir = info.site_dir(assembly);
+        // check out the code for this, that's where much of the stuff done here comes from:
+        // output.emit(&site_dir)?;
+
+        let _wasm_hash = {
+            let mut wasm = output.wasm_mut().emit_wasm();
+            let filename = format!("{}.wasm", info.package);
+            if self.optimize_wasm {
+                Self::optimize_wasm(&mut wasm)?;
+            }
+            self.out.write_file(&wasm, &site_dir, &filename)
+        }?;
+
+        let _js_hash = {
+            let filename = format!("{}.js", info.package);
+            let contents = output.js().as_bytes();
+            self.out.write_file(contents, &site_dir, &filename)
+        }?;
+
+        self.write_snippets(output.snippets());
+        self.write_modules(output.local_modules(), &site_dir)?;
+        Ok(())
+    }
+
+    fn write_snippets(&self, snippets: &HashMap<String, Vec<String>>) {
+        // Provide inline JS files
+        let mut snippet_list = Vec::new();
+        for (identifier, list) in snippets.iter() {
+            for (i, _js) in list.iter().enumerate() {
+                let name = format!("inline{}.js", i);
+                snippet_list.push(format!(
+                    "snippet handling not implemented: {identifier} {name}"
+                ));
+            }
+        }
+        if !snippet_list.is_empty() {
+            panic!(
+                "snippet handling not implemented: {}",
+                snippet_list.join(", ")
+            );
+        }
+    }
+
+    fn write_modules(&self, modules: &HashMap<String, String>, _site_dir: &Utf8Path) -> Result<()> {
+        // Provide snippet files from JS snippets
+        for (path, _js) in modules.iter() {
+            println!("module: {path}");
+            // let site_path = Utf8PathBuf::from("snippets").join(path);
+            // let file_path = proj.site.root_relative_pkg_dir().join(&site_path);
+
+            // fs::create_dir_all(file_path.parent().unwrap()).await?;
+
+            // let site_file = SiteFile {
+            //     dest: file_path,
+            //     site: site_path,
+            // };
+
+            // js_changed |= if proj.release && proj.js_minify {
+            //     proj.site
+            //         .updated_with(&site_file, minify(js)?.as_bytes())
+            //         .await?
+            // } else {
+            //     proj.site.updated_with(&site_file, js.as_bytes()).await?
+            // };
+        }
+        Ok(())
+    }
+
+    fn optimize_wasm(wasm: &mut Vec<u8>) -> Result<()> {
+        let mut infile = NamedTempFile::new()?;
+        infile.write_all(wasm)?;
+
+        let mut outfile = NamedTempFile::new()?;
+
+        wasm_opt::OptimizationOptions::new_optimize_for_size()
+            .run(infile.path(), outfile.path())?;
+
+        wasm.clear();
+        outfile.read_to_end(wasm)?;
+        Ok(())
+    }
+}

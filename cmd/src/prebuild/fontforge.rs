@@ -1,12 +1,12 @@
+use crate::anyhow::{bail, Context, Result};
 use crate::util::filehash;
-use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use fs_err as fs;
 use std::process::Command;
 use toml_edit::Item;
 use which::which;
 
-use super::PrebuildArgs;
+use super::args::PrebuildArgs;
 
 #[derive(Debug, Default)]
 pub struct FontForge {

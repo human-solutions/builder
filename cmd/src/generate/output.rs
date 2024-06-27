@@ -1,5 +1,5 @@
-use crate::ext::{ByteVecExt, TomlValueExt};
-use anyhow::{bail, Result};
+use crate::anyhow::{bail, Result};
+use crate::ext::{ByteVecExt, TomlValueExt, Utf8PathExt};
 use base64::engine::general_purpose::URL_SAFE;
 use base64::prelude::*;
 use brotli::{enc::BrotliEncoderParams, BrotliCompress};
@@ -66,18 +66,42 @@ impl Output {
         format!("{folder}/{}{filename}", checksum.unwrap_or_default(),)
     }
 
+    pub fn hash_and_path(
+        &self,
+        contents: &[u8],
+        dir: &Utf8Path,
+        filename: &str,
+    ) -> Result<(Option<String>, Utf8PathBuf)> {
+        let hash = self.checksum.then(|| contents.base64_checksum());
+        let prefix = hash.as_deref().unwrap_or_default();
+        let dir = self.full_created_dir(dir)?;
+        let filename = format!("{prefix}{filename}");
+        let path = dir.join(filename);
+        Ok((hash, path))
+    }
+
+    pub fn path(
+        &self,
+        hash: &Option<String>,
+        dir: &Utf8Path,
+        filename: &str,
+    ) -> Result<Utf8PathBuf> {
+        let prefix = hash.as_deref().unwrap_or_default();
+        let dir = self.full_created_dir(dir)?;
+        let filename = format!("{prefix}{filename}");
+        let path = dir.join(filename);
+        Ok(path)
+    }
+
     pub fn write_file(
         &self,
-        contents: Vec<u8>,
+        contents: &[u8],
         dir: &Utf8Path,
         filename: &str,
     ) -> Result<Option<String>> {
         let hash = self.checksum.then(|| contents.base64_checksum());
-        let prefix = hash.as_deref().unwrap_or_default();
-
-        let dir = self.full_created_dir(dir)?;
-        let filename = format!("{prefix}{filename}");
-        self.compress_and_write(contents, &filename, &dir)?;
+        let path = self.path(&hash, dir, filename)?;
+        self.compress_and_write(contents, &path)?;
 
         Ok(hash)
     }
@@ -94,16 +118,15 @@ impl Output {
         Ok(dir)
     }
 
-    fn compress_and_write(&self, contents: Vec<u8>, filename: &str, dir: &Utf8Path) -> Result<()> {
+    fn compress_and_write(&self, contents: &[u8], path: &Utf8Path) -> Result<()> {
         // if none are set, then default to uncompressed
         let default_uncompressed = !self.uncompressed && !self.brotli && !self.gzip;
 
         if self.uncompressed || default_uncompressed {
-            let path = dir.join(filename);
-            fs::write(path, &contents)?;
+            fs::write(path, contents)?;
         }
         if self.brotli {
-            let path = dir.join(format!("{filename}.br"));
+            let path = path.push_ext("br");
             let mut file = fs::File::create(path)?;
             let mut cursor = Cursor::new(&contents);
 
@@ -115,12 +138,10 @@ impl Output {
         }
 
         if self.gzip {
-            let filename = format!("{filename}.gz");
-            let f = fs::File::create(dir.join(&filename))?;
-            let mut gz = GzBuilder::new()
-                .filename(filename)
-                .write(f, Compression::default());
-            gz.write_all(&contents)?;
+            let path = path.push_ext("gz");
+            let f = fs::File::create(path)?;
+            let mut gz = GzBuilder::new().write(f, Compression::default());
+            gz.write_all(contents)?;
             gz.finish()?;
         }
         Ok(())
@@ -143,13 +164,10 @@ impl Output {
             URL_SAFE.encode(checksummer.finish().to_be_bytes())
         });
 
-        let prefix = hash.as_deref().unwrap_or_default();
-        let filename = format!("{prefix}{filename}");
-
         for (langid, content) in variants {
-            let lang = langid.to_string();
-            let filename = format!("{filename}.{ext}.{lang}");
-            self.compress_and_write(content, &filename, &dir)?;
+            let filename = format!("{filename}.{ext}.{langid}");
+            let path = self.path(&hash, &dir, &filename)?;
+            self.compress_and_write(&content, &path)?;
         }
         Ok(hash)
     }

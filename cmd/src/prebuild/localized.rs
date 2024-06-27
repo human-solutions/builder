@@ -1,14 +1,14 @@
 use fs_err as fs;
 use unic_langid::LanguageIdentifier;
 
+use crate::anyhow::{bail, Context, Result};
 use crate::generate::Output;
-use anyhow::{bail, Context, Result};
 use camino::Utf8PathBuf;
 use toml_edit::TableLike;
 
 use crate::ext::TomlValueExt;
 
-use super::PrebuildArgs;
+use super::args::PrebuildArgs;
 
 #[derive(Debug, Default)]
 pub struct Localized {
