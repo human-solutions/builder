@@ -1,13 +1,17 @@
 use std::collections::HashMap;
 use std::io::{Read, Write};
+use std::sync::Arc;
 
-use crate::anyhow::Result;
+use crate::anyhow::{Context, Result};
 use crate::ext::TomlValueExt;
 use crate::generate::Output;
 use crate::util::timehash;
 use crate::PostbuildArgs;
 use anyhow::bail;
 use camino::Utf8Path;
+use swc::config::{IsModule, JsMinifyOptions};
+use swc::{try_with_handler, BoolOrDataConfig};
+use swc_common::{FileName, SourceMap, GLOBALS};
 use tempfile::NamedTempFile;
 use toml_edit::TableLike;
 use wasm_bindgen_cli_support::Bindgen;
@@ -71,7 +75,12 @@ impl WasmBindgen {
 
         let _js_hash = {
             let filename = format!("{}.js", info.package);
-            let contents = output.js().as_bytes();
+            let js = if self.minify_js {
+                Self::minify(output.js().to_string())?
+            } else {
+                output.js().to_string()
+            };
+            let contents = js.as_bytes();
             self.out.write_file(contents, &site_dir, &filename)
         }?;
 
@@ -136,5 +145,32 @@ impl WasmBindgen {
         wasm.clear();
         outfile.read_to_end(wasm)?;
         Ok(())
+    }
+
+    fn minify(js: String) -> Result<String> {
+        let cm = Arc::<SourceMap>::default();
+
+        let c = swc::Compiler::new(cm.clone());
+        let output = GLOBALS.set(&Default::default(), || {
+            try_with_handler(cm.clone(), Default::default(), |handler| {
+                let fm = cm.new_source_file(FileName::Anon, js);
+
+                c.minify(
+                    fm,
+                    handler,
+                    &JsMinifyOptions {
+                        compress: BoolOrDataConfig::from_bool(true),
+                        mangle: BoolOrDataConfig::from_bool(true),
+                        // keep_classnames: true,
+                        // keep_fnames: true,
+                        module: IsModule::Bool(true),
+                        ..Default::default()
+                    },
+                )
+                .context("failed to minify")
+            })
+        })?;
+
+        Ok(output.code)
     }
 }

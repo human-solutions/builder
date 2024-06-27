@@ -25,3 +25,5 @@ clap = { version = "4.5", features = ["derive", "env"] }
 wasm-bindgen-cli-support = "0.2"
 tempfile = "3.10"
 wasm-opt = "0.116.1"
+swc = "0.278"
+swc_common = "0.34"

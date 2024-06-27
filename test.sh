@@ -4,7 +4,7 @@ export CARGO_MANIFEST_DIR="${PWD}/playground/"
 export OUT_DIR="${PWD}/target"
 export CARGO_PKG_NAME="playground"
 export PROFILE=dev
-# export BUILDER_PROFILE=release
+# export PROFILE=release
 
 cargo run --bin=builder -- prebuild --manifest-dir="${CARGO_MANIFEST_DIR}" --profile="${PROFILE}" --package="${CARGO_PKG_NAME}" --out-dir="${OUT_DIR}"
 
