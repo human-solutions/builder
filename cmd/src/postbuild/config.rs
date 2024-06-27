@@ -6,11 +6,11 @@ use crate::anyhow::{Context, Result};
 use super::{assembly::Assembly, PostbuildArgs};
 
 #[derive(Debug)]
-pub struct PostbuildManifest {
+pub struct PostbuildConfig {
     assemblies: Vec<Assembly>,
 }
 
-impl PostbuildManifest {
+impl PostbuildConfig {
     pub fn try_parse(info: &PostbuildArgs) -> Result<Self> {
         let manifest_str = fs::read_to_string(info.manifest_dir.join("Cargo.toml"))?;
         let manifest = manifest_str.parse::<DocumentMut>()?;

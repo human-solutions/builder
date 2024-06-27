@@ -1,5 +1,5 @@
 use builder::anyhow::Result;
-use builder::{PostbuildArgs, PostbuildManifest, PrebuildArgs, PrebuildManifest, RawPrebuildArgs};
+use builder::{PostbuildArgs, PostbuildConfig, PrebuildArgs, PrebuildConfig, RawPrebuildArgs};
 use clap::{Parser, Subcommand};
 use std::process::ExitCode;
 
@@ -19,12 +19,12 @@ fn try_main() -> Result<()> {
     match cli.command {
         Commands::Prebuild(info) => {
             let info: PrebuildArgs = info.try_into()?;
-            let manifest = PrebuildManifest::try_parse(&info)?;
-            manifest.process(&info)
+            let conf = PrebuildConfig::try_parse(&info)?;
+            conf.process(&info)
         }
         Commands::Postbuild(info) => {
-            let manifest = PostbuildManifest::try_parse(&info)?;
-            manifest.process(&info)
+            let conf = PostbuildConfig::try_parse(&info)?;
+            conf.process(&info)
         }
     }
 }

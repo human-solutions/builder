@@ -1,7 +1,7 @@
 mod args;
 mod assembly;
-mod manifest;
+mod config;
 mod wasm;
 
 pub use args::PostbuildArgs;
-pub use manifest::PostbuildManifest;
+pub use config::PostbuildConfig;

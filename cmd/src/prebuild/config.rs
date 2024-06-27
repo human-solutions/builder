@@ -10,12 +10,12 @@ use crate::generate::Generator;
 use super::{fontforge::FontForge, Assembly, PrebuildArgs};
 
 #[derive(Debug)]
-pub struct PrebuildManifest {
+pub struct PrebuildConfig {
     pub assemblies: Vec<Assembly>,
     pub fontforge: Option<FontForge>,
 }
 
-impl PrebuildManifest {
+impl PrebuildConfig {
     pub fn try_parse(info: &PrebuildArgs) -> Result<Self> {
         Self::_try_parse(info).with_context(|| {
             format!(
@@ -60,7 +60,7 @@ impl PrebuildManifest {
     }
 }
 
-impl PrebuildManifest {
+impl PrebuildConfig {
     pub fn process(&self, info: &PrebuildArgs) -> Result<()> {
         let mut watched = HashSet::new();
         watched.insert("Cargo.toml".to_string());

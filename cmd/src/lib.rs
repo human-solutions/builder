@@ -5,5 +5,5 @@ mod prebuild;
 mod util;
 
 pub use ext::anyhow;
-pub use postbuild::{PostbuildArgs, PostbuildManifest};
-pub use prebuild::{PrebuildArgs, PrebuildManifest, RawPrebuildArgs};
+pub use postbuild::{PostbuildArgs, PostbuildConfig};
+pub use prebuild::{PrebuildArgs, PrebuildConfig, RawPrebuildArgs};
