@@ -1,4 +1,6 @@
 use fs_err as fs;
+use serde_json::Value;
+// use serde_json::Value;
 use toml_edit::DocumentMut;
 
 use crate::anyhow::{Context, Result};
@@ -11,6 +13,23 @@ pub struct PostbuildConfig {
 }
 
 impl PostbuildConfig {
+    pub fn from_json(json: &Value) -> Result<Self> {
+        let mut assemblies = Vec::new();
+        for (assembly_name, assembly_val) in json.as_object().unwrap() {
+            if let Some(assembly_obj) = assembly_val.as_object() {
+                for (key, val) in assembly_obj.iter() {
+                    let mut assembly: Assembly = serde_json::from_value(val.clone()).unwrap();
+                    assembly.name.clone_from(assembly_name);
+                    assembly.profile.clone_from(key);
+                    assemblies.push(assembly);
+                }
+            } else {
+                panic!("invalid assembly")
+            }
+        }
+        Ok(Self { assemblies })
+    }
+
     pub fn try_parse(info: &PostbuildArgs) -> Result<Self> {
         let manifest_str = fs::read_to_string(info.manifest_dir.join("Cargo.toml"))?;
         let manifest = manifest_str.parse::<DocumentMut>()?;
@@ -36,6 +55,9 @@ impl PostbuildConfig {
         Ok(Self { assemblies })
     }
 
+    // pub fn try_parse_metadata(value: &Value) {
+    //     // serde_json::from_value(value)
+    // }
     pub fn process(&self, info: &PostbuildArgs) -> Result<()> {
         for assembly in &self.assemblies {
             if assembly.profile == info.profile {

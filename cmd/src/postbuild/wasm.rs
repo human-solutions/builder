@@ -9,6 +9,7 @@ use crate::util::timehash;
 use crate::PostbuildArgs;
 use anyhow::bail;
 use camino::Utf8Path;
+use serde::Deserialize;
 use swc::config::{IsModule, JsMinifyOptions};
 use swc::{try_with_handler, BoolOrDataConfig};
 use swc_common::{FileName, SourceMap, GLOBALS};
@@ -16,7 +17,8 @@ use tempfile::NamedTempFile;
 use toml_edit::TableLike;
 use wasm_bindgen_cli_support::Bindgen;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct WasmBindgen {
     optimize_wasm: bool,
     minify_js: bool,

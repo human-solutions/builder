@@ -1,4 +1,5 @@
 use fs_err as fs;
+use serde::Deserialize;
 use unic_langid::LanguageIdentifier;
 
 use crate::anyhow::{bail, Context, Result};
@@ -10,12 +11,14 @@ use crate::ext::TomlValueExt;
 
 use super::args::PrebuildArgs;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Localized {
     /// the path to the folder containing the localised files
     pub path: Utf8PathBuf,
     /// The file extension (file type)
-    pub file_ext: String,
+
+    #[serde(rename = "file-extension")]
+    pub file_extension: String,
     /// output options
     pub out: Output,
 }
@@ -27,7 +30,7 @@ impl Localized {
             let value = value.as_value().unwrap();
             match key {
                 "path" => me.path = value.try_path()?,
-                "file-extension" => me.file_ext = value.try_string()?,
+                "file-extension" => me.file_extension = value.try_string()?,
                 "out" => me.out = Output::try_parse(value)?,
                 _ => bail!("Invalid key: {key} (value: '{value}'"),
             }
@@ -36,7 +39,7 @@ impl Localized {
     }
 
     pub fn url(&self, checksum: Option<String>) -> String {
-        let ext = &self.file_ext;
+        let ext = &self.file_extension;
         let filename = format!("{}.{ext}", self.path.iter().last().unwrap());
         self.out.url(&filename, checksum)
     }
@@ -59,7 +62,7 @@ impl Localized {
             let file_extension_match = file
                 .path()
                 .extension()
-                .map(|ext| ext == self.file_ext)
+                .map(|ext| ext == self.file_extension)
                 .unwrap_or_default();
 
             if file_type.is_file() && file_extension_match {

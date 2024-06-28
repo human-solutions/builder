@@ -2,13 +2,15 @@ use crate::anyhow::{bail, Context, Result};
 use crate::util::filehash;
 use camino::{Utf8Path, Utf8PathBuf};
 use fs_err as fs;
+use serde::Deserialize;
 use std::process::Command;
 use toml_edit::Item;
 use which::which;
 
 use super::args::PrebuildArgs;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
+#[serde(transparent)]
 pub struct FontForge {
     pub file: Utf8PathBuf,
 }

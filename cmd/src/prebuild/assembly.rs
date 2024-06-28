@@ -6,12 +6,17 @@ use crate::{
     util::parse_vec,
 };
 use fs_err as fs;
+use serde::Deserialize;
 use toml_edit::Item;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Default)]
+#[serde(default)]
 pub struct Assembly {
+    #[serde(skip)]
     pub name: Option<String>,
+    #[serde(skip)]
     pub profile: String,
+
     pub sass: Vec<Sass>,
     pub localized: Vec<Localized>,
     pub files: Vec<File>,
@@ -85,7 +90,7 @@ impl Assembly {
             let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
 
             let filename = localized.path.iter().last().unwrap();
-            let ext = &localized.file_ext;
+            let ext = &localized.file_extension;
             let hash = localized
                 .out
                 .write_localized(&site_dir, filename, ext, variants)?;

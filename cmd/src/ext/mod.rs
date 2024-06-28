@@ -1,4 +1,5 @@
 pub mod anyhow;
+pub mod metadata;
 
 use crate::anyhow::{Context, Result};
 use base64::engine::general_purpose::URL_SAFE;

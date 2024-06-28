@@ -1,5 +1,6 @@
-use crate::anyhow::{bail, Context, Result};
+use crate::anyhow::{bail, Result};
 use camino::{Utf8Path, Utf8PathBuf};
+use cargo_metadata::{Metadata, PackageId};
 use clap::Args;
 
 #[derive(Args, Debug)]
@@ -10,42 +11,43 @@ pub struct RawPrebuildArgs {
     pub profile: String,
     #[clap(long, env = "CARGO_PKG_NAME")]
     pub package: String,
-    #[clap(long, env = "OUT_DIR")]
-    pub out_dir: String,
 }
 
 impl TryInto<PrebuildArgs> for RawPrebuildArgs {
     type Error = anyhow::Error;
 
     fn try_into(self) -> Result<PrebuildArgs> {
+        let metadata = cargo_metadata::MetadataCommand::new()
+            .manifest_path(&self.manifest_dir.join("Cargo.toml"))
+            .exec()?;
+        let package_id = metadata
+            .root_package()
+            .expect("Expected to have a root package in the cargo metadata")
+            .id
+            .clone();
+
         Ok(PrebuildArgs {
+            package_id,
+            metadata,
             manifest_dir: self.manifest_dir,
             profile: self.profile,
             package: self.package,
-            out_dir: target_dir(&self.out_dir)?,
         })
     }
 }
 
 pub struct PrebuildArgs {
+    pub package_id: PackageId,
+    pub metadata: Metadata,
     pub manifest_dir: Utf8PathBuf,
     pub profile: String,
     pub package: String,
-    pub out_dir: Utf8PathBuf,
-}
-
-fn target_dir(out_dir: &str) -> Result<Utf8PathBuf> {
-    let target_dir_pos = out_dir
-        .find("target")
-        .with_context(|| format!("Expected to find 'target' in OUT_DIR: '{out_dir}'"))?;
-
-    let target_dir = &out_dir[..target_dir_pos + "target".len()];
-    Ok(Utf8PathBuf::from(target_dir))
 }
 
 impl PrebuildArgs {
     pub fn site_dir(&self, assembly: &str) -> Utf8PathBuf {
-        self.out_dir
+        self.metadata
+            .target_directory
             .join(&self.package)
             .join(assembly)
             .join(&self.profile)

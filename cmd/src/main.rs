@@ -1,5 +1,8 @@
 use builder::anyhow::Result;
-use builder::{PostbuildArgs, PostbuildConfig, PrebuildArgs, PrebuildConfig, RawPrebuildArgs};
+use builder::{
+    Manifest, PostbuildArgs, PostbuildConfig, PrebuildArgs, PrebuildConfig, RawManifest,
+    RawPrebuildArgs,
+};
 use clap::{Parser, Subcommand};
 use std::process::ExitCode;
 
@@ -26,6 +29,11 @@ fn try_main() -> Result<()> {
             let conf = PostbuildConfig::try_parse(&info)?;
             conf.process(&info)
         }
+        Commands::Manifest(manif) => {
+            let manif: Manifest = manif.try_into()?;
+            manif.process()?;
+            Ok(())
+        }
     }
 }
 
@@ -40,4 +48,5 @@ struct Cli {
 enum Commands {
     Prebuild(RawPrebuildArgs),
     Postbuild(PostbuildArgs),
+    Manifest(RawManifest),
 }

@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use fs_err as fs;
+use serde_json::Value;
 use toml_edit::DocumentMut;
 
 use crate::anyhow::{Context, Result};
@@ -16,6 +17,33 @@ pub struct PrebuildConfig {
 }
 
 impl PrebuildConfig {
+    pub fn from_json(json: &Value) -> Result<Self> {
+        let mut assemblies = Vec::new();
+        let mut fontforge = None;
+        for (assembly_name, assembly_val) in json.as_object().unwrap() {
+            if assembly_name == "fontforge" {
+                fontforge = Some(serde_json::from_value(assembly_val.clone())?);
+            } else if let Some(assembly_obj) = assembly_val.as_object() {
+                for (key, val) in assembly_obj.iter() {
+                    let mut assembly: Assembly = serde_json::from_value(val.clone()).unwrap();
+                    assembly.name = if assembly_name == "*" {
+                        None
+                    } else {
+                        Some(assembly_name.to_owned())
+                    };
+                    assembly.profile.clone_from(key);
+                    assemblies.push(assembly);
+                }
+            } else {
+                panic!("invalid assembly")
+            }
+        }
+        Ok(Self {
+            assemblies,
+            fontforge,
+        })
+    }
+
     pub fn try_parse(info: &PrebuildArgs) -> Result<Self> {
         Self::_try_parse(info).with_context(|| {
             format!(

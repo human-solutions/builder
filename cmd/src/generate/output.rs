@@ -7,6 +7,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use flate2::{Compression, GzBuilder};
 use fs_err as fs;
 use seahash::SeaHasher;
+use serde::Deserialize;
 use std::{
     hash::Hasher,
     io::{Cursor, Write},
@@ -14,7 +15,8 @@ use std::{
 use toml_edit::Value;
 use unic_langid::LanguageIdentifier;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Deserialize)]
+#[serde(default)]
 pub struct Output {
     pub brotli: bool,
     pub gzip: bool,

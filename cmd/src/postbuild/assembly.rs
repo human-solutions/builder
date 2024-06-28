@@ -1,14 +1,18 @@
 use crate::anyhow::{bail, Context, Result};
 use crate::util::parse_vec;
 use crate::PostbuildArgs;
+use serde::Deserialize;
 use toml_edit::Item;
 
 use super::wasm::WasmBindgen;
 
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Assembly {
+    #[serde(skip)]
     pub name: String,
+    #[serde(skip)]
     pub profile: String,
+    #[serde(rename = "wasmbindgen")]
     pub wasm: Vec<WasmBindgen>,
 }
 

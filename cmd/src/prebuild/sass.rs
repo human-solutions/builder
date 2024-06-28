@@ -7,13 +7,15 @@ use lightningcss::{
     stylesheet::StyleSheet,
     targets::{Browsers, Targets},
 };
+use serde::Deserialize;
 use std::process::Command;
 use toml_edit::TableLike;
 use which::which;
 
 use super::args::PrebuildArgs;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Sass {
     pub file: Utf8PathBuf,
     pub optimize: bool,

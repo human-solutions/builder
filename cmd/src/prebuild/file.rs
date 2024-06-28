@@ -2,9 +2,10 @@ use crate::{ext::TomlValueExt, generate::Output};
 
 use crate::anyhow::{bail, Result};
 use camino::Utf8PathBuf;
+use serde::Deserialize;
 use toml_edit::TableLike;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
 pub struct File {
     pub path: Utf8PathBuf,
     pub out: Output,
