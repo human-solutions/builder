@@ -1,13 +1,11 @@
 use crate::anyhow::{bail, Context, Result};
 use crate::util::filehash;
+use crate::Config;
 use camino::{Utf8Path, Utf8PathBuf};
 use fs_err as fs;
 use serde::Deserialize;
 use std::process::Command;
-use toml_edit::Item;
 use which::which;
-
-use super::args::PrebuildArgs;
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(transparent)]
@@ -16,15 +14,9 @@ pub struct FontForge {
 }
 
 impl FontForge {
-    pub fn try_parse(value: &Item) -> Result<Self> {
-        let s = value.as_str().context("expected string")?;
-        let path = Utf8PathBuf::from(s);
-        Ok(Self { file: path })
-    }
-
-    pub fn process(&self, info: &PrebuildArgs) -> Result<()> {
-        let sum_file = info.manifest_dir.join(self.file.with_extension("sfd.hash"));
-        let sfd_file = info.manifest_dir.join(&self.file);
+    pub fn process(&self, info: &Config) -> Result<()> {
+        let sum_file = info.args.dir.join(self.file.with_extension("sfd.hash"));
+        let sfd_file = info.args.dir.join(&self.file);
 
         // check if sfd file exists
         if !sfd_file.exists() {
@@ -52,7 +44,7 @@ impl FontForge {
         }
     }
 
-    fn generate(&self, info: &PrebuildArgs) -> Result<()> {
+    fn generate(&self, info: &Config) -> Result<()> {
         let Ok(command) = which("fontforge") else {
             println!("cargo::warning=fontforge command not found, skipping woff2 update");
             return Ok(());
@@ -64,7 +56,7 @@ impl FontForge {
 
         let cmd = Command::new(command)
             .args(["-lang=ff", "-c", &ff])
-            .current_dir(info.manifest_dir.as_path())
+            .current_dir(info.args.dir.as_path())
             .output()
             .context("fontforge command failed")?;
         let out = String::from_utf8(cmd.stdout).unwrap();
@@ -74,7 +66,7 @@ impl FontForge {
             bail!("installed binary fontforge failed with error: {err}{out}")
         }
 
-        let otf_file = info.manifest_dir.join(otf);
+        let otf_file = info.args.dir.join(otf);
 
         // copy otf file to font directory (only macos)
         if cfg!(target_os = "macos") {

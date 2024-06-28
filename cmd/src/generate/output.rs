@@ -1,5 +1,5 @@
-use crate::anyhow::{bail, Result};
-use crate::ext::{ByteVecExt, TomlValueExt, Utf8PathExt};
+use crate::anyhow::Result;
+use crate::ext::{ByteVecExt, Utf8PathExt};
 use base64::engine::general_purpose::URL_SAFE;
 use base64::prelude::*;
 use brotli::{enc::BrotliEncoderParams, BrotliCompress};
@@ -12,7 +12,6 @@ use std::{
     hash::Hasher,
     io::{Cursor, Write},
 };
-use toml_edit::Value;
 use unic_langid::LanguageIdentifier;
 
 #[derive(Default, Debug, Deserialize)]
@@ -27,23 +26,6 @@ pub struct Output {
 }
 
 impl Output {
-    pub fn try_parse(toml: &Value) -> Result<Self> {
-        let mut me = Output::default();
-
-        for (key, value) in toml.try_table()? {
-            match key {
-                "brotli" => me.brotli = value.try_bool()?,
-                "gzip" => me.gzip = value.try_bool()?,
-                "uncompressed" => me.uncompressed = value.try_bool()?,
-                "checksum" => me.checksum = value.try_bool()?,
-                "folder" => me.folder = Some(value.try_path()?),
-                _ => bail!("Unexpected key: '{key}' with value: '{value}'"),
-            }
-        }
-
-        Ok(me)
-    }
-
     /// Encodings according to https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
     pub fn encodings(&self) -> Vec<String> {
         let mut encodings = vec![];

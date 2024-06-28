@@ -4,12 +4,8 @@ use unic_langid::LanguageIdentifier;
 
 use crate::anyhow::{bail, Context, Result};
 use crate::generate::Output;
+use crate::Config;
 use camino::Utf8PathBuf;
-use toml_edit::TableLike;
-
-use crate::ext::TomlValueExt;
-
-use super::args::PrebuildArgs;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Localized {
@@ -24,27 +20,13 @@ pub struct Localized {
 }
 
 impl Localized {
-    pub fn try_parse(table: &dyn TableLike) -> Result<Self> {
-        let mut me = Localized::default();
-        for (key, value) in table.iter() {
-            let value = value.as_value().unwrap();
-            match key {
-                "path" => me.path = value.try_path()?,
-                "file-extension" => me.file_extension = value.try_string()?,
-                "out" => me.out = Output::try_parse(value)?,
-                _ => bail!("Invalid key: {key} (value: '{value}'"),
-            }
-        }
-        Ok(me)
-    }
-
     pub fn url(&self, checksum: Option<String>) -> String {
         let ext = &self.file_extension;
         let filename = format!("{}.{ext}", self.path.iter().last().unwrap());
         self.out.url(&filename, checksum)
     }
 
-    pub fn process(&self, info: &PrebuildArgs) -> Result<Vec<(LanguageIdentifier, Vec<u8>)>> {
+    pub fn process(&self, info: &Config) -> Result<Vec<(LanguageIdentifier, Vec<u8>)>> {
         let folder = info
             .existing_manifest_dir_path(&self.path)
             .context("localized path not found")?;

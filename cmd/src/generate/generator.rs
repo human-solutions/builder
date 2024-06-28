@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use crate::anyhow::Result;
-use crate::{ext::RustNaming, prebuild::PrebuildArgs};
+use crate::ext::RustNaming;
+use crate::Config;
 use fs_err as fs;
 
 use super::Asset;
@@ -22,22 +23,17 @@ impl Generator {
             .or_default()
             .push(asset);
     }
-    pub fn write(&self, info: &PrebuildArgs) -> Result<()> {
+    pub fn write(&self, info: &Config) -> Result<()> {
         for (module, assets) in &self.assets {
             self.write_assembly(module, info, assets)?;
         }
         Ok(())
     }
 
-    pub fn write_assembly(
-        &self,
-        module: &str,
-        info: &PrebuildArgs,
-        assets: &[Asset],
-    ) -> Result<()> {
+    pub fn write_assembly(&self, module: &str, info: &Config, assets: &[Asset]) -> Result<()> {
         let module = module.to_rust_module();
         let text = self.text(&module, assets);
-        let dir = info.manifest_dir.join("gen");
+        let dir = info.args.dir.join("gen");
         if !dir.exists() {
             fs::create_dir_all(&dir)?;
         }

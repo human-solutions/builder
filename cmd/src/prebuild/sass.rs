@@ -1,5 +1,6 @@
 use crate::anyhow::{anyhow, bail, Context, Result};
-use crate::{ext::TomlValueExt, generate::Output};
+use crate::generate::Output;
+use crate::Config;
 use camino::Utf8PathBuf;
 use fs_err as fs;
 use lightningcss::{
@@ -9,10 +10,7 @@ use lightningcss::{
 };
 use serde::Deserialize;
 use std::process::Command;
-use toml_edit::TableLike;
 use which::which;
-
-use super::args::PrebuildArgs;
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default)]
@@ -23,20 +21,6 @@ pub struct Sass {
 }
 
 impl Sass {
-    pub fn try_parse(table: &dyn TableLike) -> Result<Self> {
-        let mut me = Sass::default();
-        for (key, value) in table.iter() {
-            let value = value.as_value().unwrap();
-            match key {
-                "file" => me.file = value.try_path()?,
-                "optimize" => me.optimize = value.try_bool()?,
-                "out" => me.out = Output::try_parse(value)?,
-                _ => bail!("Invalid key: {key} (value: '{value}'"),
-            }
-        }
-        Ok(me)
-    }
-
     pub fn url(&self, checksum: Option<String>) -> String {
         let folder = if let Some(folder) = self.out.folder.as_ref() {
             format!("/{folder}")
@@ -47,7 +31,7 @@ impl Sass {
         format!("{folder}/{}{filename}", checksum.unwrap_or_default())
     }
 
-    pub fn process(&self, info: &PrebuildArgs) -> Result<String> {
+    pub fn process(&self, info: &Config) -> Result<String> {
         let file = info
             .existing_manifest_dir_path(&self.file)
             .context("sass file not found")?;

@@ -1,8 +1,5 @@
-use builder::anyhow::Result;
-use builder::{
-    Manifest, PostbuildArgs, PostbuildConfig, PrebuildArgs, PrebuildConfig, RawManifest,
-    RawPrebuildArgs,
-};
+use anyhow::Result;
+use builder::{CmdArgs, Config};
 use clap::{Parser, Subcommand};
 use std::process::ExitCode;
 
@@ -20,20 +17,8 @@ fn try_main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Prebuild(info) => {
-            let info: PrebuildArgs = info.try_into()?;
-            let conf = PrebuildConfig::try_parse(&info)?;
-            conf.process(&info)
-        }
-        Commands::Postbuild(info) => {
-            let conf = PostbuildConfig::try_parse(&info)?;
-            conf.process(&info)
-        }
-        Commands::Manifest(manif) => {
-            let manif: Manifest = manif.try_into()?;
-            manif.process()?;
-            Ok(())
-        }
+        Commands::Prebuild(info) => Config::from_path(info)?.run_prebuild(),
+        Commands::Postbuild(info) => Config::from_path(info)?.run_postbuild(),
     }
 }
 
@@ -46,7 +31,6 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Prebuild(RawPrebuildArgs),
-    Postbuild(PostbuildArgs),
-    Manifest(RawManifest),
+    Prebuild(CmdArgs),
+    Postbuild(CmdArgs),
 }

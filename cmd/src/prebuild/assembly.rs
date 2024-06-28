@@ -1,13 +1,9 @@
-use super::args::PrebuildArgs;
 use super::{File, Localized, Sass};
-use crate::anyhow::{bail, Context, Result};
-use crate::{
-    generate::{Asset, Generator},
-    util::parse_vec,
-};
+use crate::anyhow::Result;
+use crate::generate::{Asset, Generator};
+use crate::Config;
 use fs_err as fs;
 use serde::Deserialize;
-use toml_edit::Item;
 
 #[derive(Debug, Deserialize, Default)]
 #[serde(default)]
@@ -23,46 +19,9 @@ pub struct Assembly {
 }
 
 impl Assembly {
-    pub fn try_parse(name: &str, profile: &str, toml: &Item) -> Result<Self> {
-        let name = name.to_string();
-        let name = (name != "*").then_some(name);
-
-        let profile = profile.to_string();
-        let table = toml.as_table().context("no content")?;
-
-        let mut sass = Vec::new();
-        let mut localized = Vec::new();
-        let mut files = Vec::new();
-
-        for (process, toml) in table {
-            match process {
-                "sass" => {
-                    sass =
-                        parse_vec(toml, Sass::try_parse).context("Could not parse sass values")?;
-                }
-                "localized" => {
-                    localized = parse_vec(toml, Localized::try_parse)
-                        .context("Could not parse localized values")?
-                }
-                "files" => {
-                    files =
-                        parse_vec(toml, File::try_parse).context("Could not parse file value")?;
-                }
-                _ => bail!("Invalid processing type: {process}"),
-            }
-        }
-        Ok(Self {
-            name,
-            profile,
-            sass,
-            localized,
-            files,
-        })
-    }
-
     pub fn process(
         &self,
-        info: &PrebuildArgs,
+        info: &Config,
         generator: &mut Generator,
         name: &str,
         clean: bool,
@@ -99,7 +58,7 @@ impl Assembly {
             watched.push(localized.path.to_string());
         }
         for file in &self.files {
-            let path = info.manifest_dir.join(&file.path);
+            let path = info.args.dir.join(&file.path);
             let contents = fs::read(&path)?;
             let filename = file.path.file_name().unwrap();
             let hash = file.out.write_file(&contents, &site_dir, filename)?;

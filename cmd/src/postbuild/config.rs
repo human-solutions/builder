@@ -1,11 +1,8 @@
-use fs_err as fs;
 use serde_json::Value;
-// use serde_json::Value;
-use toml_edit::DocumentMut;
 
-use crate::anyhow::{Context, Result};
+use crate::{anyhow::Result, Config};
 
-use super::{assembly::Assembly, PostbuildArgs};
+use super::assembly::Assembly;
 
 #[derive(Debug)]
 pub struct PostbuildConfig {
@@ -30,37 +27,9 @@ impl PostbuildConfig {
         Ok(Self { assemblies })
     }
 
-    pub fn try_parse(info: &PostbuildArgs) -> Result<Self> {
-        let manifest_str = fs::read_to_string(info.manifest_dir.join("Cargo.toml"))?;
-        let manifest = manifest_str.parse::<DocumentMut>()?;
-        let val = &manifest
-            .get("package")
-            .context("Could not find package section in manifest")?
-            .get("metadata")
-            .context("Could not find package.metadata section in manifest")?
-            .get("postbuild")
-            .context("Could not find package.metadata.postbuild section in manifest")?;
-
-        let names = val.as_table().context(
-            "Could not find assembly name. Expected package.metadata.postbuild.<assembly>",
-        )?;
-
-        let mut assemblies = Vec::new();
-        for (name, value) in names {
-            for (profile, toml) in value.as_table().unwrap() {
-                let ass = Assembly::try_parse(name, profile, toml)?;
-                assemblies.push(ass)
-            }
-        }
-        Ok(Self { assemblies })
-    }
-
-    // pub fn try_parse_metadata(value: &Value) {
-    //     // serde_json::from_value(value)
-    // }
-    pub fn process(&self, info: &PostbuildArgs) -> Result<()> {
+    pub fn process(&self, info: &Config) -> Result<()> {
         for assembly in &self.assemblies {
-            if assembly.profile == info.profile {
+            if assembly.profile == info.args.profile {
                 assembly.process(info)?;
             }
         }

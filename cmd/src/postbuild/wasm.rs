@@ -3,18 +3,15 @@ use std::io::{Read, Write};
 use std::sync::Arc;
 
 use crate::anyhow::{Context, Result};
-use crate::ext::TomlValueExt;
 use crate::generate::Output;
 use crate::util::timehash;
-use crate::PostbuildArgs;
-use anyhow::bail;
+use crate::Config;
 use camino::Utf8Path;
 use serde::Deserialize;
 use swc::config::{IsModule, JsMinifyOptions};
 use swc::{try_with_handler, BoolOrDataConfig};
 use swc_common::{FileName, SourceMap, GLOBALS};
 use tempfile::NamedTempFile;
-use toml_edit::TableLike;
 use wasm_bindgen_cli_support::Bindgen;
 
 #[derive(Debug, Default, Deserialize)]
@@ -26,32 +23,20 @@ pub struct WasmBindgen {
 }
 
 impl WasmBindgen {
-    pub fn try_parse(table: &dyn TableLike) -> Result<Self> {
-        let mut me = Self::default();
-        for (key, value) in table.iter() {
-            let value = value.as_value().unwrap();
-            match key {
-                "optimize-wasm" => me.optimize_wasm = value.try_bool()?,
-                "minify-js" => me.minify_js = value.try_bool()?,
-                "out" => me.out = Output::try_parse(value)?,
-                _ => bail!("Invalid key: {key} (value: '{value}'"),
-            }
-        }
-        Ok(me)
-    }
-    pub fn process(&self, info: &PostbuildArgs, assembly: &str) -> Result<()> {
+    pub fn process(&self, info: &Config, assembly: &str) -> Result<()> {
         let hash = timehash();
-        let debug = info.profile != "release";
-        let profile = if info.profile == "dev" {
+        let debug = info.args.profile != "release";
+        let profile = if info.args.profile == "dev" {
             "debug"
         } else {
-            &info.profile
+            &info.args.profile
         };
         let input = info
-            .target_dir
+            .metadata
+            .target_directory
             .join("wasm32-unknown-unknown")
             .join(profile)
-            .join(&info.package)
+            .join(&info.package.name)
             .with_extension("wasm");
 
         let mut output = Bindgen::new()
@@ -59,7 +44,7 @@ impl WasmBindgen {
             .browser(true)?
             .debug(debug)
             .keep_debug(debug)
-            .out_name(&format!("{hash}{}", info.package))
+            .out_name(&format!("{hash}{}", info.package.name))
             .generate_output()?;
 
         let site_dir = info.site_dir(assembly);
@@ -68,7 +53,7 @@ impl WasmBindgen {
 
         let _wasm_hash = {
             let mut wasm = output.wasm_mut().emit_wasm();
-            let filename = format!("{}.wasm", info.package);
+            let filename = format!("{}.wasm", info.package.name);
             if self.optimize_wasm {
                 Self::optimize_wasm(&mut wasm)?;
             }
@@ -76,7 +61,7 @@ impl WasmBindgen {
         }?;
 
         let _js_hash = {
-            let filename = format!("{}.js", info.package);
+            let filename = format!("{}.js", info.package.name);
             let js = if self.minify_js {
                 Self::minify(output.js().to_string())?
             } else {

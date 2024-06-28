@@ -7,4 +7,4 @@ echo "Build playground"
 touch playground/build.rs
 cargo build -p playground --target=wasm32-unknown-unknown -r
 
-builder postbuild --manifest-dir=playground --profile=release --package=playground --target-dir=target
+builder postbuild --dir=playground --profile=release --package=playground

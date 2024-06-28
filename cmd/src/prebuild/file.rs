@@ -1,9 +1,7 @@
-use crate::{ext::TomlValueExt, generate::Output};
+use crate::generate::Output;
 
-use crate::anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use serde::Deserialize;
-use toml_edit::TableLike;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct File {
@@ -12,19 +10,6 @@ pub struct File {
 }
 
 impl File {
-    pub fn try_parse(table: &dyn TableLike) -> Result<Self> {
-        let mut me = Self::default();
-        for (key, value) in table.iter() {
-            let value = value.as_value().unwrap();
-            match key {
-                "path" => me.path = value.try_path()?,
-                "out" => me.out = Output::try_parse(value)?,
-                _ => bail!("Invalid key: {key} (value: '{value}'"),
-            }
-        }
-        Ok(me)
-    }
-
     pub fn url(&self, checksum: Option<String>) -> String {
         let filename = self.path.file_name().unwrap();
         self.out.url(filename, checksum)
