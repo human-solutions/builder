@@ -1,6 +1,7 @@
 mod config;
 mod ext;
 mod generate;
+mod install;
 mod postbuild;
 mod prebuild;
 mod util;

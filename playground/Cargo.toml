@@ -16,31 +16,34 @@ which = "6.0"
 # auto update the iconfont if fontforge is installed
 fontforge = "iconfont/polyglot.sfd"
 
-[package.metadata.prebuild."*".dev]
-files = [
-    { path = "iconfont/polyglot.woff2", out = { folder = "static", checksum = true } },
-]
-[package.metadata.prebuild."*".release]
-files = [
-    { path = "iconfont/polyglot.woff2", out = { folder = "static", checksum = true, brotli = true, gzip = true } },
-]
+[[package.metadata.prebuild."*".dev.files]]
+path = "iconfont/polyglot.woff2"
+out = { folder = "static", checksum = true }
+
+[[package.metadata.prebuild."*".release.files]]
+path = "iconfont/polyglot.woff2"
+out = { folder = "static", checksum = true, brotli = true, gzip = true }
 
 ##### MOBILE DEBUG AND RELEASE #####
-[package.metadata.prebuild.mobile.dev]
-sass = [{ file = "style/main.scss" }]
+[[package.metadata.prebuild.mobile.dev.sass]]
+file = "style/main.scss"
 
-[package.metadata.prebuild.mobile.release]
-sass = [{ file = "style/main.scss", optimize = true, out = { brotli = true } }]
+[[package.metadata.prebuild.mobile.release.sass]]
+file = "style/main.scss"
+optimize = true
+out = { brotli = true }
 
 ##### WEB DEBUG #####
 
-[package.metadata.prebuild.web.dev]
-sass = [
-    { file = "style/main.scss", out = { checksum = true, folder = "static" } },
-]
-localized = [
-    { path = "img/apple_store", file-extension = "svg", out = { folder = "static/badge", checksum = true } },
-]
+[[package.metadata.prebuild.web.dev.sass]]
+file = "style/main.scss"
+out = { checksum = true, folder = "static" }
+
+[[package.metadata.prebuild.web.dev.localized]]
+path = "img/apple_store"
+file-extension = "svg"
+out = { folder = "static/badge", checksum = true }
+
 
 ##### WEB RELEASE #####
 

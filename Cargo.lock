@@ -308,6 +308,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "browserslist-rs"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fdf0ca73de70c3da94e4194e4a01fe732378f55d47cf4c0588caab22a0dbfa14"
+dependencies = [
+ "ahash 0.8.11",
+ "chrono",
+ "either",
+ "indexmap 2.2.2",
+ "itertools 0.13.0",
+ "nom",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "builder"
 version = "0.0.2"
 dependencies = [
@@ -317,6 +335,7 @@ dependencies = [
  "camino",
  "cargo_metadata",
  "clap",
+ "colorful",
  "flate2",
  "fs-err",
  "grass",
@@ -327,6 +346,7 @@ dependencies = [
  "swc",
  "swc_common",
  "tempfile",
+ "toml",
  "unic-langid",
  "wasm-bindgen-cli-support",
  "wasm-opt",
@@ -495,6 +515,12 @@ name = "colorchoice"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b6a852b24ab71dffc585bcb46eaf7959d175cb865a7152e35b348d1b2960422"
+
+[[package]]
+name = "colorful"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97af0562545a7d7f3d9222fcf909963bec36dcb502afaacab98c6ffac8da47ce"
 
 [[package]]
 name = "const-str"
@@ -1076,6 +1102,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1143,7 +1178,7 @@ checksum = "10bc10261f46b8df263b80e7779d1748b1880488cd951fbb9e096430cead10e6"
 dependencies = [
  "ahash 0.8.11",
  "bitflags",
- "browserslist-rs",
+ "browserslist-rs 0.15.0",
  "const-str",
  "cssparser",
  "cssparser-color",
@@ -1545,13 +1580,13 @@ checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 
 [[package]]
 name = "preset_env_base"
-version = "0.4.13"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08ccd15679953ae0d5fa716af78b58c0bfdc69a0534bfe9ea423abd1eaaf527b"
+checksum = "1ecfcd4aefde8c1ed1ac4f1118ca5021763a717ba87f5508db7785e864dac1d8"
 dependencies = [
  "ahash 0.8.11",
  "anyhow",
- "browserslist-rs",
+ "browserslist-rs 0.16.0",
  "dashmap",
  "from_variant",
  "once_cell",
@@ -1878,6 +1913,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_spanned"
+version = "0.6.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79e674e01f999af37c49f70a6ede167a8a60b2503e56c5599532a65baa5969a0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "sha1"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2090,9 +2134,9 @@ dependencies = [
 
 [[package]]
 name = "swc"
-version = "0.278.2"
+version = "0.279.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74dc8ff088c791478379b21eb7ef03e809bd07f999dd2cc7cd0736dc9895d8c6"
+checksum = "267d1595c1992901ff8d9b0b299b000c38c1f4bcc117c7a60652acaaac77e356"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -2601,9 +2645,9 @@ dependencies = [
 
 [[package]]
 name = "swc_ecma_preset_env"
-version = "0.209.1"
+version = "0.210.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07f66d7ea30cb59057cf69159f9324dc0b0145c8d0c1c5240f67ecb3c76a5ce2"
+checksum = "9cd4847a3356a01bb9a73ccdd1c462dfdaed66d27d7ea6d6785ee1b54c9556ce"
 dependencies = [
  "anyhow",
  "dashmap",
@@ -3132,6 +3176,40 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
+name = "toml"
+version = "0.8.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f49eb2ab21d2f26bd6db7bf383edc527a7ebaee412d17af4d40fdccd442f335"
+dependencies = [
+ "serde",
+ "serde_spanned",
+ "toml_datetime",
+ "toml_edit",
+]
+
+[[package]]
+name = "toml_datetime"
+version = "0.6.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4badfd56924ae69bcc9039335b2e017639ce3f9b001c393c1b2d1ef846ce2cbf"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "toml_edit"
+version = "0.22.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f21c7aaf97f1bd9ca9d4f9e73b0a6c74bd5afef56f2bc931943a6e1c37e04e38"
+dependencies = [
+ "indexmap 2.2.2",
+ "serde",
+ "serde_spanned",
+ "toml_datetime",
+ "winnow",
+]
+
+[[package]]
 name = "tracing"
 version = "0.1.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3630,6 +3708,15 @@ name = "windows_x86_64_msvc"
 version = "0.52.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bec47e5bfd1bff0eeaf6d8b485cc1074891a197ab4225d504cb7a1ab88b02bf0"
+
+[[package]]
+name = "winnow"
+version = "0.6.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59b5e5f6c299a3c7890b876a2a587f3115162487e704907d9b6cd29473052ba1"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "winsafe"
