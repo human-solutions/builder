@@ -34,7 +34,7 @@ impl PackageConfig {
         let mut prebuild = None;
         let mut postbuild = None;
         if let Some(prebuild_val) = package.metadata.get("prebuild") {
-            prebuild = Some(PrebuildConfig::from_json(prebuild_val)?);
+            prebuild = Some(PrebuildConfig::from_json(prebuild_val).dot()?);
         }
         if let Some(postbuild_val) = package.metadata.get("postbuild") {
             postbuild = Some(PostbuildConfig::from_json(postbuild_val)?);

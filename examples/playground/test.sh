@@ -1,6 +1,8 @@
 #/bin/sh
 
-export CARGO_MANIFEST_DIR="${PWD}/playground/"
+# IMPORTANT run from the workspace root
+
+export CARGO_MANIFEST_DIR="${PWD}/examples/playground/"
 export CARGO_PKG_NAME="playground"
 export PROFILE=dev
 # export PROFILE=release

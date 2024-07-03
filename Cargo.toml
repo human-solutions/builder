@@ -2,10 +2,7 @@
 [workspace]
 resolver = "2"
 
-members = ["cmd", "playground"]
-
-[workspace.install]
-root = ".builder"
+members = ["crates/*", "examples/*"]
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
