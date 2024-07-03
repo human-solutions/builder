@@ -6,7 +6,7 @@ edition = "2021"
 license = "MIT"
 name = "builder"
 repository = "https://github.com/human-solutions/builder"
-version = "0.0.2"
+version = "0.0.3"
 
 [dependencies]
 grass = "0.13"
