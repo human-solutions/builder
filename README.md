@@ -58,17 +58,15 @@ fn main() -> ExitCode {
 
 ## Configuration
 
-The configuration of each pre- and post-build plugin is either done in the _Cargo.toml_ of the package in the
-`[package.metadata]` section, or in a separate _Builder.toml_ file next to the packages' _Cargo.toml_ files.
+The configuration of each pre- and post-build plugin is done package-level _Builder.toml_ files.
 This is done to keep the configuration close to the source.
 
 The table names are composed as:
 
-`package.metadata.[prebuild|postbuild].<assembly?>.<target-triple?><profile?>.<plugin>.<action?>`
+`[prebuild|postbuild].<assembly?>.<target-triple?><profile?>.<plugin>.<action?>`
 
 Where:
 
-- `package.metadata` is the metadata section of the package, this is not necessary when using _Builder.toml_ files.
 - `[prebuild|postbuild]` is the build phase.
 - `<assembly?>` is the optional assembly name. More regarding assemblies [below](#assemblies).
 - `<target-triple?>` is the optional platform [triple](https://doc.rust-lang.org/nightly/rustc/platform-support.html)
@@ -82,7 +80,6 @@ Where:
 Example:
 
 ```toml
-# In a Builder.toml file in the package's directory. It uses the "mobile" assembbly
 [prebuild.mobile.release.sass.compile]
 file = "style/main.scss"
 optimize = true
@@ -110,16 +107,16 @@ implementation where you can define all the helpers you need.
 Example configuration:
 
 ```toml
-[package.metadata.postbuild.release.generate] # In Cargo.toml
+[postbuild.release.generate]
 template = "src/index.html.hbs"
-helpers = ["src/helpers.rs"]
+# Any handlebar helpers
+helpers = ["src/helpers.rhai"]
 generate = "gen/index.html"
 ```
 
-Example template:
+Example _index.html.hbs_ template:
 
 ```html
-<!-- index.html.hbs -->
 <html>
   <head>
     <!-- Using the file's checksum in the URL so caching safely can be turned on -->
@@ -147,7 +144,7 @@ Note that a plugin that is defined on workspace level, but not used by any packa
 
 The configuration table names are composed as:
 
-`workspace.metadata.builder.install.<host-triple?><plugin>`
+`install.<host-triple?><plugin>`
 
 Where:
 
@@ -176,10 +173,10 @@ The options are:
 Example:
 
 ```toml
-[workspace.metadata.builder.install.nextest]
+[install.nextest]
 binstall = "cargo-nextest@v0.9.72"
 
-[workspace.metadata.builder.plugin.my-prog]
+[install.my-prog]
 version = "1.0.0"
 version-cmd = "-V"
 install = "curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/myuser/myrepo/main/install.sh | bash"
@@ -200,7 +197,7 @@ Builder can handle setting up the git hooks for you. All you need to do is to sp
 
 Configuration:
 
-`[[workspace.metadata.builder.githook.<hook-name>]]` where `<hook-name>` is the name as defined in the [githook doc](https://git-scm.com/docs/githooks).
+`[[githook.<hook-name>]]` where `<hook-name>` is the name as defined in the [githook doc](https://git-scm.com/docs/githooks).
 
 With the parameter `<plugin>` the name of the plugin to call
 
@@ -236,11 +233,11 @@ Where:
 - **Input.yaml** prepared by the builder, with the contents:
   - `envs`: (build plugins only) Environment variables defined
     [here](https://doc.rust-lang.org/cargo/reference/environment-variables.html).
-  - `configuration`: The content of the plugin's configuration in the _Cargo.toml_ or _Builder.toml_ file.
+  - `configuration`: The content of the plugin's configuration in the _Builder.toml_ file.
   - `runtime`: The current runtime configuration, including the action invoked, profile, target, etc.
   - Content of the _Output.yaml_ from previously run plugins of the same category:
     - build plugins: `<package>.<assembly?>.<plugin>.<action?>`
-    - githook plugins: `hook.<hook-name>.<plugin>`
+    - githook plugins: `githook.<hook-name>.<plugin>`
     - install plugins: `install.<host-triple?>.<plugin>`
 
 ## Outputs
