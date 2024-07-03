@@ -4,7 +4,7 @@ authors = ["henrik akesson"]
 description = "Command line tool for building web assets, wasm and mobile libs"
 edition = "2021"
 license = "MIT"
-name = "builder"
+name = "builder-poc"
 repository = "https://github.com/human-solutions/builder"
 version = "0.0.3"
 

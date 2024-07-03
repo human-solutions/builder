@@ -326,7 +326,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "builder"
+name = "builder-poc"
 version = "0.0.3"
 dependencies = [
  "anyhow",

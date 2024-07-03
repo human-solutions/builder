@@ -1,5 +1,5 @@
 use anyhow::Result;
-use builder::{CmdArgs, Config};
+use builder_poc::{CmdArgs, Config};
 use clap::{Parser, Subcommand};
 use std::process::ExitCode;
 
