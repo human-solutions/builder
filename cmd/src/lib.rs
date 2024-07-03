@@ -1,8 +1,10 @@
 mod config;
 mod ext;
 mod generate;
-mod process;
-mod runtime_info;
+mod install;
+mod postbuild;
+mod prebuild;
+mod util;
 
-pub use config::Manifest;
-pub use runtime_info::RuntimeInfo;
+pub use config::{CmdArgs, Config};
+pub use ext::anyhow;

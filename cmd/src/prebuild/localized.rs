@@ -1,11 +1,32 @@
-use anyhow::{bail, Context, Result};
 use fs_err as fs;
+use serde::Deserialize;
 use unic_langid::LanguageIdentifier;
 
-use crate::{config::Localized, RuntimeInfo};
+use crate::anyhow::{bail, Context, Result};
+use crate::generate::Output;
+use crate::Config;
+use camino::Utf8PathBuf;
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Localized {
+    /// the path to the folder containing the localised files
+    pub path: Utf8PathBuf,
+    /// The file extension (file type)
+
+    #[serde(rename = "file-extension")]
+    pub file_extension: String,
+    /// output options
+    pub out: Output,
+}
 
 impl Localized {
-    pub fn process(&self, info: &RuntimeInfo) -> Result<Vec<(LanguageIdentifier, Vec<u8>)>> {
+    pub fn url(&self, checksum: Option<String>) -> String {
+        let ext = &self.file_extension;
+        let filename = format!("{}.{ext}", self.path.iter().last().unwrap());
+        self.out.url(&filename, checksum)
+    }
+
+    pub fn process(&self, info: &Config) -> Result<Vec<(LanguageIdentifier, Vec<u8>)>> {
         let folder = info
             .existing_manifest_dir_path(&self.path)
             .context("localized path not found")?;
@@ -23,7 +44,7 @@ impl Localized {
             let file_extension_match = file
                 .path()
                 .extension()
-                .map(|ext| ext == self.file_ext)
+                .map(|ext| ext == self.file_extension)
                 .unwrap_or_default();
 
             if file_type.is_file() && file_extension_match {

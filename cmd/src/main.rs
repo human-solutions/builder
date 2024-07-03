@@ -1,16 +1,9 @@
 use anyhow::Result;
-use builder::RuntimeInfo;
-use std::env;
+use builder::{CmdArgs, Config};
+use clap::{Parser, Subcommand};
 use std::process::ExitCode;
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-
 fn main() -> ExitCode {
-    let args: Vec<String> = env::args().collect();
-    if args.contains(&"-v".to_string()) || args.contains(&"--version".to_string()) {
-        println!("builder {}", VERSION);
-        return ExitCode::SUCCESS;
-    }
     match try_main() {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
@@ -21,7 +14,23 @@ fn main() -> ExitCode {
 }
 
 fn try_main() -> Result<()> {
-    let info = RuntimeInfo::from_env()?;
-    let manifest = builder::Manifest::try_parse(&info)?;
-    manifest.process(&info)
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Prebuild(info) => Config::from_path(info)?.run_prebuild(),
+        Commands::Postbuild(info) => Config::from_path(info)?.run_postbuild(),
+    }
+}
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    #[clap(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Prebuild(CmdArgs),
+    Postbuild(CmdArgs),
 }

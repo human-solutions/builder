@@ -5,3 +5,15 @@
 
 // include!("../gen/mobile.rs");
 // include!("../gen/web.rs");
+
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen]
+extern "C" {
+    fn alert(s: &str);
+}
+
+#[wasm_bindgen]
+pub fn greet(name: &str) {
+    alert(&format!("Hello, {}!", name));
+}

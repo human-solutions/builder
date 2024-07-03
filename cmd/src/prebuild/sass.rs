@@ -1,19 +1,37 @@
-use std::process::Command;
-
-use anyhow::{anyhow, bail, Context, Result};
+use crate::anyhow::{anyhow, bail, Context, Result};
+use crate::generate::Output;
+use crate::Config;
+use camino::Utf8PathBuf;
 use fs_err as fs;
-
 use lightningcss::{
     printer::PrinterOptions,
     stylesheet::StyleSheet,
     targets::{Browsers, Targets},
 };
+use serde::Deserialize;
+use std::process::Command;
 use which::which;
 
-use crate::{config::Sass, RuntimeInfo};
+#[derive(Debug, Default, Deserialize)]
+#[serde(default)]
+pub struct Sass {
+    pub file: Utf8PathBuf,
+    pub optimize: bool,
+    pub out: Output,
+}
 
 impl Sass {
-    pub fn process(&self, info: &RuntimeInfo) -> Result<String> {
+    pub fn url(&self, checksum: Option<String>) -> String {
+        let folder = if let Some(folder) = self.out.folder.as_ref() {
+            format!("/{folder}")
+        } else {
+            "".to_string()
+        };
+        let filename = self.file.file_name().unwrap();
+        format!("{folder}/{}{filename}", checksum.unwrap_or_default())
+    }
+
+    pub fn process(&self, info: &Config) -> Result<String> {
         let file = info
             .existing_manifest_dir_path(&self.file)
             .context("sass file not found")?;
