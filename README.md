@@ -207,11 +207,11 @@ Plugins are simple executables that are called by **builder**.
 
 ## Working directory
 
-The working directories are:
+The working directories inside of `target/builder` are:
 
-- builder: `target/builder/<package>/<assembly?>/<target-triple?>/<profile?>/<plugin>/<action?>`
-- installer: `target/builder/installer/<host-triple?>/<plugin>`
-- githook: `target/builder/plugins/<host-triple?>/<plugin>`
+- builder: `<package>/<assembly?>/<target-triple?>/<profile?>/<plugin>/[pre|post]/<action?>`
+- installer: `installer/<host-triple?>/<plugin>`
+- githook: `githook/<host-triple?>/<plugin>`
 
 Where:
 
