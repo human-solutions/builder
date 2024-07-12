@@ -1,0 +1,16 @@
+[postbuild.assembly.target.profile.plugin.action1]
+test = "lorem"
+test2 = "ipsum"
+test3 = "dolor"
+
+[postbuild.assembly.target.profile.plugin.action2]
+test = "lorem"
+test2 = "ipsum"
+
+[postbuild.assembly.target.profile.plugin.overrided]
+test = "lorem"
+test2 = "ipsum"
+
+[install.clippy]
+version = "1"
+install = "clippy_url"
