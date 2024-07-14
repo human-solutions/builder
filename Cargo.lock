@@ -368,6 +368,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "builder_"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cargo_metadata",
+ "clap",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "toml",
+ "which",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
