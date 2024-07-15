@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::BuilderArgs;
+use crate::{parser, BuilderArgs};
 
 // Input :
 // - envs
@@ -49,6 +49,10 @@ pub fn run(args: BuilderArgs) -> Result<()> {
     // gather all the output.yaml generated
     // read the envs
     // create input.yaml
+
+    let table = parser::parse(format!("{}/Builder.toml", args.dir))?;
+
+    println!("{}", table.string());
 
     // let input = Input::gather_all(&args.dir)?;
 
