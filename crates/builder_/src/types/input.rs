@@ -1,13 +1,11 @@
-use super::plugin::Plugin;
+use super::{envs::Envs, plugin::Plugin};
 
 struct Input {
-    // envs: Envs,
+    envs: Envs,
     plugins: Vec<Plugin>,
     // binaries: Vec<Binary>,
     // githooks: Vec<GitHook>,
 }
-
-struct Envs;
 
 // struct Binary;
 
