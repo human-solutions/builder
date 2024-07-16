@@ -120,7 +120,6 @@ var = "value"
 
 [[githook.post-commit]]
 script = "echo 'Hello, world!'"
-
     "###;
 
     let cursor = Cursor::new(toml);
@@ -128,7 +127,11 @@ script = "echo 'Hello, world!'"
 
     let tables = process_lines(reader.lines()).unwrap();
 
-    println!("{}", tables.string());
-
-    panic!()
+    assert_eq!(
+        tables.string(),
+        r#"Table:[
+- githook.post-commit: [{"install":"true"}, {"script":"echo 'Hello, world!'"}]
+- phase.assembly.target.profile.plugin.action: {"var":"value"}
+]"#
+    );
 }
