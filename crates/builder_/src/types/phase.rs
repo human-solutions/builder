@@ -16,3 +16,13 @@ impl FromStr for Phase {
         }
     }
 }
+
+impl Phase {
+    pub fn is_postbuild(&self) -> bool {
+        matches!(self, Self::PostBuild)
+    }
+
+    pub fn is_pre_build(&self) -> bool {
+        matches!(self, Self::PreBuild)
+    }
+}

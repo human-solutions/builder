@@ -295,7 +295,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "either",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "itertools 0.12.1",
  "nom",
  "once_cell",
@@ -316,7 +316,7 @@ dependencies = [
  "ahash 0.8.11",
  "chrono",
  "either",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "itertools 0.13.0",
  "nom",
  "once_cell",
@@ -377,6 +377,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "target-lexicon",
  "toml",
  "which",
 ]
@@ -931,7 +932,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f39216c1843182f78541276fec96f88406861f16aa19cc9f8add70f8e67b7577"
 dependencies = [
  "codemap",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "lasso",
  "once_cell",
  "phf 0.11.2",
@@ -1078,9 +1079,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.2.2"
+version = "2.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "824b2ae422412366ba479e8111fd301f7b5faece8149317bb81925979a53f520"
+checksum = "168fb715dda47215e360912c096649d23d58bf392ac62f73919e831745e40f26"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.3",
@@ -1497,7 +1498,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4c5cc86750666a3ed20bdaf5ca2a0344f9c67674cae0515bec2da16fbaa47db"
 dependencies = [
  "fixedbitset",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
 ]
 
 [[package]]
@@ -1955,7 +1956,7 @@ version = "0.9.34+deprecated"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47"
 dependencies = [
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "itoa",
  "ryu",
  "serde",
@@ -2183,7 +2184,7 @@ dependencies = [
  "base64 0.21.7",
  "dashmap",
  "either",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "jsonc-parser",
  "lru",
  "once_cell",
@@ -2309,7 +2310,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84b67e115ab136fe0eb03558bb0508ca7782eeb446a96d165508c48617e3fd94"
 dependencies = [
  "anyhow",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "serde",
  "serde_json",
  "sourcemap",
@@ -2415,7 +2416,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d23a9a192078d1d074113d77d8ad811f2a81a4447ae967739824da5d391616bf"
 dependencies = [
  "arrayvec",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "is-macro",
  "serde",
  "serde_derive",
@@ -2635,7 +2636,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42abacd1c2682fd238c682209a616ebfee96abe2b9583aba273e7f1532b62bfc"
 dependencies = [
  "arrayvec",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "num-bigint",
  "num_cpus",
  "once_cell",
@@ -2692,7 +2693,7 @@ checksum = "9cd4847a3356a01bb9a73ccdd1c462dfdaed66d27d7ea6d6785ee1b54c9556ce"
 dependencies = [
  "anyhow",
  "dashmap",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "once_cell",
  "preset_env_base",
  "rustc-hash",
@@ -2737,7 +2738,7 @@ checksum = "4341c6272c4feaaf22cc8104f65ebcadac8ad2098dfacb6eb62e8c053698a40d"
 dependencies = [
  "better_scoped_tls",
  "bitflags",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "once_cell",
  "phf 0.11.2",
  "rustc-hash",
@@ -2773,7 +2774,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "626198f214d4c09adc98ab14565c19d72b6df9630f7e806ef9b2ef05a5fd17a5"
 dependencies = [
  "arrayvec",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "is-macro",
  "num-bigint",
  "serde",
@@ -2823,7 +2824,7 @@ dependencies = [
  "Inflector",
  "anyhow",
  "bitflags",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "is-macro",
  "path-clean",
  "pathdiff",
@@ -2848,7 +2849,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2f7845e59b50f8f6bf37a4067f6e91aad0c10fd5d2beb18df68b7ea7ee1ea09"
 dependencies = [
  "dashmap",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "once_cell",
  "petgraph",
  "rustc-hash",
@@ -2893,7 +2894,7 @@ checksum = "446da32cac8299973aaf1d37496562bfd0c1e4f3c3ab5d0af6f07f42e8184102"
 dependencies = [
  "base64 0.21.7",
  "dashmap",
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "once_cell",
  "serde",
  "sha1",
@@ -2932,7 +2933,7 @@ version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "146562ac3515c8de0fa9d479c43ae673cf9df9ece814f8b8130686080a7251ac"
 dependencies = [
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "rustc-hash",
  "swc_atoms",
  "swc_common",
@@ -2949,7 +2950,7 @@ version = "0.130.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca6a7f430bd83e14f3bf39f01e25806a5c403af73ff2cf94b647132594ddd63c"
 dependencies = [
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "num_cpus",
  "once_cell",
  "rustc-hash",
@@ -3006,7 +3007,7 @@ version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c00cf5c1687e9858fb9de1ffa90a3e21369095406e97ace870a389320d105b0a"
 dependencies = [
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "petgraph",
  "rustc-hash",
  "swc_common",
@@ -3131,6 +3132,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
+name = "target-lexicon"
+version = "0.12.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4873307b7c257eddcb50c9bedf158eb669578359fb28428bef438fec8e6ba7c2"
+
+[[package]]
 name = "tempfile"
 version = "3.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3243,7 +3250,7 @@ version = "0.22.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f21c7aaf97f1bd9ca9d4f9e73b0a6c74bd5afef56f2bc931943a6e1c37e04e38"
 dependencies = [
- "indexmap 2.2.2",
+ "indexmap 2.2.6",
  "serde",
  "serde_spanned",
  "toml_datetime",

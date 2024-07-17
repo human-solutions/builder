@@ -1,24 +1,15 @@
 use anyhow::Result;
 use serde_json::Value;
 
-enum ValueWrapper {
-    Array(Vec<Value>),
-    Single(Value),
-}
+use crate::types::ValueWrapper;
 
-impl Default for ValueWrapper {
-    fn default() -> Self {
-        Self::Single(Value::default())
-    }
-}
-
-struct TableEntry {
-    key: String,
-    value: ValueWrapper,
+pub struct TableEntry {
+    pub key: String,
+    pub value: ValueWrapper,
 }
 
 #[derive(Default)]
-pub(crate) struct Tables(Vec<TableEntry>);
+pub struct Tables(Vec<TableEntry>);
 
 impl Tables {
     pub fn insert(&mut self, key: String, val: Value) {
@@ -38,7 +29,11 @@ impl Tables {
         });
     }
 
-    pub(super) fn insert_empty_vec(&mut self, key: String) -> Result<()> {
+    pub fn into_iter(self) -> std::vec::IntoIter<TableEntry> {
+        self.0.into_iter()
+    }
+
+    pub fn insert_empty_vec(&mut self, key: String) -> Result<()> {
         if let Some(entry) = self.0.iter_mut().find(|entry| entry.key == key) {
             if let ValueWrapper::Array(_) = &entry.value {
                 // NOTE: if the key already exists for an array, maybe insert an empty entry ?
@@ -58,7 +53,7 @@ impl Tables {
         Ok(())
     }
 
-    pub(super) fn insert_array(&mut self, key: String, val: Value) -> Result<()> {
+    pub fn insert_array(&mut self, key: String, val: Value) -> Result<()> {
         if let Some(entry) = self.0.iter_mut().find(|entry| entry.key == key) {
             if let ValueWrapper::Array(vec) = &mut entry.value {
                 vec.push(val);
@@ -78,8 +73,8 @@ impl Tables {
         Ok(())
     }
 
-    // #[cfg(test)]
-    pub(crate) fn string(&self) -> String {
+    #[cfg(test)]
+    pub fn string(&self) -> String {
         let mut s = self
             .0
             .iter()

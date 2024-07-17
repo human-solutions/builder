@@ -1,6 +1,8 @@
 use std::{collections::HashMap, env};
 
-#[derive(Default)]
+use serde::Serialize;
+
+#[derive(Default, Serialize)]
 pub(crate) struct Envs {
     cargo: HashMap<String, String>,
     rustc: HashMap<String, String>,

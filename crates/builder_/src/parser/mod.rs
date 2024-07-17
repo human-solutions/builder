@@ -1,5 +1,4 @@
 mod str_divider;
-mod tables;
 
 use std::{
     fs::File,
@@ -10,7 +9,8 @@ use std::{
 use anyhow::{Context, Result};
 use serde_json::Value;
 use str_divider::StrDivider;
-use tables::Tables;
+
+use crate::types::Tables;
 
 pub fn parse<P>(path: P) -> Result<Tables>
 where
