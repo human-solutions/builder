@@ -10,6 +10,10 @@ test3 = "dolor"
 test = "lorem"
 test2 = "ipsum"
 
+[postbuild.web.aarch64-apple-darwin.custom2.plugin.action2]
+test = "lorem"
+test2 = "ipsum"
+
 [postbuild.web.aarch64-apple-darwin.custom.plugin.action3]
 test = "lorem"
 test2 = "ipsum"

@@ -88,10 +88,8 @@ impl Input {
                     plugin
                 ))?;
 
-            let assembly = Assembly::new(assembly, target, profile, value)?;
-
             plugins[plugin_idx]
-                .push_action(&phase, action, assembly)
+                .push_action(&phase, action, assembly, target, profile, value)
                 .context(format!("Failed to add action to plugin '{plugin}'",))?;
         }
 

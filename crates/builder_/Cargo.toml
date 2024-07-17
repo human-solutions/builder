@@ -6,6 +6,9 @@ version = "0.1.0"
 [profile.custom]
 opt-level = 1
 
+[profile.custom2]
+opt-level = 1
+
 [dependencies]
 anyhow = "1.0"
 cargo_metadata = "0.18"

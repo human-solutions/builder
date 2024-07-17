@@ -17,41 +17,101 @@ impl Plugin {
         &mut self,
         phase: &Phase,
         action: Option<String>,
-        assembly: Assembly,
+        assembly: Option<String>,
+        target: Option<String>,
+        profile: Option<String>,
+        output: ValueWrapper,
     ) -> Result<()> {
         if phase.is_pre_build() {
             if let Some(pos) = self.has_prebuild_action(&action) {
-                if self.prebuild[pos].has_target(&assembly.target.name) {
-                    anyhow::bail!(format!(
-                        "Prebuild action '{}' with target '{}' already exists",
-                        action.unwrap_or_default(),
-                        assembly.target.name.unwrap_or_default()
-                    ));
+                if let Some(a_pos) = self.prebuild[pos].has_assembly(&assembly) {
+                    if let Some(t_pos) = self.prebuild[pos].assemblies[a_pos].has_target(&target) {
+                        //
+                        if self.prebuild[pos].assemblies[a_pos].targets[t_pos]
+                            .has_profile(&profile)
+                            .is_some()
+                        {
+                            anyhow::bail!(format!(
+                                "Profile '{}' already exists for plugin '{}':'{}'.'{}'",
+                                profile.unwrap_or_default(),
+                                self.name,
+                                assembly.unwrap_or_default(),
+                                target.unwrap_or_default(),
+                            ));
+                        } else {
+                            self.prebuild[pos].assemblies[a_pos].targets[t_pos]
+                                .push(profile, output)
+                                .context(format!(
+                                    "Plugin '{}':'{}'.'{}'",
+                                    self.name,
+                                    assembly.unwrap_or_default(),
+                                    target.unwrap_or_default(),
+                                ))?;
+                        }
+                    } else {
+                        self.prebuild[pos].assemblies[a_pos]
+                            .push(target, profile, output)
+                            .context(format!(
+                                "Failed to add target to plugin '{}':'{}'",
+                                self.name,
+                                assembly.unwrap_or_default(),
+                            ))?;
+                    }
                 } else {
-                    self.prebuild[pos].assemblies.push(assembly);
+                    self.prebuild[pos]
+                        .push(assembly, target, profile, output)
+                        .context(format!("Failed to add assembly to plugin '{}'", self.name))?;
                 }
             } else {
-                self.prebuild.push(Action {
-                    action,
-                    assemblies: vec![assembly],
-                });
+                let action = Action::new(action, assembly, target, profile, output)
+                    .context(format!("Failed to add action to plugin '{}'", self.name))?;
+
+                self.prebuild.push(action);
             }
         } else if phase.is_postbuild() {
             if let Some(pos) = self.has_postbuild_action(&action) {
-                if self.postbuild[pos].has_target(&assembly.target.name) {
-                    anyhow::bail!(format!(
-                        "Postbuild action '{}' with target '{}' already exists",
-                        action.unwrap_or_default(),
-                        assembly.target.name.unwrap_or_default()
-                    ));
+                if let Some(a_pos) = self.postbuild[pos].has_assembly(&assembly) {
+                    if let Some(t_pos) = self.postbuild[pos].assemblies[a_pos].has_target(&target) {
+                        if self.postbuild[pos].assemblies[a_pos].targets[t_pos]
+                            .has_profile(&profile)
+                            .is_some()
+                        {
+                            anyhow::bail!(format!(
+                                "Profile '{}' already exists for plugin '{}':'{}'.'{}'",
+                                profile.unwrap_or_default(),
+                                self.name,
+                                assembly.unwrap_or_default(),
+                                target.unwrap_or_default(),
+                            ));
+                        } else {
+                            self.postbuild[pos].assemblies[a_pos].targets[t_pos]
+                                .push(profile, output)
+                                .context(format!(
+                                    "Plugin '{}':'{}'.'{}'",
+                                    self.name,
+                                    assembly.unwrap_or_default(),
+                                    target.unwrap_or_default(),
+                                ))?;
+                        }
+                    } else {
+                        self.postbuild[pos].assemblies[a_pos]
+                            .push(target, profile, output)
+                            .context(format!(
+                                "Failed to add target to plugin '{}':'{}'",
+                                self.name,
+                                assembly.unwrap_or_default(),
+                            ))?;
+                    }
                 } else {
-                    self.postbuild[pos].assemblies.push(assembly);
+                    self.postbuild[pos]
+                        .push(assembly, target, profile, output)
+                        .context(format!("Failed to add assembly to plugin '{}'", self.name))?;
                 }
             } else {
-                self.postbuild.push(Action {
-                    action,
-                    assemblies: vec![assembly],
-                });
+                let action = Action::new(action, assembly, target, profile, output)
+                    .context(format!("Failed to add action  to plugin '{}'", self.name))?;
+
+                self.postbuild.push(action);
             }
         }
 
@@ -59,68 +119,147 @@ impl Plugin {
     }
 
     fn has_prebuild_action(&self, action_name: &Option<String>) -> Option<usize> {
-        self.prebuild.iter().position(|a| a.action == *action_name)
+        self.prebuild.iter().position(|a| a.name == *action_name)
     }
 
     fn has_postbuild_action(&self, action_name: &Option<String>) -> Option<usize> {
-        self.postbuild.iter().position(|a| a.action == *action_name)
+        self.postbuild.iter().position(|a| a.name == *action_name)
     }
 }
 
 #[derive(Serialize)]
 pub struct Action {
-    action: Option<String>,
+    #[serde(rename = "action")]
+    name: Option<String>,
     assemblies: Vec<Assembly>,
 }
 
 impl Action {
-    pub fn has_target(&self, target: &Option<String>) -> bool {
-        self.assemblies.iter().any(|a| a.target.name == *target)
+    fn has_assembly(&self, assembly_name: &Option<String>) -> Option<usize> {
+        self.assemblies
+            .iter()
+            .position(|a| a.name == *assembly_name)
+    }
+
+    fn push(
+        &mut self,
+        assembly: Option<String>,
+        target: Option<String>,
+        profile: Option<String>,
+        output: ValueWrapper,
+    ) -> Result<()> {
+        let assembly = Assembly::new(assembly, target, profile, output).context(format!(
+            "action-add-assembly:'{}'",
+            self.name.as_ref().unwrap_or(&"".to_string())
+        ))?;
+
+        self.assemblies.push(assembly);
+
+        Ok(())
+    }
+
+    fn new(
+        name: Option<String>,
+        assembly: Option<String>,
+        target: Option<String>,
+        profile: Option<String>,
+        output: ValueWrapper,
+    ) -> Result<Self> {
+        let assembly = Assembly::new(assembly, target, profile, output).context(format!(
+            "create_action:'{}'",
+            name.as_ref().unwrap_or(&"".to_string())
+        ))?;
+
+        Ok(Self {
+            name,
+            assemblies: vec![assembly],
+        })
     }
 }
 
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 pub struct Assembly {
     #[serde(rename = "assembly")]
     name: Option<String>,
-    target: Target,
+    targets: Vec<Target>,
 }
 
 impl Assembly {
-    pub fn new(
+    fn has_target(&self, target_name: &Option<String>) -> Option<usize> {
+        self.targets.iter().position(|t| t.name == *target_name)
+    }
+
+    fn push(
+        &mut self,
+        target: Option<String>,
+        profile: Option<String>,
+        output: ValueWrapper,
+    ) -> Result<()> {
+        let target = Target::new(target, profile, output).context(format!(
+            "assembly-add-target:'{}'",
+            self.name.as_ref().unwrap_or(&"".to_string())
+        ))?;
+
+        self.targets.push(target);
+
+        Ok(())
+    }
+
+    fn new(
         name: Option<String>,
         target: Option<String>,
         profile: Option<String>,
         output: ValueWrapper,
     ) -> Result<Self> {
-        if let ValueWrapper::Single(output) = output {
-            Ok(Self {
-                name,
-                target: Target::new(target, profile, output),
-            })
-        } else {
-            anyhow::bail!("Expected action data from table but action data defined as table array")
-        }
+        let target = Target::new(target, profile, output).context(format!(
+            "create-assembly:'{}'",
+            name.as_ref().unwrap_or(&"".to_string())
+        ))?;
+
+        Ok(Self {
+            name,
+            targets: vec![target],
+        })
     }
 }
 
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 struct Target {
-    #[serde(rename = "arch")]
+    #[serde(rename = "triple")]
     name: Option<String>,
-    profile: Profile,
+    profiles: Vec<Profile>,
 }
 
 impl Target {
-    fn new(name: Option<String>, profile: Option<String>, output: Value) -> Self {
-        Self {
+    fn has_profile(&self, profile_name: &Option<String>) -> Option<usize> {
+        self.profiles.iter().position(|p| p.name == *profile_name)
+    }
+
+    fn push(&mut self, profile: Option<String>, output: ValueWrapper) -> Result<()> {
+        let profile = Profile::new(profile, output).context(format!(
+            "target-add-profile:'{}'",
+            self.name.as_ref().unwrap_or(&"".to_string())
+        ))?;
+
+        self.profiles.push(profile);
+
+        Ok(())
+    }
+
+    fn new(name: Option<String>, profile: Option<String>, output: ValueWrapper) -> Result<Self> {
+        let profile = Profile::new(profile, output).context(format!(
+            "create-target:'{}'",
+            name.as_ref().unwrap_or(&"".to_string())
+        ))?;
+
+        Ok(Self {
             name,
-            profile: Profile::new(profile, output),
-        }
+            profiles: vec![profile],
+        })
     }
 }
 
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 struct Profile {
     #[serde(rename = "profile")]
     name: Option<String>,
@@ -128,8 +267,14 @@ struct Profile {
 }
 
 impl Profile {
-    fn new(name: Option<String>, output: Value) -> Self {
-        Self { name, output }
+    fn new(name: Option<String>, output: ValueWrapper) -> Result<Self> {
+        if let ValueWrapper::Single(output) = output {
+            Ok(Self { name, output })
+        } else {
+            Err(anyhow::Error::msg(
+                "Expected output data from table but output data defined as table array",
+            ))
+        }
     }
 }
 
