@@ -13,39 +13,44 @@ pub struct Plugin {
 }
 
 impl Plugin {
-    pub fn push_action(&mut self, phase: &Phase, action: Option<String>, spec: Spec) -> Result<()> {
+    pub fn push_action(
+        &mut self,
+        phase: &Phase,
+        action: Option<String>,
+        assembly: Assembly,
+    ) -> Result<()> {
         if phase.is_pre_build() {
             if let Some(pos) = self.has_prebuild_action(&action) {
-                if self.prebuild[pos].has_target(&spec.target) {
+                if self.prebuild[pos].has_target(&assembly.target.name) {
                     anyhow::bail!(format!(
                         "Prebuild action '{}' with target '{}' already exists",
                         action.unwrap_or_default(),
-                        spec.target.unwrap_or_default()
+                        assembly.target.name.unwrap_or_default()
                     ));
                 } else {
-                    self.prebuild[pos].specs.push(spec);
+                    self.prebuild[pos].assemblies.push(assembly);
                 }
             } else {
                 self.prebuild.push(Action {
                     action,
-                    specs: vec![spec],
+                    assemblies: vec![assembly],
                 });
             }
         } else if phase.is_postbuild() {
             if let Some(pos) = self.has_postbuild_action(&action) {
-                if self.postbuild[pos].has_target(&spec.target) {
+                if self.postbuild[pos].has_target(&assembly.target.name) {
                     anyhow::bail!(format!(
                         "Postbuild action '{}' with target '{}' already exists",
                         action.unwrap_or_default(),
-                        spec.target.unwrap_or_default()
+                        assembly.target.name.unwrap_or_default()
                     ));
                 } else {
-                    self.postbuild[pos].specs.push(spec);
+                    self.postbuild[pos].assemblies.push(assembly);
                 }
             } else {
                 self.postbuild.push(Action {
                     action,
-                    specs: vec![spec],
+                    assemblies: vec![assembly],
                 });
             }
         }
@@ -58,47 +63,73 @@ impl Plugin {
     }
 
     fn has_postbuild_action(&self, action_name: &Option<String>) -> Option<usize> {
-        self.prebuild.iter().position(|a| a.action == *action_name)
+        self.postbuild.iter().position(|a| a.action == *action_name)
     }
 }
 
 #[derive(Serialize)]
 pub struct Action {
     action: Option<String>,
-    specs: Vec<Spec>,
+    assemblies: Vec<Assembly>,
 }
 
 impl Action {
     pub fn has_target(&self, target: &Option<String>) -> bool {
-        self.specs.iter().any(|spec| spec.target == *target)
+        self.assemblies.iter().any(|a| a.target.name == *target)
     }
 }
 
 #[derive(Serialize)]
-pub struct Spec {
-    assembly: Option<String>,
-    target: Option<String>,
-    profile: Option<String>,
-    output: Value,
+pub struct Assembly {
+    #[serde(rename = "assembly")]
+    name: Option<String>,
+    target: Target,
 }
 
-impl Spec {
+impl Assembly {
     pub fn new(
-        assembly: Option<String>,
+        name: Option<String>,
         target: Option<String>,
         profile: Option<String>,
         output: ValueWrapper,
     ) -> Result<Self> {
-        if let ValueWrapper::Single(val) = output {
+        if let ValueWrapper::Single(output) = output {
             Ok(Self {
-                assembly,
-                target,
-                profile,
-                output: val,
+                name,
+                target: Target::new(target, profile, output),
             })
         } else {
-            anyhow::bail!("Expected output value as single value but found as array");
+            anyhow::bail!("Expected action data from table but action data defined as table array")
         }
+    }
+}
+
+#[derive(Serialize)]
+struct Target {
+    #[serde(rename = "arch")]
+    name: Option<String>,
+    profile: Profile,
+}
+
+impl Target {
+    fn new(name: Option<String>, profile: Option<String>, output: Value) -> Self {
+        Self {
+            name,
+            profile: Profile::new(profile, output),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct Profile {
+    #[serde(rename = "profile")]
+    name: Option<String>,
+    output: Value,
+}
+
+impl Profile {
+    fn new(name: Option<String>, output: Value) -> Self {
+        Self { name, output }
     }
 }
 

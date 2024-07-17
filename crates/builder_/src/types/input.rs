@@ -1,14 +1,14 @@
 use std::{fs::File, io::Write};
 
 use anyhow::{Context, Result};
-use cargo_metadata::MetadataCommand;
+// use cargo_metadata::MetadataCommand;
 use serde::Serialize;
 
-use crate::{parser, types::plugin::Spec, BuilderArgs};
+use crate::{parser, BuilderArgs};
 
 use super::{
     envs::Envs,
-    plugin::{Plugin, Setup},
+    plugin::{Assembly, Plugin, Setup},
     profiles::Profiles,
     table_keys::{ConfigKey, InstallKey},
     tables::TableEntry,
@@ -23,10 +23,10 @@ pub struct Input {
 
 impl Input {
     pub fn gather(args: BuilderArgs) -> Result<Self> {
-        let metadata = MetadataCommand::new()
-            .manifest_path(args.dir.join("Cargo.toml"))
-            .exec()?;
-        let package = metadata.root_package().context("root package not found")?;
+        // let metadata = MetadataCommand::new()
+        //     .manifest_path(args.dir.join("Cargo.toml"))
+        //     .exec()?;
+        // let package = metadata.root_package().context("root package not found")?;
 
         let envs = Envs::gather();
         let profiles = Profiles::gather(&args.dir)?;
@@ -88,11 +88,10 @@ impl Input {
                     plugin
                 ))?;
 
-            let spec = Spec::new(assembly, target, profile, value)
-                .context(format!("Failed to create spec for plugin {}", plugin))?;
+            let assembly = Assembly::new(assembly, target, profile, value)?;
 
             plugins[plugin_idx]
-                .push_action(&phase, action, spec)
+                .push_action(&phase, action, assembly)
                 .context(format!("Failed to add action to plugin '{plugin}'",))?;
         }
 
