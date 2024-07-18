@@ -1,7 +1,6 @@
 use std::{fs::File, io::Write};
 
 use anyhow::{Context, Result};
-// use cargo_metadata::MetadataCommand;
 use serde::Serialize;
 
 use crate::{parser, BuilderArgs};
