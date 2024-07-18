@@ -1,6 +1,7 @@
 mod envs;
 mod githook;
 mod input;
+mod output;
 mod phase;
 mod plugin;
 mod profiles;

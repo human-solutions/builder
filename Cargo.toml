@@ -28,3 +28,6 @@ targets = [
 pr-run-mode = "plan"
 # Whether to install an updater program
 install-updater = false
+
+[workspace.dependencies]
+builder-poc = { path = "crates/builder-poc" }

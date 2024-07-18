@@ -8,6 +8,7 @@ use crate::{parser, BuilderArgs};
 use super::{
     envs::Envs,
     githook::GitHook,
+    output::Outputs,
     plugin::{Plugin, Setup},
     profiles::Profiles,
     table::{ConfigKey, InstallKey, TableEntry},
@@ -18,6 +19,7 @@ pub struct Input {
     envs: Envs,
     plugins: Vec<Plugin>,
     githooks: Vec<GitHook>,
+    outputs: Outputs,
 }
 
 impl Input {
@@ -102,10 +104,13 @@ impl Input {
             githooks.push(githook);
         }
 
+        let outputs = Outputs::gather(&args.dir)?;
+
         Ok(Self {
             envs,
             plugins,
             githooks,
+            outputs,
         })
     }
 
