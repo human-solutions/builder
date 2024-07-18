@@ -8,7 +8,7 @@ use crate::{parser, BuilderArgs};
 
 use super::{
     envs::Envs,
-    plugin::{Assembly, Plugin, Setup},
+    plugin::{Plugin, Setup},
     profiles::Profiles,
     table_keys::{ConfigKey, InstallKey},
     tables::TableEntry,
