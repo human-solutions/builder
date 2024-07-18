@@ -11,8 +11,7 @@ use super::{
     githook::GitHook,
     plugin::{Plugin, Setup},
     profiles::Profiles,
-    table_keys::{ConfigKey, InstallKey},
-    tables::TableEntry,
+    table::{ConfigKey, InstallKey, TableEntry},
 };
 
 #[derive(Serialize)]
@@ -24,11 +23,6 @@ pub struct Input {
 
 impl Input {
     pub fn gather(args: BuilderArgs) -> Result<Self> {
-        // let metadata = MetadataCommand::new()
-        //     .manifest_path(args.dir.join("Cargo.toml"))
-        //     .exec()?;
-        // let package = metadata.root_package().context("root package not found")?;
-
         let envs = Envs::gather();
         let profiles = Profiles::gather(&args.dir)?;
 
@@ -98,7 +92,7 @@ impl Input {
 
         for TableEntry { key, value } in hook_tables.into_iter() {
             let (_, hook_phase) = key.split_once('.').context(format!(
-                "Failed to split githook table key into phase and hook name: {}",
+                "Failed to retrieve githook stage from table key: {}",
                 key
             ))?;
 

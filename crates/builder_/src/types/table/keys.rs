@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::{Context, Result};
 use target_lexicon::Triple;
 
-use super::{phase::Phase, plugin::Plugin, profiles::Profiles};
+use crate::types::{phase::Phase, plugin::Plugin, profiles::Profiles};
 
 #[derive(Debug)]
 enum ConfigKeyPart {
@@ -20,7 +20,7 @@ fn validate_key_part(part: &str, expected: &ConfigKeyPart, profiles: &Profiles) 
     }
 }
 
-pub(super) struct ConfigKey {
+pub struct ConfigKey {
     pub phase: Phase,
     pub assembly: Option<String>,
     pub target: Option<String>,
