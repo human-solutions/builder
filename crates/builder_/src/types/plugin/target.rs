@@ -6,7 +6,7 @@ use crate::types::ValueWrapper;
 use super::profile::Profile;
 
 #[derive(Default, Serialize)]
-pub(super) struct Target {
+pub struct Target {
     #[serde(rename = "triple")]
     pub name: Option<String>,
     pub profiles: Vec<Profile>,

@@ -5,7 +5,7 @@ use serde_json::Value;
 use crate::types::ValueWrapper;
 
 #[derive(Default, Serialize)]
-pub(super) struct Profile {
+pub struct Profile {
     #[serde(rename = "profile")]
     pub name: Option<String>,
     pub output: Value,
