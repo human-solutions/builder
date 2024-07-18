@@ -51,7 +51,8 @@ impl Input {
 
             let setup = Setup::try_from_value(&table.value)
                 .context(format!("{}: ", table.key))?
-                .with_target(key.target);
+                .with_target(key.target)
+                .context(format!("{}: ", table.key))?;
 
             if let Some(pos) = plugins.iter().position(|p: &Plugin| p.name == key.plugin) {
                 plugins[pos].setup.push(setup);
@@ -113,6 +114,20 @@ impl Input {
 
         let mut file = File::create("input.yaml")?;
         file.write_all(yaml_string.as_bytes())?;
+
+        Ok(())
+    }
+
+    pub fn check_plugins(&self) -> Result<()> {
+        let mut bins = Vec::new();
+
+        for plugin in &self.plugins {
+            bins.extend(plugin.check()?);
+        }
+
+        for bin in bins {
+            println!("{bin}");
+        }
 
         Ok(())
     }

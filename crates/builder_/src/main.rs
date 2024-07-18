@@ -1,4 +1,5 @@
 mod builder;
+mod cmd_runner;
 mod parser;
 mod types;
 

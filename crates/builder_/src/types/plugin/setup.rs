@@ -3,11 +3,13 @@ use serde::Serialize;
 
 use crate::types::ValueWrapper;
 
-use super::installer::Installer;
+use super::installer::{Binary, Installer};
 
 #[derive(Serialize)]
 pub struct Setup {
     target: Option<String>,
+    #[serde(rename = "cmd-alias")]
+    cmd_alias: Option<String>,
     version: Option<String>,
     version_cmd: Option<String>,
     installer: Installer,
@@ -18,6 +20,7 @@ pub struct Setup {
 impl Setup {
     pub fn try_from_value(value: &ValueWrapper) -> Result<Self> {
         if let ValueWrapper::Single(value) = value {
+            let mut cmd_alias = None;
             let mut version = None;
             let mut version_cmd = None;
             let mut installer = Installer::default();
@@ -66,10 +69,17 @@ impl Setup {
                             .context("Failed to read args value as string")?
                             .to_string(),
                     );
+                } else if key == "cmd-alias" {
+                    cmd_alias = Some(
+                        val.as_str()
+                            .context("Failed to read cmd-alias value as string")?
+                            .to_string(),
+                    );
                 }
             }
 
             Ok(Self {
+                cmd_alias,
                 target: None,
                 version,
                 version_cmd,
@@ -84,8 +94,27 @@ impl Setup {
         }
     }
 
-    pub fn with_target(mut self, target: Option<String>) -> Self {
+    pub fn with_target(mut self, target: Option<String>) -> Result<Self> {
+        if target.is_some() && self.cmd_alias.is_none() {
+            anyhow::bail!("cmd-alias is required when target is defined");
+        }
+
         self.target = target;
-        self
+
+        Ok(self)
+    }
+
+    pub fn check(&self, name: &str) -> Result<Binary> {
+        self.installer
+            .check(
+                name,
+                self.cmd_alias.as_ref(),
+                self.version_cmd.as_ref(),
+                &self.target,
+            )
+            .context(format!(
+                "Failed to check for '{}' target",
+                self.target.as_ref().unwrap_or(&"".to_owned())
+            ))
     }
 }

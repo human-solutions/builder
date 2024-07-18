@@ -53,7 +53,9 @@ pub fn run(args: BuilderArgs) -> Result<()> {
     // let input = Input::gather_all(&args.dir)?;
     let input = Input::gather(args)?;
 
-    input.save_file()?;
+    // input.save_file()?;
+
+    input.check_plugins()?;
 
     // for (key, val) in input.configs.0 {
     //     println!("{key:?} -> {val}");

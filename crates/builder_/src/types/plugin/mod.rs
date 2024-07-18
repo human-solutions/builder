@@ -7,6 +7,7 @@ mod target;
 
 use action::Action;
 use anyhow::{Context, Result};
+pub use installer::Binary;
 use serde::Serialize;
 pub use setup::Setup;
 
@@ -124,6 +125,20 @@ impl Plugin {
         }
 
         Ok(())
+    }
+
+    pub fn check(&self) -> Result<Vec<Binary>> {
+        let mut bins = Vec::new();
+
+        for setup in &self.setup {
+            bins.push(
+                setup
+                    .check(&self.name)
+                    .context(format!("Failed to check plugin '{}'", self.name))?,
+            );
+        }
+
+        Ok(bins)
     }
 
     fn has_prebuild_action(&self, action_name: &Option<String>) -> Option<usize> {
