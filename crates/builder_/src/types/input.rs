@@ -8,6 +8,7 @@ use crate::{parser, BuilderArgs};
 
 use super::{
     envs::Envs,
+    githook::GitHook,
     plugin::{Plugin, Setup},
     profiles::Profiles,
     table_keys::{ConfigKey, InstallKey},
@@ -18,7 +19,7 @@ use super::{
 pub struct Input {
     envs: Envs,
     plugins: Vec<Plugin>,
-    // githooks: Vec<GitHook>,
+    githooks: Vec<GitHook>,
 }
 
 impl Input {
@@ -34,7 +35,7 @@ impl Input {
         let tables = parser::parse(format!("{}/Builder.toml", args.dir))?;
 
         let mut installs = Vec::new();
-        let mut githooks = Vec::new();
+        let mut hook_tables = Vec::new();
         let mut configs = Vec::new();
 
         for table in tables.into_iter() {
@@ -43,7 +44,7 @@ impl Input {
             } else if table.key.starts_with("prebuild") || table.key.starts_with("postbuild") {
                 configs.push(table);
             } else if table.key.starts_with("githook") {
-                githooks.push(table)
+                hook_tables.push(table)
             } else {
                 // unknown key
                 // NOTE: ignore for now
@@ -93,10 +94,24 @@ impl Input {
                 .context(format!("Failed to add action to plugin '{plugin}'",))?;
         }
 
+        let mut githooks = Vec::new();
+
+        for TableEntry { key, value } in hook_tables.into_iter() {
+            let (_, hook_phase) = key.split_once('.').context(format!(
+                "Failed to split githook table key into phase and hook name: {}",
+                key
+            ))?;
+
+            let githook = GitHook::new(hook_phase, value, &plugins)
+                .context("failed to process githook table entry")?;
+
+            githooks.push(githook);
+        }
+
         Ok(Self {
             envs,
             plugins,
-            // githooks,
+            githooks,
         })
     }
 

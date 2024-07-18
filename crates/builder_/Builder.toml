@@ -25,3 +25,9 @@ test2 = "ipsum"
 [install.clippy]
 version = "1"
 install = "cargo_cmd_package_name"
+
+[githook.pre-commit]
+plugin = {}
+
+[githook.post-commit]
+plugin = {}
