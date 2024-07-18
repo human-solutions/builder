@@ -1,4 +1,4 @@
-use std::process::{Child, Command, ExitCode, ExitStatus, Output, Stdio};
+use std::process::{Child, Command, ExitCode, Output, Stdio};
 
 pub type CmdResult<T> = Result<T, ExitCode>;
 

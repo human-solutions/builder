@@ -1,14 +1,11 @@
 mod builder;
 mod cmd_runner;
-mod envs;
-mod input;
-mod output;
-mod tables;
+mod parser;
+mod types;
 
 use std::process::ExitCode;
 
 use anyhow::Result;
-use builder::Builder;
 use cargo_metadata::camino::Utf8PathBuf;
 use clap::Parser;
 
@@ -25,7 +22,7 @@ fn main() -> ExitCode {
 fn try_main() -> Result<()> {
     let args = BuilderArgs::parse();
 
-    Builder::run(args)
+    builder::run(args)
 }
 
 #[derive(Parser, Debug)]

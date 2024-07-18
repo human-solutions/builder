@@ -1,0 +1,173 @@
+envs:
+  cargo:
+    CARGO_HOME: /Users/silver/.cargo
+    CARGO_PKG_LICENSE_FILE: ''
+    CARGO_PKG_NAME: builder
+    CARGO_PKG_AUTHORS: ''
+    CARGO_PKG_RUST_VERSION: ''
+    CARGO_PKG_VERSION_MINOR: '1'
+    CARGO_PKG_VERSION_PRE: ''
+    CARGO_MANIFEST_DIR: /Users/silver/Developer/rust/builder/crates/builder
+    CARGO_PKG_LICENSE: ''
+    CARGO_PKG_VERSION_PATCH: '0'
+    CARGO_PKG_VERSION: 0.1.0
+    CARGO_PKG_DESCRIPTION: ''
+    CARGO_PKG_README: ''
+    CARGO_PKG_HOMEPAGE: ''
+    CARGO_PKG_VERSION_MAJOR: '0'
+    CARGO_PKG_REPOSITORY: ''
+  rustc: {}
+  other:
+    GIT_ASKPASS: /Applications/Visual Studio Code.app/Contents/Resources/app/extensions/git/dist/askpass.sh
+    HOMEBREW_CELLAR: /opt/homebrew/Cellar
+    PROMPT_MULTILINE_INDICATOR: "%{\e[38;2;17;2;46m%}∙%{\e[0m%} "
+    INFOPATH: '/opt/homebrew/share/info:'
+    MallocNanoZone: '0'
+    NVM_BIN: /Users/silver/.nvm/versions/node/v20.9.0/bin
+    COMMAND_MODE: unix2003
+    NVM_INC: /Users/silver/.nvm/versions/node/v20.9.0/include/node
+    ORIGINAL_XDG_CURRENT_DESKTOP: undefined
+    TERM_PROGRAM_VERSION: 1.91.1
+    TMPDIR: /var/folders/px/6wk6b6j90g5_fdq2g_wf5vpw0000gp/T/
+    __CF_USER_TEXT_ENCODING: 0x1F6:0x0:0x0
+    DIRS_POSITION: '0'
+    RUSTUP_HOME: /Users/silver/.rustup
+    CARGO: /Users/silver/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo
+    NU_LOG_FORMAT: '%ANSI_START%%DATE%|%LEVEL%|%MSG%%ANSI_STOP%'
+    CMD_DURATION_MS: '523'
+    NVM_CD_FLAGS: -q
+    LAST_EXIT_CODE: '0'
+    PKG_CONFIG_PATH: /opt/homebrew/Cellar/libzim/9.1.0/lib/pkgconfig:/opt/homebrew/opt/icu4c/lib/pkgconfig
+    HOME: /Users/silver
+    MANPATH: '/opt/homebrew/share/man::'
+    CURRENT_FILE: /Users/silver/.cache/starship/init.nu
+    PWD: /Users/silver/Developer/rust/builder/crates/builder
+    VSCODE_GIT_IPC_HANDLE: /var/folders/px/6wk6b6j90g5_fdq2g_wf5vpw0000gp/T/vscode-git-3bc9362364.sock
+    XPC_SERVICE_NAME: application.com.microsoft.VSCode.26178319.26178325
+    TERM: xterm-256color
+    COLORTERM: truecolor
+    _: /Applications/Visual Studio Code.app/Contents/MacOS/Electron
+    STARSHIP_SHELL: nu
+    NU_LOG_DATE_FORMAT: '%Y-%m-%dT%H:%M:%S%.3f'
+    SHELL: /bin/zsh
+    DYLD_FALLBACK_LIBRARY_PATH: /Users/silver/Developer/rust/builder/target/debug/build/cxx-e918b181939408aa/out:/Users/silver/Developer/rust/builder/target/debug/build/link-cplusplus-9c50e06431e3990f/out:/Users/silver/Developer/rust/builder/target/debug/build/psm-dbe6dc690e8efe1d/out:/Users/silver/Developer/rust/builder/target/debug/build/wasm-opt-cxx-sys-a73fc2191f9a4005/out:/Users/silver/Developer/rust/builder/target/debug/build/wasm-opt-sys-08970d2adcbdc828/out:/Users/silver/Developer/rust/builder/target/debug/deps:/Users/silver/Developer/rust/builder/target/debug:/Users/silver/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib:/Users/silver/.rustup/toolchains/stable-aarch64-apple-darwin/lib:/Users/silver/lib:/usr/local/lib:/usr/lib
+    FILE_PWD: /Users/silver/.cache/starship
+    LANG: en_US.UTF-8
+    SECURITYSESSIONID: 186a3
+    VSCODE_GIT_ASKPASS_MAIN: /Applications/Visual Studio Code.app/Contents/Resources/app/extensions/git/dist/askpass-main.js
+    SHLVL: '0'
+    SSH_AUTH_SOCK: /private/tmp/com.apple.launchd.wzZTCehNZ8/Listeners
+    PROMPT_INDICATOR: ''
+    LOGNAME: silver
+    USER: silver
+    VSCODE_GIT_ASKPASS_NODE: /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/Contents/MacOS/Code Helper (Plugin)
+    XPC_FLAGS: '0x0'
+    HOMEBREW_REPOSITORY: /opt/homebrew
+    NVM_DIR: /Users/silver/.nvm
+    OLDPWD: /Users/silver/Developer/rust/builder
+    STARSHIP_SESSION_KEY: lyBRn46oEko1UGDJ
+    PATH: /opt/homebrew/bin:/opt/homebrew/sbin:/Users/silver/.nvm/versions/node/v20.9.0/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/opt/powershell/bin/pwsh:/Users/silver/.zimtools:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Users/silver/.cargo/bin:/Users/silver/Library/Application Support/JetBrains/Toolbox/scripts
+    NU_VERSION: 0.87.1
+    HOMEBREW_PREFIX: /opt/homebrew
+    RUST_RECURSION_COUNT: '1'
+    __CFBundleIdentifier: com.microsoft.VSCode
+    VSCODE_GIT_ASKPASS_EXTRA_ARGS: ''
+    LaunchInstanceID: 93613268-6F87-4742-8E2D-42A7090CE6B4
+    RUSTUP_TOOLCHAIN: stable-aarch64-apple-darwin
+    TERM_PROGRAM: vscode
+plugins:
+- name: plugin
+  prebuild: []
+  postbuild:
+  - action: action1
+    assemblies:
+    - assembly: web
+      targets:
+      - triple: aarch64-apple-darwin
+        profiles:
+        - profile: custom
+          output:
+            test: lorem
+            test2: ipsum
+            test3: dolor
+  - action: action2
+    assemblies:
+    - assembly: web
+      targets:
+      - triple: aarch64-apple-darwin
+        profiles:
+        - profile: custom
+          output:
+            test: lorem
+            test2: ipsum
+        - profile: custom2
+          output:
+            test: lorem
+            test2: ipsum
+  - action: action3
+    assemblies:
+    - assembly: web
+      targets:
+      - triple: aarch64-apple-darwin
+        profiles:
+        - profile: custom
+          output:
+            test: lorem
+            test2: ipsum
+      - triple: i686-pc-windows-msvc
+        profiles:
+        - profile: custom
+          output:
+            test: lorem
+            test2: ipsum
+  setup:
+  - target: i686-pc-windows-msvc
+    cmd-alias: plugin
+    version: null
+    version_cmd: null
+    installer: Cargo
+    watch: []
+    args: null
+  - target: aarch64-apple-darwin
+    cmd-alias: plugin
+    version: null
+    version_cmd: null
+    installer: Cargo
+    watch: []
+    args: null
+- name: clippy
+  prebuild: []
+  postbuild: []
+  setup:
+  - target: null
+    cmd-alias: cargo-clippy
+    version: '1'
+    version_cmd: null
+    installer: Cargo
+    watch: []
+    args: null
+- name: plugin2
+  prebuild: []
+  postbuild: []
+  setup:
+  - target: i686-pc-windows-msvc
+    cmd-alias: plugin
+    version: null
+    version_cmd: null
+    installer: Cargo
+    watch: []
+    args: null
+githooks:
+- stage: PreCommit
+  plugins:
+  - plugin
+- stage: PostCommit
+  plugins:
+  - plugin
+outputs:
+- content:
+    test: lorem
+    test2: ipsum
+    test3: dolor
+- content:
+    mobile: android

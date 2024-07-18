@@ -330,12 +330,15 @@ name = "builder"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "builder-poc",
  "cargo_metadata",
  "clap",
  "serde",
  "serde_json",
  "serde_yaml",
+ "target-lexicon",
  "toml",
+ "walkdir",
  "which",
 ]
 
@@ -364,23 +367,6 @@ dependencies = [
  "unic-langid",
  "wasm-bindgen-cli-support",
  "wasm-opt",
- "which",
-]
-
-[[package]]
-name = "builder_"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "builder-poc",
- "cargo_metadata",
- "clap",
- "serde",
- "serde_json",
- "serde_yaml",
- "target-lexicon",
- "toml",
- "walkdir",
  "which",
 ]
 

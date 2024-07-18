@@ -1,29 +1,13 @@
 use anyhow::Result;
 
-use crate::{input::Input, BuilderArgs};
+use crate::{types::Input, BuilderArgs};
 
-pub struct Builder;
+pub fn run(args: BuilderArgs) -> Result<()> {
+    let input = Input::gather(args)?;
 
-impl Builder {
-    pub fn run(args: BuilderArgs) -> Result<()> {
-        // parse cargo.toml
-        // parse builder.toml
-        // check if needed binaries are installed
-        // gather all the output.yaml generated
-        // read the envs
-        // create input.yaml
+    input.save_file()?;
 
-        let input = Input::gather_all(&args.dir)?;
+    input.check_plugins()?;
 
-        // for (key, val) in input.configs.0 {
-        //     println!("{key:?} -> {val}");
-        // }
-        // for (key, val) in input.binaries.0 {
-        //     println!("{key:?} -> {val:?}");
-        // }
-
-        input.save_file()?;
-
-        Ok(())
-    }
+    Ok(())
 }
