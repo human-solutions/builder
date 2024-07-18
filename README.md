@@ -179,7 +179,7 @@ binstall = "cargo-nextest@v0.9.72"
 [install.my-prog]
 version = "1.0.0"
 version-cmd = "-V"
-install = "curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/myuser/myrepo/main/install.sh | bash"
+shell = "curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/myuser/myrepo/main/install.sh | bash"
 ```
 
 ## Installation directory
