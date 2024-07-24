@@ -140,7 +140,7 @@ impl WasmBindgen {
         let c = swc::Compiler::new(cm.clone());
         let output = GLOBALS.set(&Default::default(), || {
             try_with_handler(cm.clone(), Default::default(), |handler| {
-                let fm = cm.new_source_file(FileName::Anon, js);
+                let fm = cm.new_source_file(Arc::new(FileName::Anon), js);
 
                 c.minify(
                     fm,
