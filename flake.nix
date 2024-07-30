@@ -71,7 +71,7 @@
         # https://nixos.wiki/wiki/Packaging/Binaries
         src = pkgs.fetchurl {
           url = "https://github.com/human-solutions/builder/releases/download/v${version}/builder-x86_64-unknown-linux-gnu.tar.xz";
-          sha256 = "sha256-o82EeaeyppnCawV5F4pJNAsUlr2TEHHnHmQDyH9Ii9k=";
+          sha256 = "sha256-nIg7sedGu8+rHj20OSE0q5Sc2VgCb+ADfydBqUvDvsA=";
         };
 
         sourceRoot = ".";
