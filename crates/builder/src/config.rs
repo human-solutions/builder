@@ -66,7 +66,7 @@ pub struct Config {
 impl Config {
     pub fn from_path(args: CmdArgs) -> Result<Self> {
         let metadata = cargo_metadata::MetadataCommand::new()
-            .manifest_path(&args.dir.join("Cargo.toml"))
+            .manifest_path(args.dir.join("Cargo.toml"))
             .exec()?;
         let root_pack = metadata.root_package().context("root package not found")?;
         let package = PackageConfig::from_package(root_pack)?;
