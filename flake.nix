@@ -83,7 +83,7 @@
         meta = with lib; {
           homepage = "https://github.com/human-solutions/builder";
           description = "Command line tool for building web assets, wasm and mobile libraries";
-          platforms = platforms.darwin;
+          platforms = platforms.linux;
         };
       };
   };
