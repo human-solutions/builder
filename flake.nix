@@ -9,7 +9,7 @@
     defaultPackage.aarch64-darwin =
       with import nixpkgs { system = "aarch64-darwin"; };
 
-    stdenv.mkDerivation rec {
+    stdenvNoCC.mkDerivation rec {
       name = "builder";
 
       version = "0.0.3";
