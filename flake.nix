@@ -5,86 +5,70 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
   };
 
-  outputs = {self, nixpkgs}: {
-    defaultPackage.aarch64-darwin =
-      with import nixpkgs { system = "aarch64-darwin"; };
+  outputs = { self, nixpkgs }: 
+    let
+      name = "builder";
+      version = "0.0.3";
 
-      stdenvNoCC.mkDerivation rec {
-        name = "builder";
-
-        version = "0.0.3";
-
-        # https://nixos.wiki/wiki/Packaging/Binaries
-        src = pkgs.fetchurl {
-          url = "https://github.com/human-solutions/builder/releases/download/v${version}/builder-aarch64-apple-darwin.tar.xz";
-          sha256 = "sha256-o82EeaeyppnCawV5F4pJNAsUlr2TEHHnHmQDyH9Ii9k=";
+      packages = {
+        aarch64-darwin = {
+          label = "aarch64-darwin";
+          triple = "aarch64-apple-darwin";
+          checksum = "sha256-o82EeaeyppnCawV5F4pJNAsUlr2TEHHnHmQDyH9Ii9k=";
+          platform = "darwin";
         };
-
-        sourceRoot = ".";
-
-        installPhase = ''
-        install -m755 -D builder-aarch64-apple-darwin/builder $out/bin/builder
-        '';
-
-        meta = with lib; {
-          homepage = "https://github.com/human-solutions/builder";
-          description = "Command line tool for building web assets, wasm and mobile libraries";
-          platforms = platforms.darwin;
+        x86_64-darwin = {
+          label = "x86_64-darwin";
+          triple = "x86_64-apple-darwin";
+          checksum = "todo";
+          platform = "darwin";
+        };
+        x86_64-linux = {
+          label = "x86_64-linux";
+          triple = "x86_64-unknown-linux-gnu";
+          checksum = "sha256-nIg7sedGu8+rHj20OSE0q5Sc2VgCb+ADfydBqUvDvsA=";
+          platform = "linux";
         };
       };
 
-    defaultPackage.x86_64-darwin =
-      with import nixpkgs { system = "x86_64-darwin"; };
+      defaultPackage = build packages;
 
-      stdenvNoCC.mkDerivation rec {
-        name = "builder";
+      # FUNCTIONS
 
-        version = "0.0.3";
+      url = { triple, version }: "https://github.com/human-solutions/builder/releases/download/v${version}/builder-${triple}.tar.xz";
 
-        # https://nixos.wiki/wiki/Packaging/Binaries
-        src = pkgs.fetchurl {
-          url = "https://github.com/human-solutions/builder/releases/download/v${version}/builder-x86_64-apple-darwin.tar.xz";
-          sha256 = "sha256-o82EeaeyppnCawV5F4pJNAsUlr2TEHHnHmQDyH9Ii9k=";
-        };
+      build = package: builtins.listToAttrs (map (system: {
+        name = system;
+        value = with import nixpkgs { system = package.${system}.label; };
+          stdenvNoCC.mkDerivation rec {
+            inherit name version;
 
-        sourceRoot = ".";
+            # https://nixos.wiki/wiki/Packaging/Binaries
+            src = pkgs.fetchurl {
+              url = url { 
+                triple = package.${system}.triple;
+                version = version; 
+              };
+              sha256 = package.${system}.checksum;
+            };
 
-        installPhase = ''
-        install -m755 -D builder-x86_64-apple-darwin/builder $out/bin/builder
-        '';
+            sourceRoot = ".";
 
-        meta = with lib; {
-          homepage = "https://github.com/human-solutions/builder";
-          description = "Command line tool for building web assets, wasm and mobile libraries";
-          platforms = platforms.darwin;
-        };
-      };
+            installPhase = ''
+            install -m755 -D builder-${package.${system}.triple}/builder $out/bin/builder
+            '';
 
-    defaultPackage.x86_64-linux =
-      with import nixpkgs { system = "x86_64-linux"; };
+            meta = with lib; {
+              homepage = "https://github.com/human-solutions/builder";
+              description = "Command line tool for building web assets, wasm and mobile libraries";
+              platforms = platforms.${package.${system}.platform};
+            };
+          };
+      }) (builtins.attrNames package));
 
-      stdenvNoCC.mkDerivation rec {
-        name = "builder";
+    in
+    {
+      inherit defaultPackage;
+    };
 
-        version = "0.0.3";
-
-        # https://nixos.wiki/wiki/Packaging/Binaries
-        src = pkgs.fetchurl {
-          url = "https://github.com/human-solutions/builder/releases/download/v${version}/builder-x86_64-unknown-linux-gnu.tar.xz";
-          sha256 = "sha256-nIg7sedGu8+rHj20OSE0q5Sc2VgCb+ADfydBqUvDvsA=";
-        };
-
-        sourceRoot = ".";
-
-        installPhase = ''
-        install -m755 -D builder-x86_64-unknown-linux-gnu/builder $out/bin/builder
-        '';
-
-        meta = with lib; {
-          homepage = "https://github.com/human-solutions/builder";
-          description = "Command line tool for building web assets, wasm and mobile libraries";
-          platforms = platforms.linux;
-        };
-      };
-  };
 }
