@@ -33,3 +33,6 @@ toml = "0.8"
 colorful = "0.2"
 log = "0.4"
 simplelog = "0.12"
+
+[dev-dependencies]
+insta = "1.39"

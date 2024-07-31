@@ -14,18 +14,28 @@ use simplelog::{
     ColorChoice, CombinedLogger, Config as LogConfig, TermLogger, TerminalMode, WriteLogger,
 };
 
-pub fn setup_logging(log_path: &str) {
-    let _ = CombinedLogger::init(vec![
-        TermLogger::new(
-            LevelFilter::Info,
+pub fn setup_logging(log_file: &str, log_level: LevelFilter) {
+    const LOG_TO_TERM_AND_FILE: bool = false;
+
+    if LOG_TO_TERM_AND_FILE {
+        let _ = CombinedLogger::init(vec![
+            TermLogger::new(
+                log_level,
+                LogConfig::default(),
+                TerminalMode::Mixed,
+                ColorChoice::Auto,
+            ),
+            WriteLogger::new(
+                LevelFilter::Info,
+                LogConfig::default(),
+                File::create(log_file).unwrap(),
+            ),
+        ]);
+    } else {
+        let _ = WriteLogger::init(
+            log_level,
             LogConfig::default(),
-            TerminalMode::Mixed,
-            ColorChoice::Auto,
-        ),
-        WriteLogger::new(
-            LevelFilter::Info,
-            LogConfig::default(),
-            File::create(log_path).unwrap(),
-        ),
-    ]);
+            File::create(log_file).unwrap(),
+        );
+    }
 }

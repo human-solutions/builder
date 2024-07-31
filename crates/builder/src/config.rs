@@ -1,10 +1,15 @@
-use ::anyhow::bail;
+use fs_err as fs;
+use log::LevelFilter;
 
-use crate::ext::anyhow;
-use crate::ext::{anyhow::Context, metadata::MetadataExt};
 use crate::postbuild::PostbuildConfig;
 use crate::prebuild::PrebuildConfig;
-use anyhow::Result;
+use crate::{
+    ext::{
+        anyhow::{bail, Context, Result},
+        metadata::MetadataExt,
+    },
+    setup_logging,
+};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_metadata::{Metadata, Package, PackageId};
 use clap::{Args, Subcommand};
@@ -55,6 +60,21 @@ impl PackageConfig {
     }
 }
 
+#[derive(Debug)]
+enum BuildStep {
+    Prebuild,
+    Postbuild,
+}
+
+impl BuildStep {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Prebuild => "prebuild",
+            Self::Postbuild => "postbuild",
+        }
+    }
+}
+
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     Prebuild(CmdArgs),
@@ -63,10 +83,21 @@ pub enum Commands {
 
 impl Commands {
     pub fn run(&self) -> Result<()> {
-        match self {
-            Self::Prebuild(info) => Config::new(info)?.run_prebuild(),
-            Self::Postbuild(info) => Config::new(info)?.run_postbuild(),
-        }
+        let (args, step) = match self {
+            Self::Prebuild(args) => (args, BuildStep::Prebuild),
+            Self::Postbuild(args) => (args, BuildStep::Postbuild),
+        };
+
+        let conf = Config::new(args)?;
+
+        let log_path = conf.metadata.target_directory.join(&conf.package.name);
+        fs::create_dir_all(&log_path)?;
+
+        let log_file = log_path.join(format!("{}-{}.log", step.as_str(), args.profile));
+        setup_logging(log_file.as_str(), LevelFilter::Debug);
+        log::info!("Args: {args:?}");
+
+        conf.run(step)
     }
 }
 
@@ -98,7 +129,15 @@ impl Config {
         })
     }
 
-    pub fn run_prebuild(&self) -> anyhow::Result<()> {
+    fn run(&self, step: BuildStep) -> Result<()> {
+        log::info!("Running {} step", step.as_str());
+        match step {
+            BuildStep::Prebuild => self.run_prebuild(),
+            BuildStep::Postbuild => self.run_postbuild(),
+        }
+    }
+
+    pub fn run_prebuild(&self) -> Result<()> {
         self.package
             .prebuild
             .as_ref()
@@ -106,7 +145,7 @@ impl Config {
             .process(self)
     }
 
-    pub fn run_postbuild(&self) -> anyhow::Result<()> {
+    pub fn run_postbuild(&self) -> Result<()> {
         self.package
             .postbuild
             .as_ref()

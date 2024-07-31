@@ -1,37 +1,47 @@
-use std::process::Command;
+mod common;
 
 use camino::Utf8PathBuf;
-
-const BIN: &str = env!("CARGO_BIN_EXE_builder");
+use common::{cargo, PathExt};
+use fs_err as fs;
 
 #[test]
-fn test_builder_cmdargs() {
-    cargo(["clean"]);
-    cargo(["build"]);
-}
-
-fn cargo<I, S>(args: I)
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<std::ffi::OsStr>,
-{
-    let bin_path = Utf8PathBuf::from(BIN);
-    assert!(bin_path.exists());
-
-    let path_env = std::env::var("PATH").unwrap();
-    let new_path = format!("{}:{path_env}", bin_path.parent().unwrap());
-    // println!("new path: {new_path}");
-
+fn test_playground() {
     let dir = Utf8PathBuf::from("../../examples/playground");
+    let gen = dir.join("gen");
 
-    let out = Command::new("cargo")
-        .args(args)
-        .current_dir(&dir)
-        .env("PATH", new_path)
-        .output()
-        .unwrap();
-    println!("{}", String::from_utf8(out.stderr).unwrap());
-    println!("{}", String::from_utf8(out.stdout).unwrap());
+    cargo(&dir, ["clean"]);
+    fs::remove_dir_all(&gen).unwrap();
 
-    assert!(out.status.success());
+    cargo(&dir, ["build"]);
+
+    let out = dir.join("target").join("playground");
+
+    insta::assert_snapshot!(out.ls_ascii(0).unwrap(), @r###"
+    playground:
+      prebuild-debug.log
+      mobile:
+        debug:
+          main.scss
+          static:
+            hfT-f2u761M=polyglot.woff2
+      web:
+        debug:
+          static:
+            _zAvsDmXbqc=main.scss
+            hfT-f2u761M=polyglot.woff2
+            badge:
+              static:
+                badge:
+                  2RFNKlNba6s=apple_store.svg.en
+                  2RFNKlNba6s=apple_store.svg.fr
+                  2RFNKlNba6s=apple_store.svg.fr-CA
+    "###);
+
+    insta::assert_snapshot!(gen.ls_ascii(0).unwrap(), @r###"
+    gen:
+      mobile.rs
+      web.rs
+    "###);
+
+    cargo(&dir, ["build", "--release"]);
 }
