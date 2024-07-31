@@ -7,9 +7,9 @@ use crate::prebuild::PrebuildConfig;
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_metadata::{Metadata, Package, PackageId};
-use clap::Args;
+use clap::{Args, Subcommand};
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct CmdArgs {
     #[clap(long, env = "CARGO_MANIFEST_DIR")]
     pub dir: Utf8PathBuf,
@@ -55,6 +55,21 @@ impl PackageConfig {
     }
 }
 
+#[derive(Subcommand, Debug)]
+pub enum Commands {
+    Prebuild(CmdArgs),
+    Postbuild(CmdArgs),
+}
+
+impl Commands {
+    pub fn run(&self) -> Result<()> {
+        match self {
+            Self::Prebuild(info) => Config::new(info)?.run_prebuild(),
+            Self::Postbuild(info) => Config::new(info)?.run_postbuild(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Config {
     pub args: CmdArgs,
@@ -64,10 +79,11 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn from_path(args: CmdArgs) -> Result<Self> {
+    pub fn new(args: &CmdArgs) -> Result<Self> {
         let metadata = cargo_metadata::MetadataCommand::new()
             .manifest_path(args.dir.join("Cargo.toml"))
             .exec()?;
+
         let root_pack = metadata.root_package().context("root package not found")?;
         let package = PackageConfig::from_package(root_pack)?;
         let builder_deps = metadata
@@ -75,7 +91,7 @@ impl Config {
             .map(PackageConfig::from_package)
             .collect::<Result<_>>()?;
         Ok(Self {
-            args,
+            args: args.clone(),
             package,
             metadata,
             builder_deps,
