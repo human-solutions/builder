@@ -37,6 +37,7 @@ impl Assembly {
         let mut watched = vec![generator.watched()];
 
         for sass in &self.sass {
+            log::info!("Processing sass assembly '{name}'");
             let css = sass.process(info)?;
             let filename = sass.file.file_name().unwrap();
             let hash = sass.out.write_file(css.as_bytes(), &site_dir, filename)?;
@@ -45,6 +46,7 @@ impl Assembly {
             watched.push(sass.watched());
         }
         for localized in &self.localized {
+            log::info!("Processing localized assembly '{name}'");
             let variants = localized.process(info)?;
             let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
 

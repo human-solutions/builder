@@ -1,3 +1,5 @@
+[workspace]
+
 [package]
 name = "playground"
 version = "0.1.0"
@@ -16,7 +18,7 @@ which = "6.0"
 # auto update the iconfont if fontforge is installed
 fontforge = "iconfont/polyglot.sfd"
 
-[[package.metadata.prebuild."*".dev.files]]
+[[package.metadata.prebuild."*".debug.files]]
 path = "iconfont/polyglot.woff2"
 out = { folder = "static", checksum = true }
 
@@ -25,7 +27,7 @@ path = "iconfont/polyglot.woff2"
 out = { folder = "static", checksum = true, brotli = true, gzip = true }
 
 ##### MOBILE DEBUG AND RELEASE #####
-[[package.metadata.prebuild.mobile.dev.sass]]
+[[package.metadata.prebuild.mobile.debug.sass]]
 file = "style/main.scss"
 
 [[package.metadata.prebuild.mobile.release.sass]]
@@ -35,11 +37,11 @@ out = { brotli = true }
 
 ##### WEB DEBUG #####
 
-[[package.metadata.prebuild.web.dev.sass]]
+[[package.metadata.prebuild.web.debug.sass]]
 file = "style/main.scss"
 out = { checksum = true, folder = "static" }
 
-[[package.metadata.prebuild.web.dev.localized]]
+[[package.metadata.prebuild.web.debug.localized]]
 path = "img/apple_store"
 file-extension = "svg"
 out = { folder = "static/badge", checksum = true }
@@ -68,5 +70,5 @@ optimize-wasm = true
 minify-js = true
 out = { folder = "static/", checksum = true, uncompressed = true, brotli = true, gzip = true }
 
-[[package.metadata.postbuild.web.dev.wasmbindgen]]
+[[package.metadata.postbuild.web.debug.wasmbindgen]]
 out = { folder = "static/", checksum = true }

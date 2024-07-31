@@ -57,6 +57,8 @@ impl PrebuildConfig {
         }
         let mut generator = Generator::default();
 
+        log::trace!("Processing {:#?}", self.assemblies);
+
         // go through all named assemblies
         for assembly in &self.assemblies {
             let Some(name) = assembly.name.as_ref() else {

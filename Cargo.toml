@@ -2,7 +2,7 @@
 [workspace]
 resolver = "2"
 
-members = ["crates/*", "examples/*"]
+members = ["crates/*"]
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

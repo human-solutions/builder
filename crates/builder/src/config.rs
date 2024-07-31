@@ -1,15 +1,20 @@
-use ::anyhow::bail;
+use fs_err as fs;
+use log::LevelFilter;
 
-use crate::ext::anyhow;
-use crate::ext::{anyhow::Context, metadata::MetadataExt};
 use crate::postbuild::PostbuildConfig;
 use crate::prebuild::PrebuildConfig;
-use anyhow::Result;
+use crate::{
+    ext::{
+        anyhow::{bail, Context, Result},
+        metadata::MetadataExt,
+    },
+    setup_logging,
+};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_metadata::{Metadata, Package, PackageId};
-use clap::Args;
+use clap::{Args, Subcommand};
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct CmdArgs {
     #[clap(long, env = "CARGO_MANIFEST_DIR")]
     pub dir: Utf8PathBuf,
@@ -56,6 +61,47 @@ impl PackageConfig {
 }
 
 #[derive(Debug)]
+enum BuildStep {
+    Prebuild,
+    Postbuild,
+}
+
+impl BuildStep {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Prebuild => "prebuild",
+            Self::Postbuild => "postbuild",
+        }
+    }
+}
+
+#[derive(Subcommand, Debug)]
+pub enum Commands {
+    Prebuild(CmdArgs),
+    Postbuild(CmdArgs),
+}
+
+impl Commands {
+    pub fn run(&self) -> Result<()> {
+        let (args, step) = match self {
+            Self::Prebuild(args) => (args, BuildStep::Prebuild),
+            Self::Postbuild(args) => (args, BuildStep::Postbuild),
+        };
+
+        let conf = Config::new(args)?;
+
+        let log_path = conf.metadata.target_directory.join(&conf.package.name);
+        fs::create_dir_all(&log_path)?;
+
+        let log_file = log_path.join(format!("{}-{}.log", step.as_str(), args.profile));
+        setup_logging(log_file.as_str(), LevelFilter::Debug);
+        log::info!("Args: {args:?}");
+
+        conf.run(step)
+    }
+}
+
+#[derive(Debug)]
 pub struct Config {
     pub args: CmdArgs,
     pub metadata: Metadata,
@@ -64,10 +110,11 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn from_path(args: CmdArgs) -> Result<Self> {
+    pub fn new(args: &CmdArgs) -> Result<Self> {
         let metadata = cargo_metadata::MetadataCommand::new()
-            .manifest_path(&args.dir.join("Cargo.toml"))
+            .manifest_path(args.dir.join("Cargo.toml"))
             .exec()?;
+
         let root_pack = metadata.root_package().context("root package not found")?;
         let package = PackageConfig::from_package(root_pack)?;
         let builder_deps = metadata
@@ -75,14 +122,22 @@ impl Config {
             .map(PackageConfig::from_package)
             .collect::<Result<_>>()?;
         Ok(Self {
-            args,
+            args: args.clone(),
             package,
             metadata,
             builder_deps,
         })
     }
 
-    pub fn run_prebuild(&self) -> anyhow::Result<()> {
+    fn run(&self, step: BuildStep) -> Result<()> {
+        log::info!("Running {} step", step.as_str());
+        match step {
+            BuildStep::Prebuild => self.run_prebuild(),
+            BuildStep::Postbuild => self.run_postbuild(),
+        }
+    }
+
+    pub fn run_prebuild(&self) -> Result<()> {
         self.package
             .prebuild
             .as_ref()
@@ -90,7 +145,7 @@ impl Config {
             .process(self)
     }
 
-    pub fn run_postbuild(&self) -> anyhow::Result<()> {
+    pub fn run_postbuild(&self) -> Result<()> {
         self.package
             .postbuild
             .as_ref()
