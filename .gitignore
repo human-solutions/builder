@@ -1,4 +1,5 @@
 /target
+**/target
 .git
 .DS_Store
 **/gen/*
