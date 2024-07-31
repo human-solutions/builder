@@ -20,7 +20,7 @@
         x86_64-darwin = {
           label = "x86_64-darwin";
           triple = "x86_64-apple-darwin";
-          checksum = "todo";
+          checksum = "sha256-POPubK7eZw4UxFIaPingI9xPy6ImihAfrtA1BIdF4+s=";
           platform = "darwin";
         };
         x86_64-linux = {
