@@ -49,6 +49,9 @@
                 triple = package.${system}.triple;
                 version = version; 
               };
+              # Get the cheksum from the release on github
+              # Convert it to base64
+              # Then prefix it with 'sha256-'
               sha256 = package.${system}.checksum;
             };
 
