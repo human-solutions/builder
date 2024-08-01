@@ -8,7 +8,7 @@
   outputs = { self, nixpkgs }: 
     let
       name = "builder";
-      version = "0.0.3";
+      version = "0.0.4";
 
       packages = {
         aarch64-darwin = {
