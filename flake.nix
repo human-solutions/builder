@@ -14,19 +14,19 @@
         aarch64-darwin = {
           label = "aarch64-darwin";
           triple = "aarch64-apple-darwin";
-          checksum = "sha256-o82EeaeyppnCawV5F4pJNAsUlr2TEHHnHmQDyH9Ii9k=";
+          checksum = "sha256-CVP8uIFVV1ZakiClpqI79gP0nJTqTZo3QXq9Z2gYGjA=";
           platform = "darwin";
         };
         x86_64-darwin = {
           label = "x86_64-darwin";
           triple = "x86_64-apple-darwin";
-          checksum = "sha256-POPubK7eZw4UxFIaPingI9xPy6ImihAfrtA1BIdF4+s=";
+          checksum = "sha256-KMprfKliocjjVQKnpq1GwadSsCI8bSVIqGN+F+KJ1qs=";
           platform = "darwin";
         };
         x86_64-linux = {
           label = "x86_64-linux";
           triple = "x86_64-unknown-linux-gnu";
-          checksum = "sha256-nIg7sedGu8+rHj20OSE0q5Sc2VgCb+ADfydBqUvDvsA=";
+          checksum = "sha256-Tnka+d8svkZrlX0q7NazgHowMoVftp2ZIsf37j5MEgg=";
           platform = "linux";
         };
       };
