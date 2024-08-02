@@ -15,7 +15,7 @@ camino = "1.1"
 anyhow = "1.0"
 fs-err = "2.11"
 which = "6.0"
-seahash = "4.1"
+seahash = { workspace = true }
 base64 = "0.22"
 brotli = "6.0"
 flate2 = "1.0"
