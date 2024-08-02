@@ -7,17 +7,20 @@ use fs_err as fs;
 #[test]
 fn test_playground() {
     let dir = Utf8PathBuf::from("../../examples/playground");
-    let gen = dir.join("gen");
+    let gen = dir.join("assets").join("gen");
 
     cargo(&dir, ["clean"]);
-    fs::remove_dir_all(&gen).unwrap();
+
+    if gen.exists() {
+        fs::remove_dir_all(&gen).unwrap();
+    }
 
     cargo(&dir, ["build"]);
 
-    let out = dir.join("target").join("playground");
+    let out = dir.join("target").join("assets");
 
     insta::assert_snapshot!(out.ls_ascii(0).unwrap(), @r###"
-    playground:
+    assets:
       prebuild-debug.log
       mobile:
         debug:
@@ -27,7 +30,7 @@ fn test_playground() {
       web:
         debug:
           static:
-            _zAvsDmXbqc=main.scss
+            My9cobbYRHU=main.scss
             hfT-f2u761M=polyglot.woff2
             badge:
               static:
