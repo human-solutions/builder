@@ -3,21 +3,6 @@
 version = 3
 
 [[package]]
-name = "app"
-version = "0.1.0"
-dependencies = [
- "assets",
- "wasm",
-]
-
-[[package]]
-name = "assets"
-version = "0.1.0"
-dependencies = [
- "which",
-]
-
-[[package]]
 name = "bitflags"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -85,6 +70,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 
 [[package]]
+name = "playground"
+version = "0.1.0"
+dependencies = [
+ "wasm-bindgen",
+ "which",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -131,13 +124,6 @@ name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
-
-[[package]]
-name = "wasm"
-version = "0.1.0"
-dependencies = [
- "wasm-bindgen",
-]
 
 [[package]]
 name = "wasm-bindgen"
