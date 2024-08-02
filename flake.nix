@@ -72,6 +72,13 @@
     in
     {
       inherit defaultPackage;
+
+      devShells.default = with nixpkgs; mkShell {
+        buildInputs = [
+          cargo
+          rustc
+        ];
+      };
     };
 
 }
