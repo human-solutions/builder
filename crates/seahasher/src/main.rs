@@ -12,15 +12,14 @@ fn main() -> ExitCode {
         eprintln!("Failed to open file: {}", args.path);
         return ExitCode::FAILURE;
     };
+    let mut contents = String::new();
 
-    let mut buffer = Vec::new();
-
-    let Ok(_) = file.read_to_end(&mut buffer) else {
+    let Ok(_) = file.read_to_string(&mut contents) else {
         eprintln!("Failed to read file: {}", args.path);
         return ExitCode::FAILURE;
     };
 
-    let h = hash(&buffer);
+    let h = hash(contents.as_bytes());
 
     println!("{}", URL_SAFE.encode(h.to_be_bytes()));
 
