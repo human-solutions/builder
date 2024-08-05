@@ -140,13 +140,15 @@ impl Output {
     ) -> Result<Option<String>> {
         let dir = self.full_created_dir(dir)?;
 
-        let hash = self.checksum.then(|| {
-            let contents = variants.iter().fold(Vec::new(), |mut acc, (_, contents)| {
-                acc.extend_from_slice(contents);
-                acc
-            });
-            URL_SAFE.encode(seahash::hash(&contents).to_be_bytes())
-        });
+        // let hash = self.checksum.then(|| {
+        //     let contents = variants.iter().fold(Vec::new(), |mut acc, (_, contents)| {
+        //         acc.extend_from_slice(contents);
+        //         acc
+        //     });
+        //     URL_SAFE.encode(seahash::hash(&contents).to_be_bytes())
+        // });
+
+        let hash = Some("localized=".to_string());
 
         for (langid, content) in variants {
             let filename = format!("{filename}.{ext}.{langid}");

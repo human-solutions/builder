@@ -35,9 +35,9 @@ fn test_playground() {
             badge:
               static:
                 badge:
-                  2RFNKlNba6s=apple_store.svg.en
-                  2RFNKlNba6s=apple_store.svg.fr
-                  2RFNKlNba6s=apple_store.svg.fr-CA
+                  localized=apple_store.svg.en
+                  localized=apple_store.svg.fr
+                  localized=apple_store.svg.fr-CA
     "###);
 
     insta::assert_snapshot!(gen.ls_ascii(0).unwrap(), @r###"
