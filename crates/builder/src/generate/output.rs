@@ -141,11 +141,11 @@ impl Output {
         let dir = self.full_created_dir(dir)?;
 
         let hash = self.checksum.then(|| {
-            let contents = variants.iter().fold(Vec::new(), |mut acc, (_, contents)| {
-                acc.extend_from_slice(contents);
-                acc
-            });
-            seahash::hash(&contents).to_string()
+            // let contents = variants.iter().fold(Vec::new(), |mut acc, (_, contents)| {
+            //     acc.extend_from_slice(contents);
+            //     acc
+            // });
+            seahash::hash("localized".as_bytes()).to_string()
         });
 
         for (langid, content) in variants {
