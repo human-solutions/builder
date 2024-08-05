@@ -141,11 +141,11 @@ impl Output {
         let dir = self.full_created_dir(dir)?;
 
         let hash = self.checksum.then(|| {
-            let mut checksummer = SeaHasher::new();
-            variants
-                .iter()
-                .for_each(|(_, content)| checksummer.write(content));
-            URL_SAFE.encode(checksummer.finish().to_be_bytes())
+            let contents = variants.iter().fold(Vec::new(), |mut acc, (_, contents)| {
+                acc.extend_from_slice(contents);
+                acc
+            });
+            URL_SAFE.encode(seahash::hash(&contents).to_be_bytes())
         });
 
         for (langid, content) in variants {
