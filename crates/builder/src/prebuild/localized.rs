@@ -57,6 +57,18 @@ impl Localized {
             }
         }
 
+        variants.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+
         Ok(variants)
+    }
+}
+
+trait LanguageIdExt {
+    fn to_lowercase(&self) -> String;
+}
+
+impl LanguageIdExt for LanguageIdentifier {
+    fn to_lowercase(&self) -> String {
+        self.to_string().to_lowercase()
     }
 }

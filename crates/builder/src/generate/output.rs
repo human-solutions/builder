@@ -1,17 +1,12 @@
 use crate::anyhow::Result;
 use crate::ext::{ByteVecExt, Utf8PathExt};
-use base64::engine::general_purpose::URL_SAFE;
-use base64::prelude::*;
+use base64::{engine::general_purpose::URL_SAFE, Engine};
 use brotli::{enc::BrotliEncoderParams, BrotliCompress};
 use camino::{Utf8Path, Utf8PathBuf};
 use flate2::{Compression, GzBuilder};
 use fs_err as fs;
-use seahash::SeaHasher;
 use serde::Deserialize;
-use std::{
-    hash::Hasher,
-    io::{Cursor, Write},
-};
+use std::io::{Cursor, Write};
 use unic_langid::LanguageIdentifier;
 
 #[derive(Default, Debug, Deserialize)]
@@ -141,11 +136,11 @@ impl Output {
         let dir = self.full_created_dir(dir)?;
 
         let hash = self.checksum.then(|| {
-            // let contents = variants.iter().fold(Vec::new(), |mut acc, (_, contents)| {
-            //     acc.extend_from_slice(contents);
-            //     acc
-            // });
-            seahash::hash("localized".as_bytes()).to_string()
+            let contents = variants.iter().fold(Vec::new(), |mut acc, (_, contents)| {
+                acc.extend_from_slice(contents);
+                acc
+            });
+            URL_SAFE.encode(seahash::hash(&contents).to_be_bytes())
         });
 
         for (langid, content) in variants {
