@@ -191,6 +191,10 @@ impl Config {
 
         let path = self.postbuild_file(&self.package.name);
 
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
         let mut file = File::create(&path)
             .context(format!("Failed to create configuration file to '{path}'"))?;
         file.write_all(string.as_bytes())
