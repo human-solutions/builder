@@ -170,7 +170,8 @@ impl Config {
         // save the config only if the postbuild step is present
         // to make it easier to skip in the next package prebuild
         if self.package.postbuild.is_some() {
-            self.save()?;
+            self.save()
+                .context("Failed to save postbuild configuration file")?;
         }
 
         Ok(())
@@ -185,10 +186,15 @@ impl Config {
     }
 
     fn save(&self) -> Result<()> {
-        let string = serde_yaml::to_string(self)?;
+        let string =
+            serde_yaml::to_string(self).context("Failed to serialize configuration file")?;
 
-        let mut file = File::create(self.postbuild_file(&self.package.name))?;
-        file.write_all(string.as_bytes())?;
+        let path = self.postbuild_file(&self.package.name);
+
+        let mut file = File::create(&path)
+            .context(format!("Failed to create configuration file to '{path}'"))?;
+        file.write_all(string.as_bytes())
+            .context("Failed to write configuration file")?;
 
         Ok(())
     }
