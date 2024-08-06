@@ -63,14 +63,6 @@ impl PackageConfig {
             has_build_rs,
         })
     }
-
-    pub fn save_postbuild(&self) -> Result<()> {
-        todo!()
-    }
-
-    pub fn load_postbuild(&self) -> Result<()> {
-        todo!()
-    }
 }
 
 #[derive(Debug)]
