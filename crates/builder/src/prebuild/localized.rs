@@ -1,5 +1,5 @@
 use fs_err as fs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use unic_langid::LanguageIdentifier;
 
 use crate::anyhow::{bail, Context, Result};
@@ -7,7 +7,7 @@ use crate::generate::Output;
 use crate::Config;
 use camino::Utf8PathBuf;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Localized {
     /// the path to the folder containing the localised files
     pub path: Utf8PathBuf,

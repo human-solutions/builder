@@ -3,11 +3,11 @@ use crate::util::filehash;
 use crate::Config;
 use camino::{Utf8Path, Utf8PathBuf};
 use fs_err as fs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
 use which::which;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(transparent)]
 pub struct FontForge {
     pub file: Utf8PathBuf,

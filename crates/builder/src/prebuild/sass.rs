@@ -8,11 +8,11 @@ use lightningcss::{
     stylesheet::StyleSheet,
     targets::{Browsers, Targets},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
 use which::which;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Sass {
     pub file: Utf8PathBuf,

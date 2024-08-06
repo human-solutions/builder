@@ -3,9 +3,9 @@ use crate::anyhow::Result;
 use crate::generate::{Asset, Generator};
 use crate::Config;
 use fs_err as fs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Serialize)]
 #[serde(default)]
 pub struct Assembly {
     #[serde(skip)]

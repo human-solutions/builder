@@ -1,5 +1,10 @@
+use std::fs::File;
+use std::io::{Read, Write};
+
+use fs4::fs_std::FileExt;
 use fs_err as fs;
 use log::LevelFilter;
+use serde::{Deserialize, Serialize};
 
 use crate::postbuild::PostbuildConfig;
 use crate::prebuild::PrebuildConfig;
@@ -14,7 +19,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cargo_metadata::{Metadata, Package, PackageId};
 use clap::{Args, Subcommand};
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Clone, Serialize, Deserialize)]
 pub struct CmdArgs {
     #[clap(long, env = "CARGO_MANIFEST_DIR")]
     pub dir: Utf8PathBuf,
@@ -24,7 +29,7 @@ pub struct CmdArgs {
     pub package: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PackageConfig {
     pub name: String,
     pub id: PackageId,
@@ -109,7 +114,7 @@ impl Commands {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub args: CmdArgs,
     pub metadata: Metadata,
@@ -153,7 +158,7 @@ impl Config {
                 continue;
             }
 
-            let postbuild = match PostbuildConfig::load(&path) {
+            let conf = match Self::load(&path) {
                 Ok(p) => p,
                 Err(e) => {
                     log::error!("Failed to load postbuild config from {path}: {e}");
@@ -161,7 +166,7 @@ impl Config {
                 }
             };
 
-            postbuild.process(self)?;
+            conf.run_postbuild()?;
         }
 
         self.package
@@ -170,8 +175,10 @@ impl Config {
             .expect("No prebuild config found")
             .process(self)?;
 
-        if let Some(postbuild) = &self.package.postbuild {
-            postbuild.save(&self.postbuild_file(&self.package.name))?;
+        // save the config only if the postbuild step is present
+        // to make it easier to skip in the next package prebuild
+        if self.package.postbuild.is_some() {
+            self.save()?;
         }
 
         Ok(())
@@ -183,6 +190,30 @@ impl Config {
             .join("builder")
             .join(package_name)
             .join("postbuild.yaml")
+    }
+
+    fn save(&self) -> Result<()> {
+        let string = serde_yaml::to_string(self)?;
+
+        let mut file = File::create(self.postbuild_file(&self.package.name))?;
+        file.write_all(string.as_bytes())?;
+
+        Ok(())
+    }
+
+    fn load(path: &Utf8PathBuf) -> Result<Self> {
+        let mut file = File::open(path)?;
+        file.try_lock_exclusive()?;
+
+        let mut string = String::new();
+        file.read_to_string(&mut string)?;
+
+        let conf: Self = serde_yaml::from_str(&string)
+            .context(format!("Failed to parse output file '{}'", path))?;
+
+        fs::remove_file(path)?;
+
+        Ok(conf)
     }
 
     pub fn run_postbuild(&self) -> Result<()> {
