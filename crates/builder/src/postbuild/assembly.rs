@@ -6,9 +6,9 @@ use super::wasm::WasmBindgen;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Assembly {
-    #[serde(skip)]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub name: String,
-    #[serde(skip)]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub profile: String,
     #[serde(rename = "wasmbindgen")]
     pub wasm: Vec<WasmBindgen>,
