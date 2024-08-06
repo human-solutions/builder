@@ -6,3 +6,6 @@ version = "0.1.0"
 [dependencies]
 assets = { workspace = true }
 wasm = { workspace = true }
+
+[build-dependencies]
+which = "6.0"
