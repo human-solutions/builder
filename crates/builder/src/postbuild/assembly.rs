@@ -1,10 +1,10 @@
 use crate::anyhow::Result;
 use crate::Config;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::wasm::WasmBindgen;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Assembly {
     #[serde(skip)]
     pub name: String,

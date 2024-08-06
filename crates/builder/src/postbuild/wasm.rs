@@ -7,14 +7,14 @@ use crate::generate::Output;
 use crate::util::timehash;
 use crate::Config;
 use camino::Utf8Path;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use swc::config::{IsModule, JsMinifyOptions};
 use swc::{try_with_handler, BoolOrDataConfig};
 use swc_common::{FileName, SourceMap, GLOBALS};
 use tempfile::NamedTempFile;
 use wasm_bindgen_cli_support::Bindgen;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct WasmBindgen {
     optimize_wasm: bool,

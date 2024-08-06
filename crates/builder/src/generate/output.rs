@@ -5,11 +5,11 @@ use brotli::{enc::BrotliEncoderParams, BrotliCompress};
 use camino::{Utf8Path, Utf8PathBuf};
 use flate2::{Compression, GzBuilder};
 use fs_err as fs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::io::{Cursor, Write};
 use unic_langid::LanguageIdentifier;
 
-#[derive(Default, Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Output {
     pub brotli: bool,

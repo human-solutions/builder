@@ -58,6 +58,14 @@ impl PackageConfig {
             has_build_rs,
         })
     }
+
+    pub fn save_postbuild(&self) -> Result<()> {
+        todo!()
+    }
+
+    pub fn load_postbuild(&self) -> Result<()> {
+        todo!()
+    }
 }
 
 #[derive(Debug)]
@@ -138,11 +146,43 @@ impl Config {
     }
 
     pub fn run_prebuild(&self) -> Result<()> {
+        for package in self.metadata.local_dependency_names() {
+            let path = self.postbuild_file(package);
+
+            if !path.exists() {
+                continue;
+            }
+
+            let postbuild = match PostbuildConfig::load(&path) {
+                Ok(p) => p,
+                Err(e) => {
+                    log::error!("Failed to load postbuild config from {path}: {e}");
+                    continue;
+                }
+            };
+
+            postbuild.process(self)?;
+        }
+
         self.package
             .prebuild
             .as_ref()
             .expect("No prebuild config found")
-            .process(self)
+            .process(self)?;
+
+        if let Some(postbuild) = &self.package.postbuild {
+            postbuild.save(&self.postbuild_file(&self.package.name))?;
+        }
+
+        Ok(())
+    }
+
+    fn postbuild_file(&self, package_name: &str) -> Utf8PathBuf {
+        self.metadata
+            .target_directory
+            .join("builder")
+            .join(package_name)
+            .join("postbuild.yaml")
     }
 
     pub fn run_postbuild(&self) -> Result<()> {
