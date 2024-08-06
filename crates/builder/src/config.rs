@@ -186,7 +186,6 @@ impl Config {
     fn postbuild_file(&self, package_name: &str) -> Utf8PathBuf {
         self.metadata
             .target_directory
-            .join("builder")
             .join(package_name)
             .join("postbuild.yaml")
     }
