@@ -135,7 +135,6 @@ impl Config {
     }
 
     fn run(&self, step: BuildStep) -> Result<()> {
-        log::info!("Running {} step", step.as_str());
         match step {
             BuildStep::Prebuild => self.run_prebuild(),
             BuildStep::Postbuild => self.run_postbuild(),
@@ -161,15 +160,22 @@ impl Config {
             conf.run_postbuild()?;
         }
 
-        self.package
-            .prebuild
-            .as_ref()
-            .expect("No prebuild config found")
-            .process(self)?;
+        log::info!("Running prebuild for {}", self.package.name);
+
+        if let Some(prebuild) = &self.package.prebuild {
+            prebuild.process(self)?;
+        } else {
+            log::info!("No prebuild configuration found for {}", self.package.name);
+            return Ok(());
+        }
 
         // save the config only if the postbuild step is present
         // to make it easier to skip in the next package prebuild
         if self.package.postbuild.is_some() {
+            log::info!(
+                "Saving postbuild configuration file for {}",
+                self.package.name
+            );
             self.save()
                 .context("Failed to save postbuild configuration file")?;
         }
@@ -219,6 +225,7 @@ impl Config {
     }
 
     pub fn run_postbuild(&self) -> Result<()> {
+        log::info!("Running postbuild for {}", self.package.name);
         self.package
             .postbuild
             .as_ref()
