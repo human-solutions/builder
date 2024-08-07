@@ -81,9 +81,9 @@
 
       devShells.default = with npkgs; mkShell {
         buildInputs = [
-          rust-bin.stable.latest.default.override {
+          (rust-bin.stable.latest.default.override {
             targets = [ "wasm32-unknown-unknown" "x86_64-unknown-linux-gnu" ];
-          }
+          })
         ];
 
         shellHook = ''
