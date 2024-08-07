@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wasm example</title>
     <script type="module">
-      import init, { greet } from "./pkg/wasm.js";
+      import init, { greet } from "../target/wasm/web/debug/static/TvPUpUj6l2s=wasm.js";
 
-      init().then(() => greet("from Rust"));
+      greet("from Rust")
     </script>
   </head>
   <body></body>
