@@ -3,9 +3,10 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
+    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
-  outputs = { self, nixpkgs }: 
+  outputs = { self, nixpkgs, rust-overlay }: 
     let
       name = "builder";
       version = "0.0.4";
@@ -29,6 +30,11 @@
           checksum = "sha256-Tnka+d8svkZrlX0q7NazgHowMoVftp2ZIsf37j5MEgg=";
           platform = "linux";
         };
+      };
+
+      overlays = [ (import rust-overlay) ];
+      npkgs = import nixpkgs {
+        inherit overlays;
       };
 
       defaultPackage = build packages;
@@ -73,10 +79,12 @@
     {
       inherit defaultPackage;
 
-      devShells.default = with nixpkgs; mkShell {
+      devShells.default = with npkgs; mkShell {
         buildInputs = [
           cargo
-          rustc
+          rust-bin.stable.latest.default.override {
+            targets = [ "wasm32-unknown-unknown" ];
+          }
         ];
       };
     };
