@@ -85,6 +85,10 @@
             targets = [ "wasm32-unknown-unknown" "x86_64-unknown-linux-gnu" ];
           }
         ];
+
+        shellHook = ''
+          rustup target add wasm32-unknown-unknown
+        '';
       };
     };
 
