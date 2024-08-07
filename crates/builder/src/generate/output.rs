@@ -5,7 +5,9 @@ use brotli::{enc::BrotliEncoderParams, BrotliCompress};
 use camino::{Utf8Path, Utf8PathBuf};
 use flate2::{Compression, GzBuilder};
 use fs_err as fs;
+use seahash::SeaHasher;
 use serde::{Deserialize, Serialize};
+use std::hash::Hasher;
 use std::io::{Cursor, Write};
 use unic_langid::LanguageIdentifier;
 
@@ -136,11 +138,11 @@ impl Output {
         let dir = self.full_created_dir(dir)?;
 
         let hash = self.checksum.then(|| {
-            let contents = variants.iter().fold(Vec::new(), |mut acc, (_, contents)| {
-                acc.extend_from_slice(contents);
-                acc
-            });
-            URL_SAFE.encode(seahash::hash(&contents).to_be_bytes())
+            let mut checksummer = SeaHasher::new();
+            variants
+                .iter()
+                .for_each(|(_, content)| checksummer.write(content));
+            URL_SAFE.encode(checksummer.finish().to_be_bytes())
         });
 
         for (langid, content) in variants {
