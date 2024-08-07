@@ -9,7 +9,15 @@ fn test_playground() {
     let dir = Utf8PathBuf::from("../../examples/playground");
     let gen = dir.join("assets").join("gen");
 
-    // cargo(&dir, ["clean"]);
+    cargo(&dir, ["clean"]);
+    cargo(
+        &dir,
+        [
+            "build",
+            "-p=wasm",
+            "--target=wasm32-unknown-unknown",
+        ],
+    );
 
     if gen.exists() {
         fs::remove_dir_all(&gen).unwrap();
