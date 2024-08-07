@@ -81,9 +81,8 @@
 
       devShells.default = with npkgs; mkShell {
         buildInputs = [
-          cargo
-          rust-bin.stable.latest.default.override {
-            targets = [ "wasm32-unknown-unknown" ];
+          rust-bin.stable.latest.minimal.override {
+            targets = [ "wasm32-unknown-unknown" "x86_64-unknown-linux-gnu" ];
           }
         ];
       };
