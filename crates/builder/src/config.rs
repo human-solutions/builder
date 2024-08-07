@@ -166,7 +166,6 @@ impl Config {
             prebuild.process(self)?;
         } else {
             log::info!("No prebuild configuration found for {}", self.package.name);
-            return Ok(());
         }
 
         // save the config only if the postbuild step is present
