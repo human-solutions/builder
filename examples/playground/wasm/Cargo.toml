@@ -9,6 +9,9 @@ crate-type = ["cdylib"]
 [dependencies]
 wasm-bindgen = { workspace = true }
 
+[build-dependencies]
+which = "6.0"
+
 ######################
 ##### POST build #####
 ######################
