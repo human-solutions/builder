@@ -21,7 +21,6 @@ fn test_playground() {
 
     insta::assert_snapshot!(out.ls_ascii(0).unwrap(), @r###"
     assets:
-      postbuild.yaml
       prebuild-debug.log
       mobile:
         debug:

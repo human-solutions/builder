@@ -53,14 +53,3 @@ optimize = true
 out = { brotli = true, gzip = true, checksum = true, folder = "static" }
 
 
-######################
-##### POST build #####
-######################
-
-[[package.metadata.postbuild.web.release.wasmbindgen]]
-optimize-wasm = true
-minify-js = true
-out = { folder = "static/", checksum = true, uncompressed = true, brotli = true, gzip = true }
-
-[[package.metadata.postbuild.web.debug.wasmbindgen]]
-out = { folder = "static/", checksum = true }
