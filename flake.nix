@@ -1,95 +1,32 @@
 {
-  description = "Command line tool for building web assets, wasm and mobile libraries";
+  description = "The devShell";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    nixpkgs.url      = "github:NixOS/nixpkgs/nixpkgs-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    flake-utils.url  = "github:numtide/flake-utils";
+    naersk.url = "github:nix-community/naersk/master";
   };
 
-  outputs = { self, nixpkgs, rust-overlay }: 
-    let
-      name = "builder";
-      version = "0.0.4";
-
-      packages = {
-        aarch64-darwin = {
-          label = "aarch64-darwin";
-          triple = "aarch64-apple-darwin";
-          checksum = "sha256-CVP8uIFVV1ZakiClpqI79gP0nJTqTZo3QXq9Z2gYGjA=";
-          platform = "darwin";
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, naersk }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        overlays = [ (import rust-overlay) ];
+        pkgs = import nixpkgs {
+          inherit system overlays;
         };
-        x86_64-darwin = {
-          label = "x86_64-darwin";
-          triple = "x86_64-apple-darwin";
-          checksum = "sha256-KMprfKliocjjVQKnpq1GwadSsCI8bSVIqGN+F+KJ1qs=";
-          platform = "darwin";
+        lib = pkgs.lib;
+        naersk-lib = pkgs.callPackage naersk { };
+      in
+      {
+        defaultPackage = naersk-lib.buildPackage ./.;
+        devShells.default = with pkgs; mkShell {
+          buildInputs = [
+            (rust-bin.stable.latest.default.override {
+              targets = [ "wasm32-unknown-unknown" ];
+            })
+          ];
         };
-        x86_64-linux = {
-          label = "x86_64-linux";
-          triple = "x86_64-unknown-linux-gnu";
-          checksum = "sha256-Tnka+d8svkZrlX0q7NazgHowMoVftp2ZIsf37j5MEgg=";
-          platform = "linux";
-        };
-      };
-
-      overlays = [ (import rust-overlay) ];
-      npkgs = import nixpkgs {
-        inherit overlays;
-      };
-
-      defaultPackage = build packages;
-
-      # FUNCTIONS
-
-      url = { triple, version }: "https://github.com/human-solutions/builder/releases/download/v${version}/builder-${triple}.tar.xz";
-
-      build = package: builtins.listToAttrs (map (system: {
-        name = system;
-        value = with import nixpkgs { system = package.${system}.label; };
-          stdenvNoCC.mkDerivation rec {
-            inherit name version;
-
-            # https://nixos.wiki/wiki/Packaging/Binaries
-            src = pkgs.fetchurl {
-              url = url { 
-                triple = package.${system}.triple;
-                version = version; 
-              };
-              # Get the cheksum from the release on github
-              # Convert it to base64
-              # Then prefix it with 'sha256-'
-              sha256 = package.${system}.checksum;
-            };
-
-            sourceRoot = ".";
-
-            installPhase = ''
-            install -m755 -D builder-${package.${system}.triple}/builder $out/bin/builder
-            '';
-
-            meta = with lib; {
-              homepage = "https://github.com/human-solutions/builder";
-              description = "Command line tool for building web assets, wasm and mobile libraries";
-              platforms = platforms.${package.${system}.platform};
-            };
-          };
-      }) (builtins.attrNames package));
-
-    in
-    {
-      inherit defaultPackage;
-
-      devShells.default = with npkgs; mkShell {
-        buildInputs = [
-          (rust-bin.stable.latest.default.override {
-            targets = [ "wasm32-unknown-unknown" "x86_64-unknown-linux-gnu" ];
-          })
-        ];
-
-        shellHook = ''
-          rustup target add wasm32-unknown-unknown
-        '';
-      };
-    };
-
+      }
+    );
 }
