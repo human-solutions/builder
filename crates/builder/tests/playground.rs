@@ -12,11 +12,7 @@ fn test_playground() {
     cargo(&dir, ["clean"]);
     cargo(
         &dir,
-        [
-            "build",
-            "-p=wasm",
-            "--target=wasm32-unknown-unknown",
-        ],
+        ["build", "-p=wasm", "--target=wasm32-unknown-unknown"],
     );
 
     if gen.exists() {
