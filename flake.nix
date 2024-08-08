@@ -21,13 +21,14 @@
         defaultPackage = naersk-lib.buildPackage {
           src = ../.;
           buildInputs = [
-            pkgs.sass
+            pkgs.dart-sass
             pkgs.fontforge
           ];
         };
         devShells.default = with pkgs; mkShell {
           buildInputs = [
-            sass
+            dart-sass
+            fontforge
             (rust-bin.stable.latest.default.override {
               targets = [ "wasm32-unknown-unknown" ];
             })
