@@ -19,7 +19,7 @@
       in
       {
         defaultPackage = naersk-lib.buildPackage {
-          src = ../.;
+          src = ./.;
           buildInputs = [
             pkgs.dart-sass
             pkgs.fontforge
