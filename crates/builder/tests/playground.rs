@@ -48,7 +48,7 @@ fn test_playground() {
       web:
         debug:
           static:
-            Ls-GLuljxGw=main.scss
+            bBuWTBM0ZPg=main.scss
             hfT-f2u761M=polyglot.woff2
             badge:
               static:
