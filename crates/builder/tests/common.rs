@@ -30,6 +30,7 @@ where
 
 pub trait PathExt {
     fn ls_ascii(&self, indent: usize) -> Result<String>;
+    fn ls_no_checksum(&self) -> Result<String>;
 }
 
 impl PathExt for Utf8PathBuf {
@@ -73,4 +74,34 @@ impl PathExt for Utf8PathBuf {
         }
         Ok(out.join("\n"))
     }
+
+    fn ls_no_checksum(&self) -> Result<String> {
+        let mut files = Vec::new();
+
+        gather_files(self, &mut files, "")?;
+
+        files.sort();
+
+        Ok(files.join("\n"))
+    }
+}
+
+fn gather_files(path: &Utf8PathBuf, files: &mut Vec<String>, ancestors: &str) -> Result<()> {
+    let parent = format!("{ancestors}/{}", path.file_name().unwrap_or_default());
+    let mut entries = path.read_dir_utf8()?;
+    while let Some(Ok(entry)) = entries.next() {
+        let path = entry.path().to_path_buf();
+        if entry.file_type()?.is_dir() {
+            gather_files(&path, files, &parent)?;
+        } else {
+            let filename = path.file_name().unwrap_or_default();
+            let filename = if let Some((_, n)) = filename.split_once('=') {
+                n
+            } else {
+                filename
+            };
+            files.push(format!("{parent}/{filename}"))
+        }
+    }
+    Ok(())
 }
