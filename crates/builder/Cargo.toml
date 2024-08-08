@@ -13,7 +13,6 @@ lightningcss = { version = "1.0.0-alpha.57", features = ["browserslist"] }
 camino = "1.1"
 anyhow = "1.0"
 fs-err = "2.11"
-which = "6.0"
 seahash = { workspace = true }
 base64 = "0.22"
 brotli = "6.0"

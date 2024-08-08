@@ -5,7 +5,6 @@ use camino::{Utf8Path, Utf8PathBuf};
 use fs_err as fs;
 use serde::{Deserialize, Serialize};
 use std::process::Command;
-use which::which;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(transparent)]
