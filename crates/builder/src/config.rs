@@ -16,7 +16,7 @@ use crate::{
     setup_logging,
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_metadata::{Metadata, Package, PackageId};
+use cargo_metadata::{Package, PackageId};
 use clap::{Args, Subcommand};
 
 #[derive(Args, Debug, Clone, Serialize, Deserialize)]
@@ -95,7 +95,7 @@ impl Commands {
 
         let conf = Config::new(args)?;
 
-        let log_path = conf.metadata.target_directory.join(&conf.package.name);
+        let log_path = conf.target_dir.join(&conf.package.name);
         fs::create_dir_all(&log_path)?;
 
         let log_file = log_path.join(format!("{}-{}.log", step.as_str(), args.profile));
@@ -109,9 +109,9 @@ impl Commands {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub args: CmdArgs,
-    pub metadata: Metadata,
+    pub target_dir: Utf8PathBuf,
     pub package: PackageConfig,
-    pub builder_deps: Vec<PackageConfig>,
+    pub deps: Vec<String>,
 }
 
 impl Config {
@@ -122,15 +122,17 @@ impl Config {
 
         let root_pack = metadata.root_package().context("root package not found")?;
         let package = PackageConfig::from_package(root_pack)?;
-        let builder_deps = metadata
+        let deps = metadata
             .local_dependency_packages()
-            .map(PackageConfig::from_package)
-            .collect::<Result<_>>()?;
+            .map(|p| p.name.to_string())
+            .collect::<Vec<_>>();
+
+        let target_dir = metadata.target_directory.clone();
         Ok(Self {
             args: args.clone(),
             package,
-            metadata,
-            builder_deps,
+            target_dir,
+            deps,
         })
     }
 
@@ -142,7 +144,7 @@ impl Config {
     }
 
     pub fn run_prebuild(&self) -> Result<()> {
-        for package in self.metadata.local_dependency_names() {
+        for package in &self.deps {
             let path = self.postbuild_file(package);
 
             if !path.exists() {
@@ -183,10 +185,7 @@ impl Config {
     }
 
     fn postbuild_file(&self, package_name: &str) -> Utf8PathBuf {
-        self.metadata
-            .target_directory
-            .join(package_name)
-            .join("postbuild.yaml")
+        self.target_dir.join(package_name).join("postbuild.yaml")
     }
 
     fn save(&self) -> Result<()> {
@@ -232,8 +231,7 @@ impl Config {
     }
 
     pub fn site_dir(&self, assembly: &str) -> Utf8PathBuf {
-        self.metadata
-            .target_directory
+        self.target_dir
             .join(&self.package.name)
             .join(assembly)
             .join(&self.args.profile)

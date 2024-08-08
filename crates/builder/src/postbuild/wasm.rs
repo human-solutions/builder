@@ -32,8 +32,7 @@ impl WasmBindgen {
             &info.args.profile
         };
         let input = info
-            .metadata
-            .target_directory
+            .target_dir
             .join("wasm32-unknown-unknown")
             .join(profile)
             .join(&info.package.name)
