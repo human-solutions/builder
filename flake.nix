@@ -15,13 +15,19 @@
         pkgs = import nixpkgs {
           inherit system overlays;
         };
-        lib = pkgs.lib;
         naersk-lib = pkgs.callPackage naersk { };
       in
       {
-        defaultPackage = naersk-lib.buildPackage ./.;
+        defaultPackage = naersk-lib.buildPackage {
+          src = ../.;
+          buildInputs = [
+            pkgs.sass
+            pkgs.fontforge
+          ];
+        };
         devShells.default = with pkgs; mkShell {
           buildInputs = [
+            sass
             (rust-bin.stable.latest.default.override {
               targets = [ "wasm32-unknown-unknown" ];
             })
