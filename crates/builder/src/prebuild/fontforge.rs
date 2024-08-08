@@ -45,16 +45,12 @@ impl FontForge {
     }
 
     fn generate(&self, info: &Config) -> Result<()> {
-        let Ok(command) = which("fontforge") else {
-            println!("cargo::warning=fontforge command not found, skipping woff2 update");
-            return Ok(());
-        };
         let name = self.file.to_string();
         let woff = self.file.with_extension("woff2");
         let otf = self.file.with_extension("otf");
         let ff = format!("Open('{name}'); Generate('{woff}'); Generate('{otf}')");
 
-        let cmd = Command::new(command)
+        let cmd = Command::new("fontforge")
             .args(["-lang=ff", "-c", &ff])
             .current_dir(info.args.dir.as_path())
             .output()
