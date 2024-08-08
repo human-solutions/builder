@@ -2,7 +2,6 @@ use crate::anyhow::{anyhow, bail, Context, Result};
 use crate::generate::Output;
 use crate::Config;
 use camino::Utf8PathBuf;
-use fs_err as fs;
 use lightningcss::{
     printer::PrinterOptions,
     stylesheet::StyleSheet,
@@ -10,7 +9,6 @@ use lightningcss::{
 };
 use serde::{Deserialize, Serialize};
 use std::process::Command;
-use which::which;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
@@ -35,13 +33,22 @@ impl Sass {
         let file = info
             .existing_manifest_dir_path(&self.file)
             .context("sass file not found")?;
-        let sass_string = fs::read_to_string(&file)?;
+
+        let cmd = Command::new("sass")
+            .args(["--embed-sources", "--embed-source-map", file.as_str()])
+            .output()
+            .context("Failed to run sass binary")?;
+
+        let out = String::from_utf8(cmd.stdout).unwrap();
+        let err = String::from_utf8(cmd.stderr).unwrap();
+
+        if !cmd.status.success() {
+            bail!("installed binary sass failed with error: {err}{out}")
+        }
 
         if self.optimize {
-            let css_style = grass::from_string(sass_string, &Default::default())?;
-
             let stylesheet =
-                StyleSheet::parse(&css_style, Default::default()).map_err(|e| anyhow!("{e}"))?;
+                StyleSheet::parse(&out, Default::default()).map_err(|e| anyhow!("{e}"))?;
 
             let targets = Targets {
                 browsers: Browsers::from_browserslist([
@@ -55,23 +62,10 @@ impl Sass {
                 targets,
                 ..Default::default()
             })?;
-            Ok(out_css.code)
-        } else if let Ok(sass_bin) = which("sass") {
-            let cmd = Command::new(sass_bin)
-                .args(["--embed-sources", "--embed-source-map", file.as_str()])
-                .output()?;
-
-            let out = String::from_utf8(cmd.stdout).unwrap();
-            let err = String::from_utf8(cmd.stderr).unwrap();
-
-            if !cmd.status.success() {
-                bail!("installed binary sass failed with error: {err}{out}")
-            }
-
-            Ok(out)
-        } else {
-            Ok(grass::from_string(sass_string, &Default::default())?)
+            return Ok(out_css.code);
         }
+
+        Ok(out)
     }
 
     pub fn watched(&self) -> String {

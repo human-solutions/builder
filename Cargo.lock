@@ -310,7 +310,6 @@ dependencies = [
  "flate2",
  "fs-err",
  "fs4",
- "grass",
  "insta",
  "lightningcss",
  "log",
@@ -471,12 +470,6 @@ name = "clap_lex"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
-
-[[package]]
-name = "codemap"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9e769b5c8c8283982a987c6e948e540254f1058d5a74b8794914d4ef5fc2a24"
 
 [[package]]
 name = "codespan-reporting"
@@ -877,10 +870,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4567c8db10ae91089c99af84c68c38da3ec2f087c3f82960bcdbf3656b6f4d7"
 dependencies = [
  "cfg-if",
- "js-sys",
  "libc",
  "wasi",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -892,31 +883,6 @@ dependencies = [
  "fallible-iterator",
  "indexmap 1.9.3",
  "stable_deref_trait",
-]
-
-[[package]]
-name = "grass"
-version = "0.13.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a46def7216d331efa51a6aa796ef777bfdfe9605378382827a553344b7e5eefc"
-dependencies = [
- "clap",
- "getrandom",
- "grass_compiler",
-]
-
-[[package]]
-name = "grass_compiler"
-version = "0.13.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f39216c1843182f78541276fec96f88406861f16aa19cc9f8add70f8e67b7577"
-dependencies = [
- "codemap",
- "indexmap 2.2.6",
- "lasso",
- "once_cell",
- "phf 0.11.2",
- "rand",
 ]
 
 [[package]]
@@ -1151,15 +1117,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b56a20e76235284255a09fcd1f45cf55d3c524ea657ebd3854735925c57743d"
 dependencies = [
  "serde_json",
-]
-
-[[package]]
-name = "lasso"
-version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4644821e1c3d7a560fe13d842d13f587c07348a1a05d3a797152d41c90c56df2"
-dependencies = [
- "hashbrown 0.13.2",
 ]
 
 [[package]]
