@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
-members = ["app", "assets", "wasm"]
+members = ["app", "assets", "client"]
 
 [workspace.dependencies]
 assets = { path = "assets" }
-wasm = { path = "wasm" }
+client = { path = "client" }
 
 wasm-bindgen = "0.2"
