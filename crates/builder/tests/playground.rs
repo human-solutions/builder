@@ -12,7 +12,7 @@ fn test_playground() {
     cargo(&dir, ["clean"]);
     cargo(
         &dir,
-        ["build", "-p=wasm", "--target=wasm32-unknown-unknown"],
+        ["build", "-p=client", "--target=wasm32-unknown-unknown"],
     );
 
     if gen.exists() {
@@ -21,7 +21,7 @@ fn test_playground() {
 
     cargo(&dir, ["build"]);
 
-    insta::assert_snapshot!(gen.ls_ascii(0).unwrap(), @r###"
+    insta::assert_snapshot!(gen.ls_ascii_replace_checksum(0, &[], "").unwrap(), @r###"
     gen:
       mobile.rs
       web.rs
@@ -31,7 +31,7 @@ fn test_playground() {
 
     let out = dir.join("target").join("assets");
 
-    insta::assert_snapshot!(out.ls_ascii(0).unwrap(), @r###"
+    insta::assert_snapshot!(out.ls_ascii_replace_checksum(0, &["main.scss"], "<checksum>").unwrap(), @r###"
     assets:
       prebuild-debug.log
       prebuild-release.log
@@ -48,7 +48,7 @@ fn test_playground() {
       web:
         debug:
           static:
-            bBuWTBM0ZPg=main.scss
+            <checksum>main.scss
             hfT-f2u761M=polyglot.woff2
             badge:
               static:
@@ -73,17 +73,17 @@ fn test_playground() {
                   MJjU0sjYbCw=apple_store.svg.fr.gz
     "###);
 
-    let out_wasm = dir.join("target").join("wasm");
+    let out_wasm = dir.join("target").join("client");
 
-    insta::assert_snapshot!(out_wasm.ls_no_checksum().unwrap(), @r###"
-/wasm/prebuild-debug.log
-/wasm/prebuild-release.log
-/wasm/web/debug/static/wasm.js
-/wasm/web/debug/static/wasm.js.br
-/wasm/web/debug/static/wasm.js.gz
-/wasm/web/debug/static/wasm.wasm
-/wasm/web/debug/static/wasm.wasm
-/wasm/web/debug/static/wasm.wasm.br
-/wasm/web/debug/static/wasm.wasm.gz
+    insta::assert_snapshot!(out_wasm.ls_replace_checksum("<checksum>").unwrap(), @r###"
+/client/prebuild-debug.log
+/client/prebuild-release.log
+/client/web/debug/static/<checksum>client.js
+/client/web/debug/static/<checksum>client.js.br
+/client/web/debug/static/<checksum>client.js.gz
+/client/web/debug/static/<checksum>client.wasm
+/client/web/debug/static/<checksum>client.wasm
+/client/web/debug/static/<checksum>client.wasm.br
+/client/web/debug/static/<checksum>client.wasm.gz
 "###)
 }

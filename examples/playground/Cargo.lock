@@ -7,7 +7,7 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "assets",
- "wasm",
+ "client",
  "which",
 ]
 
@@ -35,6 +35,14 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "client"
+version = "0.1.0"
+dependencies = [
+ "wasm-bindgen",
+ "which",
+]
 
 [[package]]
 name = "either"
@@ -132,14 +140,6 @@ name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
-
-[[package]]
-name = "wasm"
-version = "0.1.0"
-dependencies = [
- "wasm-bindgen",
- "which",
-]
 
 [[package]]
 name = "wasm-bindgen"
