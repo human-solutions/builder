@@ -1,10 +1,11 @@
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{anyhow::Result, Config};
 
 use super::assembly::Assembly;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PostbuildConfig {
     assemblies: Vec<Assembly>,
 }

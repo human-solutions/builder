@@ -3,11 +3,10 @@ use crate::util::filehash;
 use crate::Config;
 use camino::{Utf8Path, Utf8PathBuf};
 use fs_err as fs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
-use which::which;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(transparent)]
 pub struct FontForge {
     pub file: Utf8PathBuf,
@@ -45,16 +44,12 @@ impl FontForge {
     }
 
     fn generate(&self, info: &Config) -> Result<()> {
-        let Ok(command) = which("fontforge") else {
-            println!("cargo::warning=fontforge command not found, skipping woff2 update");
-            return Ok(());
-        };
         let name = self.file.to_string();
         let woff = self.file.with_extension("woff2");
         let otf = self.file.with_extension("otf");
         let ff = format!("Open('{name}'); Generate('{woff}'); Generate('{otf}')");
 
-        let cmd = Command::new(command)
+        let cmd = Command::new("fontforge")
             .args(["-lang=ff", "-c", &ff])
             .current_dir(info.args.dir.as_path())
             .output()

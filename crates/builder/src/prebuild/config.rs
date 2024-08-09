@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{anyhow::Result, Config};
@@ -8,7 +9,7 @@ use crate::generate::Generator;
 
 use super::{fontforge::FontForge, Assembly};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PrebuildConfig {
     pub assemblies: Vec<Assembly>,
     pub fontforge: Option<FontForge>,
