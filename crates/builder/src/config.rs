@@ -213,10 +213,10 @@ impl Config {
         let mut string = String::new();
         file.read_to_string(&mut string)?;
 
+        fs::remove_file(path)?;
+
         let conf: Self = serde_yaml::from_str(&string)
             .context(format!("Failed to parse output file '{}'", path))?;
-
-        fs::remove_file(path)?;
 
         Ok(conf)
     }
