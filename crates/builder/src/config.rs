@@ -213,6 +213,7 @@ impl Config {
         let mut string = String::new();
         file.read_to_string(&mut string)?;
 
+        file.unlock()?;
         fs::remove_file(path)?;
 
         let conf: Self = serde_yaml::from_str(&string)
