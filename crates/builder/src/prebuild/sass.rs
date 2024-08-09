@@ -25,7 +25,7 @@ impl Sass {
         } else {
             "".to_string()
         };
-        let filename = self.file.file_name().unwrap();
+        let filename = self.file.file_name().unwrap().replace("scss", "css");
         format!("{folder}/{}{filename}", checksum.unwrap_or_default())
     }
 

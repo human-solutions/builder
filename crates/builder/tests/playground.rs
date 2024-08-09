@@ -31,24 +31,24 @@ fn test_playground() {
 
     let out = dir.join("target").join("assets");
 
-    insta::assert_snapshot!(out.ls_ascii_replace_checksum(0, &["main.scss"], "<checksum>").unwrap(), @r###"
+    insta::assert_snapshot!(out.ls_ascii_replace_checksum(0, &["main.css"], "<checksum>").unwrap(), @r###"
     assets:
       prebuild-debug.log
       prebuild-release.log
       mobile:
         debug:
-          main.scss
+          main.css
           static:
             hfT-f2u761M=polyglot.woff2
         release:
-          main.scss.br
+          main.css.br
           static:
             hfT-f2u761M=polyglot.woff2.br
             hfT-f2u761M=polyglot.woff2.gz
       web:
         debug:
           static:
-            <checksum>main.scss
+            <checksum>main.css
             hfT-f2u761M=polyglot.woff2
             badge:
               static:
@@ -58,8 +58,8 @@ fn test_playground() {
                   MJjU0sjYbCw=apple_store.svg.fr-CA
         release:
           static:
-            4xved-FTXA0=main.scss.br
-            4xved-FTXA0=main.scss.gz
+            4xved-FTXA0=main.css.br
+            4xved-FTXA0=main.css.gz
             hfT-f2u761M=polyglot.woff2.br
             hfT-f2u761M=polyglot.woff2.gz
             badge:
