@@ -31,7 +31,7 @@ fn test_playground() {
 
     let out = dir.join("target").join("assets");
 
-    insta::assert_snapshot!(out.ls_ascii_replace_checksum(0, &["main.css"], "<checksum>").unwrap(), @r###"
+    insta::assert_snapshot!(out.ls_ascii_replace_checksum(0, &["main.css", "polyglot.woff2"], "<checksum>").unwrap(), @r###"
     assets:
       prebuild-debug.log
       prebuild-release.log
@@ -39,7 +39,7 @@ fn test_playground() {
         debug:
           main.css
           static:
-            hfT-f2u761M=polyglot.woff2
+            <checksum>polyglot.woff2
         release:
           main.css.br
           static:
@@ -49,7 +49,7 @@ fn test_playground() {
         debug:
           static:
             <checksum>main.css
-            hfT-f2u761M=polyglot.woff2
+            <checksum>polyglot.woff2
             badge:
               static:
                 badge:
