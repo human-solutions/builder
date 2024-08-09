@@ -16,10 +16,10 @@ which = "6.0"
 ##### POST build #####
 ######################
 
-[[package.metadata.postbuild.web.debug.wasmbindgen]]
+[[package.metadata.postbuild.wasm32-unknown-unknown.web.debug.wasmbindgen]]
 optimize-wasm = true
 minify-js = true
 out = { folder = "static/", checksum = true, uncompressed = true, brotli = true, gzip = true }
 
-[[package.metadata.postbuild.web.debug.wasmbindgen]]
+[[package.metadata.postbuild.wasm32-unknown-unknown.web.debug.wasmbindgen]]
 out = { folder = "static/", checksum = true }

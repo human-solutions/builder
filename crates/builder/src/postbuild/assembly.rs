@@ -9,6 +9,8 @@ pub struct Assembly {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub name: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub target: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub profile: String,
     #[serde(rename = "wasmbindgen")]
     pub wasm: Vec<WasmBindgen>,

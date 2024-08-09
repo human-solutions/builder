@@ -27,6 +27,8 @@ pub struct CmdArgs {
     pub profile: String,
     #[clap(long, env = "CARGO_PKG_NAME")]
     pub package: String,
+    #[clap(long, env = "TARGET")]
+    pub target: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
