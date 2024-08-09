@@ -11,6 +11,8 @@ pub struct Assembly {
     #[serde(skip)]
     pub name: Option<String>,
     #[serde(skip)]
+    pub target: String,
+    #[serde(skip)]
     pub profile: String,
 
     pub sass: Vec<Sass>,
