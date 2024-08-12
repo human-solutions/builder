@@ -35,7 +35,9 @@ impl PostbuildConfig {
 
     pub fn process(&self, info: &Config) -> Result<()> {
         for assembly in &self.assemblies {
-            if assembly.profile == info.args.profile {
+            if assembly.profile == info.args.profile
+                && (assembly.target == "*" || assembly.target == info.args.target)
+            {
                 assembly.process(info)?;
             }
         }
