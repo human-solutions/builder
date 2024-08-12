@@ -1,7 +1,7 @@
 mod common;
 
 use camino::Utf8PathBuf;
-use common::{cargo, PathExt};
+use common::{cargo, PathExt, Replacer};
 use fs_err as fs;
 
 #[test]
@@ -21,7 +21,7 @@ fn test_playground() {
 
     cargo(&dir, ["build"]);
 
-    insta::assert_snapshot!(gen.ls_ascii_replace_checksum(0, &[], "").unwrap(), @r###"
+    insta::assert_snapshot!(gen.ls_ascii_replace::<NoChange>(0).unwrap(), @r###"
     gen:
       mobile.rs
       web.rs
@@ -31,56 +31,11 @@ fn test_playground() {
 
     let out = dir.join("target").join("assets");
 
-    #[cfg(target_os = "macos")]
-    insta::assert_snapshot!(out.ls_ascii_replace_checksum(0, &["main.css", "polyglot.woff2"], "<checksum>").unwrap(), @r###"
+    insta::assert_snapshot!(out.ls_ascii_replace::<RemoveTargetAndChecksum>(0).unwrap(), @r###"
     assets:
       prebuild-debug.log
       prebuild-release.log
-      aarch64-apple-darwin:
-        mobile:
-          debug:
-            main.css
-            static:
-              <checksum>polyglot.woff2
-          release:
-            main.css.br
-            static:
-              hfT-f2u761M=polyglot.woff2.br
-              hfT-f2u761M=polyglot.woff2.gz
-        web:
-          debug:
-            static:
-              <checksum>main.css
-              <checksum>polyglot.woff2
-              badge:
-                static:
-                  badge:
-                    MJjU0sjYbCw=apple_store.svg.en
-                    MJjU0sjYbCw=apple_store.svg.fr
-                    MJjU0sjYbCw=apple_store.svg.fr-CA
-          release:
-            static:
-              4xved-FTXA0=main.css.br
-              4xved-FTXA0=main.css.gz
-              hfT-f2u761M=polyglot.woff2.br
-              hfT-f2u761M=polyglot.woff2.gz
-              badge:
-                static:
-                  badge:
-                    MJjU0sjYbCw=apple_store.svg.en.br
-                    MJjU0sjYbCw=apple_store.svg.en.gz
-                    MJjU0sjYbCw=apple_store.svg.fr-CA.br
-                    MJjU0sjYbCw=apple_store.svg.fr-CA.gz
-                    MJjU0sjYbCw=apple_store.svg.fr.br
-                    MJjU0sjYbCw=apple_store.svg.fr.gz
-    "###);
-
-    #[cfg(target_os = "linux")]
-    insta::assert_snapshot!(out.ls_ascii_replace_checksum(0, &["main.css", "polyglot.woff2"], "<checksum>").unwrap(), @r###"
-    assets:
-      prebuild-debug.log
-      prebuild-release.log
-      x86_64-unknown-linux-gnu:
+      <target>:
         mobile:
           debug:
             main.css
@@ -132,4 +87,31 @@ fn test_playground() {
 /client/wasm32-unknown-unknown/web/debug/static/<checksum>client.wasm.br
 /client/wasm32-unknown-unknown/web/debug/static/<checksum>client.wasm.gz
 "###)
+}
+
+struct NoChange;
+
+impl Replacer for NoChange {
+    fn replace(s: &str) -> String {
+        s.to_string()
+    }
+}
+
+struct RemoveTargetAndChecksum;
+
+impl Replacer for RemoveTargetAndChecksum {
+    fn replace(s: &str) -> String {
+        if s == "aarch64-apple-darwin" || s == "x86_64-unknown-linux-gnu" {
+            "<target>".to_string()
+        } else if let Some((_, right)) = s.split_once('=') {
+            let words = ["main.css", "polyglot.woff2"];
+            if words.contains(&right) {
+                format!("<checksum>{right}")
+            } else {
+                s.to_string()
+            }
+        } else {
+            s.to_string()
+        }
+    }
 }

@@ -28,31 +28,30 @@ where
     assert!(out.status.success());
 }
 
+pub trait Replacer {
+    fn replace(s: &str) -> String;
+}
+
 pub trait PathExt {
-    fn ls_ascii_replace_checksum(
-        &self,
-        indent: usize,
-        keys: &[&str],
-        replacement: &str,
-    ) -> Result<String>;
+    fn ls_ascii_replace<R>(&self, indent: usize) -> Result<String>
+    where
+        R: Replacer;
 
     fn ls_replace_checksum(&self, replacement: &str) -> Result<String>;
 }
 
 impl PathExt for Utf8PathBuf {
-    fn ls_ascii_replace_checksum(
-        &self,
-        indent: usize,
-        keys: &[&str],
-        replacement: &str,
-    ) -> Result<String> {
+    fn ls_ascii_replace<R>(&self, indent: usize) -> Result<String>
+    where
+        R: Replacer,
+    {
         let mut entries = self.read_dir_utf8()?;
         let mut out = Vec::new();
 
         out.push(format!(
             "{}{}:",
             "  ".repeat(indent),
-            self.file_name().unwrap_or_default()
+            R::replace(self.file_name().unwrap_or_default())
         ));
 
         let indent = indent + 1;
@@ -73,16 +72,12 @@ impl PathExt for Utf8PathBuf {
         files.sort();
 
         for file in files {
-            let filename = replace_checksum(
-                file.file_name().unwrap_or_default(),
-                |c, n| keys.contains(&n) && !c.is_empty(),
-                replacement,
-            );
+            let filename = R::replace(file.file_name().unwrap_or_default());
             out.push(format!("{}{}", "  ".repeat(indent), filename));
         }
 
         for path in dirs {
-            out.push(path.ls_ascii_replace_checksum(indent, keys, replacement)?);
+            out.push(path.ls_ascii_replace::<R>(indent)?);
         }
         Ok(out.join("\n"))
     }
