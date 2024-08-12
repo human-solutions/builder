@@ -147,21 +147,17 @@ impl Config {
 
     pub fn run_prebuild(&self) -> Result<()> {
         for package in &self.deps {
-            let path = self.postbuild_file(package);
+            for postbuild_file in self.postbuild_files(package)? {
+                let conf = match Self::load(&postbuild_file) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        log::error!("Failed to load postbuild config from {postbuild_file}: {e}");
+                        continue;
+                    }
+                };
 
-            if !path.exists() {
-                continue;
+                conf.run_postbuild()?;
             }
-
-            let conf = match Self::load(&path) {
-                Ok(p) => p,
-                Err(e) => {
-                    log::error!("Failed to load postbuild config from {path}: {e}");
-                    continue;
-                }
-            };
-
-            conf.run_postbuild()?;
         }
 
         log::info!("Running prebuild for {}", self.package.name);
@@ -187,7 +183,36 @@ impl Config {
     }
 
     fn postbuild_file(&self, package_name: &str) -> Utf8PathBuf {
-        self.target_dir.join(package_name).join("postbuild.yaml")
+        self.target_dir
+            .join(package_name)
+            .join(&self.args.target)
+            .join("postbuild.yaml")
+    }
+
+    fn postbuild_files(&self, package_name: &str) -> Result<Vec<Utf8PathBuf>> {
+        let dir = self.target_dir.join(package_name);
+
+        if !dir.exists() {
+            return Ok(Vec::new());
+        }
+
+        let mut files: Vec<Utf8PathBuf> = Vec::new();
+
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.is_dir() {
+                let file = path.join("postbuild.yaml");
+                if file.exists() {
+                    files.push(Utf8PathBuf::from_path_buf(file).map_err(|e| {
+                        anyhow::Error::msg(format!("Failed to create postbuild file path :{:?}", e))
+                    })?);
+                }
+            }
+        }
+
+        Ok(files)
     }
 
     fn save(&self) -> Result<()> {
@@ -236,6 +261,7 @@ impl Config {
     pub fn site_dir(&self, assembly: &str) -> Utf8PathBuf {
         self.target_dir
             .join(&self.package.name)
+            .join(&self.args.target)
             .join(assembly)
             .join(&self.args.profile)
     }
