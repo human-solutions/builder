@@ -69,11 +69,15 @@ impl PathExt for Utf8PathBuf {
         }
 
         dirs.sort();
+        
+        let mut files = files
+            .iter()
+            .map(|file| R::replace(file.file_name().unwrap_or_default()))
+            .collect::<Vec<_>>();
         files.sort();
 
         for file in files {
-            let filename = R::replace(file.file_name().unwrap_or_default());
-            out.push(format!("{}{}", "  ".repeat(indent), filename));
+            out.push(format!("{}{}", "  ".repeat(indent), file));
         }
 
         for path in dirs {
