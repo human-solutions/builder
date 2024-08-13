@@ -28,19 +28,30 @@ where
     assert!(out.status.success());
 }
 
+pub trait Replacer {
+    fn replace(s: &str) -> String;
+}
+
 pub trait PathExt {
-    fn ls_ascii(&self, indent: usize) -> Result<String>;
+    fn ls_ascii_replace<R>(&self, indent: usize) -> Result<String>
+    where
+        R: Replacer;
+
+    fn ls_replace_checksum(&self, replacement: &str) -> Result<String>;
 }
 
 impl PathExt for Utf8PathBuf {
-    fn ls_ascii(&self, indent: usize) -> Result<String> {
+    fn ls_ascii_replace<R>(&self, indent: usize) -> Result<String>
+    where
+        R: Replacer,
+    {
         let mut entries = self.read_dir_utf8()?;
         let mut out = Vec::new();
 
         out.push(format!(
             "{}{}:",
             "  ".repeat(indent),
-            self.file_name().unwrap_or_default()
+            R::replace(self.file_name().unwrap_or_default())
         ));
 
         let indent = indent + 1;
@@ -58,19 +69,66 @@ impl PathExt for Utf8PathBuf {
         }
 
         dirs.sort();
+        
+        let mut files = files
+            .iter()
+            .map(|file| R::replace(file.file_name().unwrap_or_default()))
+            .collect::<Vec<_>>();
         files.sort();
 
         for file in files {
-            out.push(format!(
-                "{}{}",
-                "  ".repeat(indent),
-                file.file_name().unwrap_or_default()
-            ));
+            out.push(format!("{}{}", "  ".repeat(indent), file));
         }
 
         for path in dirs {
-            out.push(path.ls_ascii(indent)?);
+            out.push(path.ls_ascii_replace::<R>(indent)?);
         }
         Ok(out.join("\n"))
     }
+
+    fn ls_replace_checksum(&self, replacement: &str) -> Result<String> {
+        let mut files = Vec::new();
+
+        gather_files(self, &mut files, "", replacement)?;
+
+        files.sort();
+
+        Ok(files.join("\n"))
+    }
+}
+
+fn replace_checksum<C>(filename: &str, condition: C, replacement: &str) -> String
+where
+    C: Fn(&str, &str) -> bool,
+{
+    if let Some((c, n)) = filename.split_once('=') {
+        if condition(c, n) {
+            return format!("{replacement}{n}");
+        }
+    }
+    filename.to_owned()
+}
+
+fn gather_files(
+    path: &Utf8PathBuf,
+    files: &mut Vec<String>,
+    ancestors: &str,
+    replacement: &str,
+) -> Result<()> {
+    let parent = format!("{ancestors}/{}", path.file_name().unwrap_or_default());
+    let mut entries = path.read_dir_utf8()?;
+    while let Some(Ok(entry)) = entries.next() {
+        let path = entry.path().to_path_buf();
+        if entry.file_type()?.is_dir() {
+            gather_files(&path, files, &parent, replacement)?;
+        } else {
+            let filename = replace_checksum(
+                path.file_name().unwrap_or_default(),
+                |c, n| !c.is_empty() && !n.is_empty(),
+                replacement,
+            );
+            files.push(format!("{parent}/{filename}"))
+        }
+    }
+    Ok(())
 }

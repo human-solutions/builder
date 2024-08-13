@@ -2,17 +2,15 @@ use crate::anyhow::{anyhow, bail, Context, Result};
 use crate::generate::Output;
 use crate::Config;
 use camino::Utf8PathBuf;
-use fs_err as fs;
 use lightningcss::{
     printer::PrinterOptions,
     stylesheet::StyleSheet,
     targets::{Browsers, Targets},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
-use which::which;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Sass {
     pub file: Utf8PathBuf,
@@ -21,27 +19,49 @@ pub struct Sass {
 }
 
 impl Sass {
-    pub fn url(&self, checksum: Option<String>) -> String {
+    pub fn file_name(&self, checksum: &Option<String>) -> String {
+        let filename = self
+            .file
+            .file_stem()
+            .map(|f| {
+                let mut s = f.to_string();
+                s.push_str(".css");
+                s
+            })
+            .unwrap_or_default();
+        format!("{}{filename}", checksum.as_deref().unwrap_or_default())
+    }
+
+    pub fn url(&self, checksum: &Option<String>) -> String {
         let folder = if let Some(folder) = self.out.folder.as_ref() {
             format!("/{folder}")
         } else {
             "".to_string()
         };
-        let filename = self.file.file_name().unwrap();
-        format!("{folder}/{}{filename}", checksum.unwrap_or_default())
+        let filename = self.file_name(checksum);
+        format!("{folder}/{filename}")
     }
 
     pub fn process(&self, info: &Config) -> Result<String> {
         let file = info
             .existing_manifest_dir_path(&self.file)
             .context("sass file not found")?;
-        let sass_string = fs::read_to_string(&file)?;
+
+        let cmd = Command::new("sass")
+            .args(["--embed-sources", "--embed-source-map", file.as_str()])
+            .output()
+            .context("Failed to run sass binary")?;
+
+        let out = String::from_utf8(cmd.stdout).unwrap();
+        let err = String::from_utf8(cmd.stderr).unwrap();
+
+        if !cmd.status.success() {
+            bail!("installed binary sass failed with error: {err}{out}")
+        }
 
         if self.optimize {
-            let css_style = grass::from_string(sass_string, &Default::default())?;
-
             let stylesheet =
-                StyleSheet::parse(&css_style, Default::default()).map_err(|e| anyhow!("{e}"))?;
+                StyleSheet::parse(&out, Default::default()).map_err(|e| anyhow!("{e}"))?;
 
             let targets = Targets {
                 browsers: Browsers::from_browserslist([
@@ -55,23 +75,10 @@ impl Sass {
                 targets,
                 ..Default::default()
             })?;
-            Ok(out_css.code)
-        } else if let Ok(sass_bin) = which("sass") {
-            let cmd = Command::new(sass_bin)
-                .args(["--embed-sources", "--embed-source-map", file.as_str()])
-                .output()?;
-
-            let out = String::from_utf8(cmd.stdout).unwrap();
-            let err = String::from_utf8(cmd.stderr).unwrap();
-
-            if !cmd.status.success() {
-                bail!("installed binary sass failed with error: {err}{out}")
-            }
-
-            Ok(out)
-        } else {
-            Ok(grass::from_string(sass_string, &Default::default())?)
+            return Ok(out_css.code);
         }
+
+        Ok(out)
     }
 
     pub fn watched(&self) -> String {

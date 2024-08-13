@@ -1,20 +1,17 @@
 use crate::anyhow::Result;
 use crate::ext::{ByteVecExt, Utf8PathExt};
-use base64::engine::general_purpose::URL_SAFE;
-use base64::prelude::*;
+use base64::{engine::general_purpose::URL_SAFE, Engine};
 use brotli::{enc::BrotliEncoderParams, BrotliCompress};
 use camino::{Utf8Path, Utf8PathBuf};
 use flate2::{Compression, GzBuilder};
 use fs_err as fs;
 use seahash::SeaHasher;
-use serde::Deserialize;
-use std::{
-    hash::Hasher,
-    io::{Cursor, Write},
-};
+use serde::{Deserialize, Serialize};
+use std::hash::Hasher;
+use std::io::{Cursor, Write};
 use unic_langid::LanguageIdentifier;
 
-#[derive(Default, Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Output {
     pub brotli: bool,

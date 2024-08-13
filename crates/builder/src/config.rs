@@ -1,5 +1,10 @@
+use std::fs::File;
+use std::io::{Read, Write};
+
+use fs4::fs_std::FileExt;
 use fs_err as fs;
 use log::LevelFilter;
+use serde::{Deserialize, Serialize};
 
 use crate::postbuild::PostbuildConfig;
 use crate::prebuild::PrebuildConfig;
@@ -11,10 +16,10 @@ use crate::{
     setup_logging,
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_metadata::{Metadata, Package, PackageId};
+use cargo_metadata::{Package, PackageId};
 use clap::{Args, Subcommand};
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Clone, Serialize, Deserialize)]
 pub struct CmdArgs {
     #[clap(long, env = "CARGO_MANIFEST_DIR")]
     pub dir: Utf8PathBuf,
@@ -22,9 +27,11 @@ pub struct CmdArgs {
     pub profile: String,
     #[clap(long, env = "CARGO_PKG_NAME")]
     pub package: String,
+    #[clap(long, env = "TARGET")]
+    pub target: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PackageConfig {
     pub name: String,
     pub id: PackageId,
@@ -90,7 +97,7 @@ impl Commands {
 
         let conf = Config::new(args)?;
 
-        let log_path = conf.metadata.target_directory.join(&conf.package.name);
+        let log_path = conf.target_dir.join(&conf.package.name);
         fs::create_dir_all(&log_path)?;
 
         let log_file = log_path.join(format!("{}-{}.log", step.as_str(), args.profile));
@@ -101,12 +108,12 @@ impl Commands {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub args: CmdArgs,
-    pub metadata: Metadata,
+    pub target_dir: Utf8PathBuf,
     pub package: PackageConfig,
-    pub builder_deps: Vec<PackageConfig>,
+    pub deps: Vec<String>,
 }
 
 impl Config {
@@ -117,20 +124,21 @@ impl Config {
 
         let root_pack = metadata.root_package().context("root package not found")?;
         let package = PackageConfig::from_package(root_pack)?;
-        let builder_deps = metadata
+        let deps = metadata
             .local_dependency_packages()
-            .map(PackageConfig::from_package)
-            .collect::<Result<_>>()?;
+            .map(|p| p.name.to_string())
+            .collect::<Vec<_>>();
+
+        let target_dir = metadata.target_directory.clone();
         Ok(Self {
             args: args.clone(),
             package,
-            metadata,
-            builder_deps,
+            target_dir,
+            deps,
         })
     }
 
     fn run(&self, step: BuildStep) -> Result<()> {
-        log::info!("Running {} step", step.as_str());
         match step {
             BuildStep::Prebuild => self.run_prebuild(),
             BuildStep::Postbuild => self.run_postbuild(),
@@ -138,14 +146,111 @@ impl Config {
     }
 
     pub fn run_prebuild(&self) -> Result<()> {
-        self.package
-            .prebuild
-            .as_ref()
-            .expect("No prebuild config found")
-            .process(self)
+        for package in &self.deps {
+            for postbuild_file in self.postbuild_files(package)? {
+                let conf = match Self::load(&postbuild_file) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        log::error!("Failed to load postbuild config from {postbuild_file}: {e}");
+                        continue;
+                    }
+                };
+
+                conf.run_postbuild()?;
+            }
+        }
+
+        log::info!("Running prebuild for {}", self.package.name);
+
+        if let Some(prebuild) = &self.package.prebuild {
+            prebuild.process(self)?;
+        } else {
+            log::info!("No prebuild configuration found for {}", self.package.name);
+        }
+
+        // save the config only if the postbuild step is present
+        // to make it easier to skip in the next package prebuild
+        if self.package.postbuild.is_some() {
+            log::info!(
+                "Saving postbuild configuration file for {}",
+                self.package.name
+            );
+            self.save()
+                .context("Failed to save postbuild configuration file")?;
+        }
+
+        Ok(())
+    }
+
+    fn postbuild_file(&self, package_name: &str) -> Utf8PathBuf {
+        self.target_dir
+            .join(package_name)
+            .join(&self.args.target)
+            .join("postbuild.yaml")
+    }
+
+    fn postbuild_files(&self, package_name: &str) -> Result<Vec<Utf8PathBuf>> {
+        let dir = self.target_dir.join(package_name);
+
+        if !dir.exists() {
+            return Ok(Vec::new());
+        }
+
+        let mut files: Vec<Utf8PathBuf> = Vec::new();
+
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.is_dir() {
+                let file = path.join("postbuild.yaml");
+                if file.exists() {
+                    files.push(Utf8PathBuf::from_path_buf(file).map_err(|e| {
+                        anyhow::Error::msg(format!("Failed to create postbuild file path :{:?}", e))
+                    })?);
+                }
+            }
+        }
+
+        Ok(files)
+    }
+
+    fn save(&self) -> Result<()> {
+        let string =
+            serde_yaml::to_string(self).context("Failed to serialize configuration file")?;
+
+        let path = self.postbuild_file(&self.package.name);
+
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        let mut file = File::create(&path)
+            .context(format!("Failed to create configuration file to '{path}'"))?;
+        file.write_all(string.as_bytes())
+            .context("Failed to write configuration file")?;
+
+        Ok(())
+    }
+
+    fn load(path: &Utf8PathBuf) -> Result<Self> {
+        let mut file = File::open(path)?;
+        file.try_lock_exclusive()?;
+
+        let mut string = String::new();
+        file.read_to_string(&mut string)?;
+
+        file.unlock()?;
+        fs::remove_file(path)?;
+
+        let conf: Self = serde_yaml::from_str(&string)
+            .context(format!("Failed to parse output file '{}'", path))?;
+
+        Ok(conf)
     }
 
     pub fn run_postbuild(&self) -> Result<()> {
+        log::info!("Running postbuild for {}", self.package.name);
         self.package
             .postbuild
             .as_ref()
@@ -154,9 +259,9 @@ impl Config {
     }
 
     pub fn site_dir(&self, assembly: &str) -> Utf8PathBuf {
-        self.metadata
-            .target_directory
+        self.target_dir
             .join(&self.package.name)
+            .join(&self.args.target)
             .join(assembly)
             .join(&self.args.profile)
     }

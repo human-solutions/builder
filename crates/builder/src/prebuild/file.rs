@@ -1,9 +1,9 @@
 use crate::generate::Output;
 
 use camino::Utf8PathBuf;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct File {
     pub path: Utf8PathBuf,
     pub out: Output,

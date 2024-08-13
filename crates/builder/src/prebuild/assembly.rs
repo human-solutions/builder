@@ -3,13 +3,15 @@ use crate::anyhow::Result;
 use crate::generate::{Asset, Generator};
 use crate::Config;
 use fs_err as fs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Serialize)]
 #[serde(default)]
 pub struct Assembly {
     #[serde(skip)]
     pub name: Option<String>,
+    #[serde(skip)]
+    pub target: String,
     #[serde(skip)]
     pub profile: String,
 
@@ -39,8 +41,8 @@ impl Assembly {
         for sass in &self.sass {
             log::info!("Processing sass assembly '{name}'");
             let css = sass.process(info)?;
-            let filename = sass.file.file_name().unwrap();
-            let hash = sass.out.write_file(css.as_bytes(), &site_dir, filename)?;
+            let filename = sass.file_name(&None);
+            let hash = sass.out.write_file(css.as_bytes(), &site_dir, &filename)?;
 
             generator.add_asset(name, Asset::from_sass(sass, hash));
             watched.push(sass.watched());
