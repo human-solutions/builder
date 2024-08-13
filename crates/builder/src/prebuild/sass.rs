@@ -19,14 +19,27 @@ pub struct Sass {
 }
 
 impl Sass {
-    pub fn url(&self, checksum: Option<String>) -> String {
+    pub fn file_name(&self, checksum: &Option<String>) -> String {
+        let filename = self
+            .file
+            .file_stem()
+            .map(|f| {
+                let mut s = f.to_string();
+                s.push_str(".css");
+                s
+            })
+            .unwrap_or_default();
+        format!("{}{filename}", checksum.as_deref().unwrap_or_default())
+    }
+
+    pub fn url(&self, checksum: &Option<String>) -> String {
         let folder = if let Some(folder) = self.out.folder.as_ref() {
             format!("/{folder}")
         } else {
             "".to_string()
         };
-        let filename = self.file.file_name().unwrap().replace("scss", "css");
-        format!("{folder}/{}{filename}", checksum.unwrap_or_default())
+        let filename = self.file_name(checksum);
+        format!("{folder}/{filename}")
     }
 
     pub fn process(&self, info: &Config) -> Result<String> {

@@ -15,13 +15,8 @@ pub struct Asset {
 impl Asset {
     pub fn from_sass(sass: &Sass, checksum: Option<String>) -> Self {
         Self {
-            url: sass.url(checksum),
-            name: sass
-                .file
-                .file_name()
-                .unwrap()
-                .to_string()
-                .replace("scss", "css"),
+            url: sass.url(&checksum),
+            name: sass.file_name(&None),
             encodings: sass.out.encodings(),
             localizations: Vec::new(),
         }
