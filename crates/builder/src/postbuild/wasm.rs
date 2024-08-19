@@ -6,7 +6,7 @@ use crate::anyhow::{Context, Result};
 use crate::generate::Output;
 use crate::util::{run_cmd, timehash};
 use crate::Config;
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 use serde::{Deserialize, Serialize};
 use swc::config::{IsModule, JsMinifyOptions};
 use swc::{try_with_handler, BoolOrDataConfig};
@@ -19,8 +19,6 @@ use wasm_bindgen_cli_support::Bindgen;
 pub struct WasmBindgen {
     optimize_wasm: bool,
     minify_js: bool,
-    /// Path to the rust mobile library Cargo.toml
-    manifest_path: Option<Utf8PathBuf>,
     out: Output,
 }
 
@@ -95,7 +93,16 @@ impl WasmBindgen {
             run_cmd(&lib_cmds).context("Failed to create android library")?;
 
             // build binaries
-            let mut bin_cmds = vec!["cargo", "ndk", "--manifest-path", "", "-o", "", "build"];
+            let manifest_path = info.args.dir.join("Cargo.toml").to_string();
+            let mut bin_cmds = vec![
+                "cargo",
+                "ndk",
+                "--manifest-path",
+                &manifest_path,
+                "-o",
+                "",
+                "build",
+            ];
             if profile == "release" {
                 bin_cmds.push("--release");
             }
