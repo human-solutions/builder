@@ -4,9 +4,9 @@ use std::sync::Arc;
 
 use crate::anyhow::{Context, Result};
 use crate::generate::Output;
-use crate::util::timehash;
+use crate::util::{run_cmd, timehash};
 use crate::Config;
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
 use swc::config::{IsModule, JsMinifyOptions};
 use swc::{try_with_handler, BoolOrDataConfig};
@@ -19,59 +19,123 @@ use wasm_bindgen_cli_support::Bindgen;
 pub struct WasmBindgen {
     optimize_wasm: bool,
     minify_js: bool,
+    /// Path to the rust mobile library Cargo.toml
+    manifest_path: Option<Utf8PathBuf>,
     out: Output,
 }
 
 impl WasmBindgen {
-    pub fn process(&self, info: &Config, assembly: &str) -> Result<()> {
-        let hash = timehash();
-        let debug = info.args.profile != "release";
-        let profile = if info.args.profile == "dev" {
-            "debug"
-        } else {
-            &info.args.profile
-        };
-        let input = info
-            .target_dir
-            .join("wasm32-unknown-unknown")
-            .join(profile)
-            .join(&info.package.name)
-            .with_extension("wasm");
-
-        let mut output = Bindgen::new()
-            .input_path(input)
-            .browser(true)?
-            .debug(debug)
-            .keep_debug(debug)
-            .out_name(&format!("{hash}{}", info.package.name))
-            .generate_output()?;
-
-        let site_dir = info.site_dir(assembly);
-        // check out the code for this, that's where much of the stuff done here comes from:
-        // output.emit(&site_dir)?;
-
-        let _wasm_hash = {
-            let mut wasm = output.wasm_mut().emit_wasm();
-            let filename = format!("{}.wasm", info.package.name);
-            if self.optimize_wasm {
-                Self::optimize_wasm(&mut wasm)?;
-            }
-            self.out.write_file(&wasm, &site_dir, &filename)
-        }?;
-
-        let _js_hash = {
-            let filename = format!("{}.js", info.package.name);
-            let js = if self.minify_js {
-                Self::minify(output.js().to_string())?
+    pub fn process(&self, info: &Config, assembly: &str, profile: &str) -> Result<()> {
+        if assembly == "web" {
+            let hash = timehash();
+            let debug = info.args.profile != "release";
+            let profile = if info.args.profile == "dev" {
+                "debug"
             } else {
-                output.js().to_string()
+                &info.args.profile
             };
-            let contents = js.as_bytes();
-            self.out.write_file(contents, &site_dir, &filename)
-        }?;
+            let input = info
+                .target_dir
+                .join("wasm32-unknown-unknown")
+                .join(profile)
+                .join(&info.package.name)
+                .with_extension("wasm");
 
-        self.write_snippets(output.snippets());
-        self.write_modules(output.local_modules(), &site_dir)?;
+            let mut output = Bindgen::new()
+                .input_path(input)
+                .browser(true)?
+                .debug(debug)
+                .keep_debug(debug)
+                .out_name(&format!("{hash}{}", info.package.name))
+                .generate_output()?;
+
+            let site_dir = info.site_dir(assembly);
+            // check out the code for this, that's where much of the stuff done here comes from:
+            // output.emit(&site_dir)?;
+
+            let _wasm_hash = {
+                let mut wasm = output.wasm_mut().emit_wasm();
+                let filename = format!("{}.wasm", info.package.name);
+                if self.optimize_wasm {
+                    Self::optimize_wasm(&mut wasm)?;
+                }
+                self.out.write_file(&wasm, &site_dir, &filename)
+            }?;
+
+            let _js_hash = {
+                let filename = format!("{}.js", info.package.name);
+                let js = if self.minify_js {
+                    Self::minify(output.js().to_string())?
+                } else {
+                    output.js().to_string()
+                };
+                let contents = js.as_bytes();
+                self.out.write_file(contents, &site_dir, &filename)
+            }?;
+
+            self.write_snippets(output.snippets());
+            self.write_modules(output.local_modules(), &site_dir)?;
+        } else if assembly == "android" {
+            // build lib
+            let profile = if profile == "release" {
+                "lib-release"
+            } else {
+                "debug"
+            };
+            let lib_cmds = vec![
+                "cargo",
+                "build",
+                "--profile",
+                profile,
+                "-p",
+                assembly,
+                "--color",
+                "always",
+            ];
+            run_cmd(&lib_cmds).context("Failed to create android library")?;
+
+            // build binaries
+            let mut bin_cmds = vec!["cargo", "ndk", "--manifest-path", "", "-o", "", "build"];
+            if profile == "release" {
+                bin_cmds.push("--release");
+            }
+            run_cmd(&bin_cmds).context("Failed to create android binaries")?;
+
+            // generate bindings
+            let is_mac = cfg!(target_os = "macos");
+            let ext = if is_mac { "dylib" } else { "so" };
+            let lib_path = {
+                let mut p = info.target_dir.join(profile).join(&info.package.name);
+                p.set_extension(ext);
+                p.to_string()
+            };
+            let out_dir = {
+                let p = info.site_dir(assembly).join(
+                    self.out
+                        .folder
+                        .as_deref()
+                        .map(|f| f.to_string())
+                        .unwrap_or_default(),
+                );
+
+                p.to_string()
+            };
+            let bind_cmds = vec![
+                "cargo",
+                "run",
+                "--release",
+                "--bin=unifi-bindgen",
+                "--color=always",
+                "--",
+                "generate",
+                "--library",
+                &lib_path,
+                "--out-dir",
+                &out_dir,
+                "--language=kotlin",
+            ];
+            run_cmd(&bind_cmds).context("Failed to generate android bindings")?;
+        }
         Ok(())
     }
 
