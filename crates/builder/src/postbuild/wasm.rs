@@ -88,14 +88,18 @@ impl WasmBindgen {
             if profile == "release" {
                 bin_cmds.push("--release");
             }
+            log::info!("Running: {:?}", bin_cmds);
             run_cmd(&bin_cmds).context("Failed to create android binaries")?;
+            log::info!("Android binaries created");
 
             // generate bindings
-            let is_mac = cfg!(target_os = "macos");
-            let ext = if is_mac { "dylib" } else { "so" };
             let lib_path = {
-                let mut p = info.target_dir.join(profile).join(&info.package.name);
-                p.set_extension(ext);
+                let is_mac = cfg!(target_os = "macos");
+                let ext = if is_mac { "dylib" } else { "so" };
+                let p = info
+                    .target_dir
+                    .join(profile)
+                    .join(format!("lib{}.{}", info.package.name, ext));
                 p.to_string()
             };
             let out_dir = {
@@ -123,7 +127,9 @@ impl WasmBindgen {
                 &out_dir,
                 "--language=kotlin",
             ];
+            log::info!("Running: {:?}", bind_cmds);
             run_cmd(&bind_cmds).context("Failed to generate android bindings")?;
+            log::info!("Android bindings generated");
         }
         Ok(())
     }
