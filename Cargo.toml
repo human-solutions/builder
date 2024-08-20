@@ -6,6 +6,7 @@ members = ["crates/*"]
 
 [workspace.dependencies]
 seahash = "4.1"
+uniffi = "0.28"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

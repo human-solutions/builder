@@ -113,7 +113,7 @@ impl WasmBindgen {
                 "cargo",
                 "run",
                 "--release",
-                "--bin=unifi-bindgen",
+                "--bin=unifi-cli",
                 "--color=always",
                 "--",
                 "generate",
