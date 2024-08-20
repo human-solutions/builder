@@ -74,24 +74,6 @@ impl WasmBindgen {
             self.write_snippets(output.snippets());
             self.write_modules(output.local_modules(), &site_dir)?;
         } else if assembly == "android" {
-            // build lib
-            let profile = if profile == "release" {
-                "lib-release"
-            } else {
-                "debug"
-            };
-            let lib_cmds = vec![
-                "cargo",
-                "build",
-                "--profile",
-                profile,
-                "-p",
-                assembly,
-                "--color",
-                "always",
-            ];
-            run_cmd(&lib_cmds).context("Failed to create android library")?;
-
             // build binaries
             let manifest_path = info.args.dir.join("Cargo.toml").to_string();
             let mut bin_cmds = vec![
