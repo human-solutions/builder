@@ -1,14 +1,9 @@
-use std::{
-    env,
-    fs::{self, copy},
-    path::{Path, PathBuf},
-    process::{Command, ExitCode};
-};
+use std::process::{Command, ExitCode};
 
 use which::which;
 
-fn main() {
-    uniffi::generate_scaffolding("./src/polyglot.udl").unwrap();
+fn main() -> ExitCode {
+    uniffi::generate_scaffolding("./src/library.udl").unwrap();
     if which("builder").is_err() {
         println!("cargo::warning=builder command not found, skipping");
         return ExitCode::SUCCESS;
