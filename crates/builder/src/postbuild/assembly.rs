@@ -19,7 +19,7 @@ pub struct Assembly {
 impl Assembly {
     pub fn process(&self, info: &Config) -> Result<()> {
         for wasm in &self.wasm {
-            wasm.process(info, &self.name, &self.profile)?;
+            wasm.process(info, &self.name)?;
         }
 
         Ok(())

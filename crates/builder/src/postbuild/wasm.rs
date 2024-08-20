@@ -23,7 +23,7 @@ pub struct WasmBindgen {
 }
 
 impl WasmBindgen {
-    pub fn process(&self, info: &Config, assembly: &str, profile: &str) -> Result<()> {
+    pub fn process(&self, info: &Config, assembly: &str) -> Result<()> {
         if assembly == "web" {
             let hash = timehash();
             let debug = info.args.profile != "release";
@@ -74,18 +74,37 @@ impl WasmBindgen {
             self.write_snippets(output.snippets());
             self.write_modules(output.local_modules(), &site_dir)?;
         } else if assembly == "android" {
+            let profile = if info.args.profile == "dev" {
+                "debug"
+            } else if info.args.profile == "release" {
+                "lib-release"
+            } else {
+                &info.args.profile
+            };
+
             // build binaries
             let manifest_path = info.args.dir.join("Cargo.toml").to_string();
+            let out_dir = {
+                let p = info.site_dir(assembly).join(
+                    self.out
+                        .folder
+                        .as_deref()
+                        .map(|f| f.to_string())
+                        .unwrap_or_default(),
+                );
+
+                p.to_string()
+            };
             let mut bin_cmds = vec![
                 "cargo",
                 "ndk",
                 "--manifest-path",
                 &manifest_path,
                 "-o",
-                "",
+                &out_dir,
                 "build",
             ];
-            if profile == "release" {
+            if profile == "lib-release" {
                 bin_cmds.push("--release");
             }
             log::info!("Running: {:?}", bin_cmds);
@@ -103,13 +122,7 @@ impl WasmBindgen {
                 p.to_string()
             };
             let out_dir = {
-                let p = info.site_dir(assembly).join(
-                    self.out
-                        .folder
-                        .as_deref()
-                        .map(|f| f.to_string())
-                        .unwrap_or_default(),
-                );
+                let p = info.site_dir(assembly).join("main").join("java");
 
                 p.to_string()
             };
