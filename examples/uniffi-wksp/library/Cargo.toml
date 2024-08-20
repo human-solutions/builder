@@ -1,0 +1,18 @@
+[package]
+edition = "2021"
+name = "library"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+name = "library"
+
+[build-dependencies]
+uniffi = { workspace = true, features = ["build"] }
+
+######################
+##### POST build #####
+######################
+
+[[package.metadata.postbuild."*".android.debug.wasmbindgen]]
+out = { folder = "jniLibs/" }

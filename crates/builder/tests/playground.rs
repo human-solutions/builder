@@ -98,6 +98,16 @@ fn test_wasm() {
 "###)
 }
 
+#[test]
+fn test_uniffi() {
+    let dir = Utf8PathBuf::from("../../examples/uniffi-wksp");
+
+    cargo(&dir, ["clean"]);
+    cargo(&dir, ["build"]);
+
+    // let out = dir.join("target").join("uniffi");
+}
+
 struct NoChange;
 
 impl Replacer for NoChange {

@@ -1,0 +1,9 @@
+[workspace]
+members = ["app", "library"]
+resolver = "2"
+
+[workspace.dependencies]
+library = { path = "library" }
+
+uniffi = "0.28"
+wasm-bindgen = "0.2"
