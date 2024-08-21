@@ -105,7 +105,20 @@ fn test_uniffi() {
     cargo(&dir, ["clean"]);
     cargo(&dir, ["build"]);
 
-    // let out = dir.join("target").join("uniffi");
+    let out = dir.join("target").join("library");
+
+    insta::assert_snapshot!(out.ls_ascii_replace::<NoChange>(0).unwrap(), @r###"
+    library:
+      prebuild-debug.log
+      aarch64-apple-darwin:
+        android:
+          debug:
+            main:
+              java:
+                uniffi:
+                  library:
+                    library.kt
+    "###);
 }
 
 struct NoChange;

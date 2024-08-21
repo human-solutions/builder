@@ -1,5 +1,5 @@
 [workspace]
-members = ["app", "library"]
+members = ["app", "library", "uniffi-cli"]
 resolver = "2"
 
 [workspace.dependencies]
