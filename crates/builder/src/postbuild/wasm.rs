@@ -82,35 +82,6 @@ impl WasmBindgen {
                 &info.args.profile
             };
 
-            // build binaries
-            let manifest_path = info.args.dir.join("Cargo.toml").to_string();
-            let out_dir = {
-                let p = info.site_dir(assembly).join(
-                    self.out
-                        .folder
-                        .as_deref()
-                        .map(|f| f.to_string())
-                        .unwrap_or_default(),
-                );
-
-                p.to_string()
-            };
-            let mut bin_cmds = vec![
-                "cargo",
-                "ndk",
-                "--manifest-path",
-                &manifest_path,
-                "-o",
-                &out_dir,
-                "build",
-            ];
-            if profile == "lib-release" {
-                bin_cmds.push("--release");
-            }
-            log::info!("Running: {:?}", bin_cmds);
-            run_cmd(&bin_cmds).context("Failed to create android binaries")?;
-            log::info!("Android binaries created");
-
             // generate bindings
             let lib_path = {
                 let is_mac = cfg!(target_os = "macos");
@@ -130,7 +101,7 @@ impl WasmBindgen {
                 "cargo",
                 "run",
                 "--release",
-                "--bin=unifi-cli",
+                "-p=uniffi-cli",
                 "--color=always",
                 "--",
                 "generate",
