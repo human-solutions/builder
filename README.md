@@ -25,3 +25,25 @@ These can be used by `cargo binstall` to install the binary.
 - **Compression**. Pre-compressing the files in brotli and gzip formats. Only release builds.
 - **Packaging**. Moving the file to the correct folder in the `target/<name of my package>` folder.
 - **Embedding**. The files can be included in the binary with [rust-embed](https://crates.io/crates/rust-embed).
+
+### Configuration
+
+The configuration is done in the package's `Cargo.toml` file.
+
+A table header for running a tool is constructed as:
+
+`[[package.metadata.<phase>.<tool>]]`
+
+Where:
+
+- `<phase>` is either `prebuild` or `postbuild`.
+- `<tool>`: is the name of the tool to run.
+
+```toml
+[[package.metadata.<phase>.<tool>]]
+# optional: only run on the specified targets
+target = [""]
+# optional: only run on the specified profile.
+# typically debug or release, or any other profile specified in the package's Cargo.toml
+profile = [""]
+```
