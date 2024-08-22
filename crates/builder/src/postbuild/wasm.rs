@@ -4,14 +4,16 @@ use std::sync::Arc;
 
 use crate::anyhow::{Context, Result};
 use crate::generate::Output;
-use crate::util::{run_cmd, timehash};
+use crate::util::timehash;
 use crate::Config;
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
 use swc::config::{IsModule, JsMinifyOptions};
 use swc::{try_with_handler, BoolOrDataConfig};
 use swc_common::{FileName, SourceMap, GLOBALS};
 use tempfile::NamedTempFile;
+use uniffi_bindgen::bindings::KotlinBindingGenerator;
+use uniffi_bindgen::generate_external_bindings;
 use wasm_bindgen_cli_support::Bindgen;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -20,6 +22,8 @@ pub struct WasmBindgen {
     optimize_wasm: bool,
     minify_js: bool,
     out: Output,
+    /// a relative path (relative to the crate directory where it is used) to a UDL file to use for generating bindings
+    udl_file: Option<Utf8PathBuf>,
 }
 
 impl WasmBindgen {
@@ -74,46 +78,29 @@ impl WasmBindgen {
             self.write_snippets(output.snippets());
             self.write_modules(output.local_modules(), &site_dir)?;
         } else if assembly == "android" {
-            let profile = if info.args.profile == "dev" {
-                "debug"
-            } else if info.args.profile == "release" {
-                "lib-release"
-            } else {
-                &info.args.profile
+            let Some(udl_path) = self.udl_file.as_ref() else {
+                anyhow::bail!("UDL file is required for android assembly");
             };
 
-            // generate bindings
-            let lib_path = {
-                let is_mac = cfg!(target_os = "macos");
-                let ext = if is_mac { "dylib" } else { "so" };
-                let p = info
-                    .target_dir
-                    .join(profile)
-                    .join(format!("lib{}.{}", info.package.name, ext));
-                p.to_string()
-            };
-            let out_dir = {
-                let p = info.site_dir(assembly).join("main").join("java");
+            let udl_file = info.args.dir.join(udl_path);
 
-                p.to_string()
-            };
-            let bind_cmds = vec![
-                "cargo",
-                "run",
-                "--release",
-                "-p=uniffi-cli",
-                "--color=always",
-                "--",
-                "generate",
-                "--library",
-                &lib_path,
-                "--out-dir",
-                &out_dir,
-                "--language=kotlin",
-            ];
-            log::info!("Running: {:?}", bind_cmds);
-            run_cmd(&bind_cmds).context("Failed to generate android bindings")?;
-            log::info!("Android bindings generated");
+            let out_folder = self.out.folder.as_deref().unwrap_or("".into());
+
+            let out_dir = info.site_dir(assembly).join(out_folder);
+
+            generate_external_bindings(
+                &KotlinBindingGenerator,
+                udl_file,
+                None::<&Utf8PathBuf>,
+                Some(out_dir),
+                None::<&Utf8PathBuf>,
+                Some(&info.package.name),
+                true,
+            )
+            .context(format!(
+                "Failed to generate bindings for {}",
+                info.package.name
+            ))?;
         }
         Ok(())
     }
