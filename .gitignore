@@ -5,3 +5,4 @@
 **/gen/*
 result
 pkg
+.direnv/
