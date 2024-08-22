@@ -107,10 +107,10 @@ fn test_uniffi() {
 
     let out = dir.join("target").join("library");
 
-    insta::assert_snapshot!(out.ls_ascii_replace::<NoChange>(0).unwrap(), @r###"
+    insta::assert_snapshot!(out.ls_ascii_replace::<RemoveTargetAndChecksum>(0).unwrap(), @r###"
     library:
       prebuild-debug.log
-      aarch64-apple-darwin:
+      <target>:
         android:
           debug:
             main:
