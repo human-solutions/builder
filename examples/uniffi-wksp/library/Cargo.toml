@@ -19,4 +19,5 @@ which = "6.0"
 ######################
 
 [[package.metadata.postbuild."*".android.debug.wasmbindgen]]
-out = { folder = "jniLibs/" }
+udl_file = "src/library.udl"
+out = { folder = "main/java/" }
