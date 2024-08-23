@@ -35,7 +35,9 @@ impl Task {
     }
 
     // maybe return a generic struct containing data about the output of the task
-    fn run(&self, target: &String, profile: &String) -> Result<()> {
+    fn run(&self, config: &Config) -> Result<()> {
+        let target = &config.args.target;
+        let profile = &config.args.profile;
         if (self.targets.is_empty() || self.targets.contains(target))
             && (self.profiles.is_empty() || self.profiles.contains(profile))
         {
@@ -97,9 +99,9 @@ impl Tasks {
 
         Ok(Self(tasks))
     }
-    fn run(&self, target: &String, profile: &String) -> Result<()> {
+    fn run(&self, config: &Config) -> Result<()> {
         for task in &self.0 {
-            task.run(target, profile)?;
+            task.run(config)?;
         }
 
         Ok(())
@@ -111,11 +113,16 @@ impl Tasks {
 }
 
 #[derive(Serialize, Deserialize)]
+struct Config {
+    pub args: CmdArgs,
+    pub package_dir: Utf8PathBuf,
+    pub target_dir: Utf8PathBuf,
+}
+
+#[derive(Serialize, Deserialize)]
 struct Setup {
     pub name: String,
-    pub args: CmdArgs,
-    pub dir: Utf8PathBuf,
-    pub target_dir: Utf8PathBuf,
+    pub config: Config,
     pub prebuild: Tasks,
     pub postbuild: Tasks,
     pub deps: Vec<String>,
@@ -144,11 +151,15 @@ impl Setup {
             postbuild = Tasks::from_value(postbuild_val)?;
         }
 
+        let config = Config {
+            args: args.clone(),
+            package_dir: package.manifest_path.clone(),
+            target_dir: metadata.target_directory.clone(),
+        };
+
         Ok(Self {
             name: package.name.clone(),
-            args: args.clone(),
-            dir: package.manifest_path.clone(),
-            target_dir: metadata.target_directory.clone(),
+            config,
             prebuild,
             postbuild,
             deps,
@@ -216,7 +227,7 @@ impl Setup {
             log::info!("No prebuild tasks found for {}", self.name);
         } else {
             log::info!("Running prebuild for {}", self.name);
-            self.prebuild.run(&self.args.target, &self.args.profile)?;
+            self.prebuild.run(&self.config)?;
         }
 
         if self.postbuild.is_empty() {
@@ -235,14 +246,14 @@ impl Setup {
             log::info!("No postbuild tasks found for {}", self.name);
         } else {
             log::info!("Running postbuild for {}", self.name);
-            self.postbuild.run(&self.args.target, &self.args.profile)?;
+            self.postbuild.run(&self.config)?;
         }
 
         Ok(())
     }
 
     fn postbuild_files(&self, package_name: &str) -> Result<Vec<Utf8PathBuf>> {
-        let target_dir = self.target_dir.join(package_name);
+        let target_dir = self.config.target_dir.join(package_name);
 
         if !target_dir.exists() {
             return Ok(Vec::new());
@@ -268,9 +279,10 @@ impl Setup {
     }
 
     fn postbuild_file(&self, package_name: &str) -> Utf8PathBuf {
-        self.target_dir
+        self.config
+            .target_dir
             .join(package_name)
-            .join(&self.args.target)
+            .join(&self.config.args.target)
             .join(POSTBUILD_FILE)
     }
 }
