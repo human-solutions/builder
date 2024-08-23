@@ -4,6 +4,7 @@ mod generate;
 mod install;
 mod postbuild;
 mod prebuild;
+mod task;
 mod util;
 
 pub use config::{CmdArgs, Commands, Config};
