@@ -45,7 +45,11 @@ impl Task {
                 ))?;
                 Tool::WasmBindgen(params)
             }
-            Tool::Sass(_) => todo!(),
+            Tool::Sass(_) => {
+                let params: SassParams = serde_json::from_value(value.clone())
+                    .context(format!("Failed to parse sass params for task '{key}'"))?;
+                Tool::Sass(params)
+            }
             Tool::Localized(_) => todo!(),
             Tool::Uniffi => todo!(),
         };
