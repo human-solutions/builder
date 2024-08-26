@@ -44,7 +44,7 @@ impl Assembly {
             let filename = sass.file_name(&None);
             let hash = sass.out.write_file(css.as_bytes(), &site_dir, &filename)?;
 
-            generator.add_asset(name, Asset::from_sass(sass, hash));
+            generator.add_asset(Asset::from_sass(sass, hash));
             watched.push(sass.watched());
         }
         for localized in &self.localized {
@@ -58,7 +58,7 @@ impl Assembly {
                 .out
                 .write_localized(&site_dir, filename, ext, variants)?;
 
-            generator.add_asset(name, Asset::from_localized(localized, hash, localizations));
+            generator.add_asset(Asset::from_localized(localized, hash, localizations));
             watched.push(localized.path.to_string());
         }
         for file in &self.files {
@@ -67,7 +67,7 @@ impl Assembly {
             let filename = file.path.file_name().unwrap();
             let hash = file.out.write_file(&contents, &site_dir, filename)?;
 
-            generator.add_asset(name, Asset::from_file(file, hash));
+            generator.add_asset(Asset::from_file(file, hash));
             watched.push(file.path.to_string());
         }
 

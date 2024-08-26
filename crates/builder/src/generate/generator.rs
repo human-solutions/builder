@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::anyhow::Result;
 use crate::ext::RustNaming;
 use crate::Config;
@@ -7,9 +5,12 @@ use fs_err as fs;
 
 use super::Asset;
 
+const MODULE_FILE: &str = "generated_assets.rs";
+const MODULE: &str = "GeneratedAssets";
+
 #[derive(Default)]
 pub struct Generator {
-    assets: HashMap<String, Vec<Asset>>,
+    assets: Vec<Asset>,
 }
 
 impl Generator {
@@ -17,28 +18,21 @@ impl Generator {
         "gen".to_string()
     }
 
-    pub fn add_asset(&mut self, assembly: &str, asset: Asset) {
-        self.assets
-            .entry(assembly.to_string())
-            .or_default()
-            .push(asset);
+    pub fn add_asset(&mut self, asset: Asset) {
+        self.assets.push(asset);
     }
     pub fn write(&self, info: &Config) -> Result<()> {
-        for (module, assets) in &self.assets {
-            self.write_assembly(module, info, assets)?;
-        }
-        Ok(())
+        self.write_assembly(info, &self.assets)
     }
 
-    pub fn write_assembly(&self, module: &str, info: &Config, assets: &[Asset]) -> Result<()> {
-        let module = module.to_rust_module();
-        let text = self.text(&module, assets);
+    pub fn write_assembly(&self, info: &Config, assets: &[Asset]) -> Result<()> {
+        let text = self.text(assets);
         let dir = info.args.dir.join("gen");
         if !dir.exists() {
             fs::create_dir_all(&dir)?;
         }
 
-        let path = dir.join(module).with_extension("rs");
+        let path = dir.join(MODULE_FILE).with_extension("rs");
         let changed = if path.exists() {
             fs::read_to_string(&path)? != text
         } else {
@@ -51,14 +45,14 @@ impl Generator {
         Ok(())
     }
 
-    pub fn text(&self, module: &str, assets: &[Asset]) -> String {
+    pub fn text(&self, assets: &[Asset]) -> String {
         let constants = self.constants(assets);
         let matching = self.match_list(assets);
         format!(
             r#"
 /// This is a generated file. Do not edit. It is updated depending on the build profile used (i.e. dev, release).
-/// Instead it should be included with an include! macro: `include!("../gen/{module}.rs");`
-pub mod {module} {{
+/// Instead it should be included with an include! macro: `include!("../gen/{MODULE_FILE}.rs");`
+pub mod {MODULE} {{
     #![allow(dead_code)]
 {constants}
 
