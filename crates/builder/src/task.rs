@@ -1,19 +1,46 @@
 use std::{
+    collections::HashMap,
     fmt::Display,
     fs::{self, File},
     io::{Read, Write},
     str::FromStr,
+    sync::Arc,
 };
 
 use anyhow::{Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use fs4::fs_std::FileExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use swc::{
+    config::{IsModule, JsMinifyOptions},
+    try_with_handler, BoolOrDataConfig,
+};
+use swc_common::{FileName, SourceMap, GLOBALS};
+use tempfile::NamedTempFile;
+use wasm_bindgen_cli_support::Bindgen;
 
-use crate::{ext::metadata::MetadataExt, CmdArgs};
+use crate::{ext::metadata::MetadataExt, generate::Output, util::timehash, CmdArgs};
 
 const POSTBUILD_FILE: &str = "postbuild.yaml";
+
+trait IntoVecString {
+    fn into_vec_string(&self, key: &str) -> Vec<String>;
+}
+
+impl IntoVecString for &Value {
+    fn into_vec_string(&self, key: &str) -> Vec<String> {
+        self.get(key)
+            .and_then(Value::as_array)
+            .map(|t| {
+                t.iter()
+                    .filter_map(Value::as_str)
+                    .map(String::from)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default()
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 struct Task {
@@ -26,12 +53,23 @@ impl Task {
     fn from_value(key: &str, value: &Value) -> Result<Self> {
         let tool = Tool::from_str(key).context(format!("Invalid tool '{key}'"))?;
 
+        let targets = value.into_vec_string("target");
+        let profiles = value.into_vec_string("profile");
+
         match tool {
             Tool::FontForge => todo!(),
-            Tool::WasmBindgen => todo!(),
+            Tool::WasmBindgen(_) => {
+                let params: WasmParams = serde_json::from_value(value.clone()).context(format!(
+                    "Failed to parse wasm-bindgen params for task '{key}'"
+                ))?;
+                Ok(Task {
+                    tool,
+                    targets,
+                    profiles,
+                })
+            }
             Tool::Uniffi => todo!(),
         }
-        todo!()
     }
 
     // maybe return a generic struct containing data about the output of the task
@@ -47,7 +85,11 @@ impl Task {
                 target,
                 profile
             );
-            todo!()
+            match &self.tool {
+                Tool::FontForge => todo!(),
+                Tool::WasmBindgen(params) => todo!(),
+                Tool::Uniffi => todo!(),
+            }
         } else {
             log::info!("Skipping task for {}", self.tool);
         }
@@ -59,7 +101,7 @@ impl Task {
 #[derive(Serialize, Deserialize)]
 enum Tool {
     FontForge,
-    WasmBindgen,
+    WasmBindgen(WasmParams),
     Uniffi,
 }
 
@@ -67,7 +109,7 @@ impl Display for Tool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Tool::FontForge => write!(f, "font-forge"),
-            Tool::WasmBindgen => write!(f, "wasm-bindgen"),
+            Tool::WasmBindgen(_) => write!(f, "wasm-bindgen"),
             Tool::Uniffi => write!(f, "uniffi"),
         }
     }
@@ -79,7 +121,7 @@ impl FromStr for Tool {
     fn from_str(s: &str) -> Result<Self> {
         match s {
             "font-forge" => Ok(Self::FontForge),
-            "wasm-bindgen" => Ok(Self::WasmBindgen),
+            "wasm-bindgen" => Ok(Self::WasmBindgen(WasmParams::default())),
             "uniffi" => Ok(Self::Uniffi),
             _ => anyhow::bail!("Invalid tool: {}", s),
         }
@@ -289,5 +331,162 @@ impl Setup {
             .join(package_name)
             .join(&self.config.args.target)
             .join(POSTBUILD_FILE)
+    }
+
+    pub fn site_dir(&self, assembly: &str) -> Utf8PathBuf {
+        self.config
+            .target_dir
+            .join(&self.name)
+            .join(&self.config.args.target)
+            .join(assembly)
+            .join(&self.config.args.profile)
+    }
+}
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+#[serde(default)]
+struct WasmParams {
+    optimize_wasm: bool,
+    minify_js: bool,
+    out: Output,
+}
+
+impl WasmParams {
+    pub fn process(&self, setup: &Setup, assembly: &str) -> Result<()> {
+        let hash = timehash();
+        let debug = setup.config.args.profile != "release";
+        let profile = if setup.config.args.profile == "dev" {
+            "debug"
+        } else {
+            &setup.config.args.profile
+        };
+        let input = setup
+            .config
+            .target_dir
+            .join("wasm32-unknown-unknown")
+            .join(profile)
+            .join(&setup.name)
+            .with_extension("wasm");
+
+        let mut output = Bindgen::new()
+            .input_path(input)
+            .browser(true)?
+            .debug(debug)
+            .keep_debug(debug)
+            .out_name(&format!("{hash}{}", setup.name))
+            .generate_output()?;
+
+        let site_dir = setup.site_dir(assembly);
+        // check out the code for this, that's where much of the stuff done here comes from:
+        // output.emit(&site_dir)?;
+
+        let _wasm_hash = {
+            let mut wasm = output.wasm_mut().emit_wasm();
+            let filename = format!("{}.wasm", setup.name);
+            if self.optimize_wasm {
+                Self::optimize_wasm(&mut wasm)?;
+            }
+            self.out.write_file(&wasm, &site_dir, &filename)
+        }?;
+
+        let _js_hash = {
+            let filename = format!("{}.js", setup.name);
+            let js = if self.minify_js {
+                Self::minify(output.js().to_string())?
+            } else {
+                output.js().to_string()
+            };
+            let contents = js.as_bytes();
+            self.out.write_file(contents, &site_dir, &filename)
+        }?;
+
+        self.write_snippets(output.snippets());
+        self.write_modules(output.local_modules(), &site_dir)?;
+        Ok(())
+    }
+
+    fn write_snippets(&self, snippets: &HashMap<String, Vec<String>>) {
+        // Provide inline JS files
+        let mut snippet_list = Vec::new();
+        for (identifier, list) in snippets.iter() {
+            for (i, _js) in list.iter().enumerate() {
+                let name = format!("inline{}.js", i);
+                snippet_list.push(format!(
+                    "snippet handling not implemented: {identifier} {name}"
+                ));
+            }
+        }
+        if !snippet_list.is_empty() {
+            panic!(
+                "snippet handling not implemented: {}",
+                snippet_list.join(", ")
+            );
+        }
+    }
+
+    fn write_modules(&self, modules: &HashMap<String, String>, _site_dir: &Utf8Path) -> Result<()> {
+        // Provide snippet files from JS snippets
+        for (path, _js) in modules.iter() {
+            println!("module: {path}");
+            // let site_path = Utf8PathBuf::from("snippets").join(path);
+            // let file_path = proj.site.root_relative_pkg_dir().join(&site_path);
+
+            // fs::create_dir_all(file_path.parent().unwrap()).await?;
+
+            // let site_file = SiteFile {
+            //     dest: file_path,
+            //     site: site_path,
+            // };
+
+            // js_changed |= if proj.release && proj.js_minify {
+            //     proj.site
+            //         .updated_with(&site_file, minify(js)?.as_bytes())
+            //         .await?
+            // } else {
+            //     proj.site.updated_with(&site_file, js.as_bytes()).await?
+            // };
+        }
+        Ok(())
+    }
+
+    fn optimize_wasm(wasm: &mut Vec<u8>) -> Result<()> {
+        let mut infile = NamedTempFile::new()?;
+        infile.write_all(wasm)?;
+
+        let mut outfile = NamedTempFile::new()?;
+
+        wasm_opt::OptimizationOptions::new_optimize_for_size()
+            .run(infile.path(), outfile.path())?;
+
+        wasm.clear();
+        outfile.read_to_end(wasm)?;
+        Ok(())
+    }
+
+    fn minify(js: String) -> Result<String> {
+        let cm = Arc::<SourceMap>::default();
+
+        let c = swc::Compiler::new(cm.clone());
+        let output = GLOBALS.set(&Default::default(), || {
+            try_with_handler(cm.clone(), Default::default(), |handler| {
+                let fm = cm.new_source_file(Arc::new(FileName::Anon), js);
+
+                c.minify(
+                    fm,
+                    handler,
+                    &JsMinifyOptions {
+                        compress: BoolOrDataConfig::from_bool(true),
+                        mangle: BoolOrDataConfig::from_bool(true),
+                        // keep_classnames: true,
+                        // keep_fnames: true,
+                        module: IsModule::Bool(true),
+                        ..Default::default()
+                    },
+                )
+                .context("failed to minify")
+            })
+        })?;
+
+        Ok(output.code)
     }
 }
