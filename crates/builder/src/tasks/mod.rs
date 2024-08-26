@@ -1,9 +1,11 @@
+mod fontforge;
 mod setup;
 mod wasm;
 
 use std::{fmt::Display, str::FromStr};
 
 use anyhow::{Context, Result};
+use fontforge::FontForgeParams;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use setup::Config;
@@ -26,7 +28,16 @@ impl Task {
         let profiles = value.into_vec_string("profile");
 
         match tool {
-            Tool::FontForge => todo!(),
+            Tool::FontForge(_) => {
+                let params: FontForgeParams = serde_json::from_value(value.clone()).context(
+                    format!("Failed to parse font-forge params for task '{key}'"),
+                )?;
+                Ok(Task {
+                    tool,
+                    targets,
+                    profiles,
+                })
+            }
             Tool::WasmBindgen(_) => {
                 let params: WasmParams = serde_json::from_value(value.clone()).context(format!(
                     "Failed to parse wasm-bindgen params for task '{key}'"
@@ -54,7 +65,7 @@ impl Task {
                 profile
             );
             match &self.tool {
-                Tool::FontForge => todo!(),
+                Tool::FontForge(fontforge) => fontforge.process(config)?,
                 Tool::WasmBindgen(wasm) => wasm.process(config)?,
                 Tool::Uniffi => todo!(),
             }
@@ -68,7 +79,7 @@ impl Task {
 
 #[derive(Serialize, Deserialize)]
 enum Tool {
-    FontForge,
+    FontForge(FontForgeParams),
     WasmBindgen(WasmParams),
     Uniffi,
 }
@@ -76,7 +87,7 @@ enum Tool {
 impl Display for Tool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Tool::FontForge => write!(f, "font-forge"),
+            Tool::FontForge(_) => write!(f, "font-forge"),
             Tool::WasmBindgen(_) => write!(f, "wasm-bindgen"),
             Tool::Uniffi => write!(f, "uniffi"),
         }
@@ -88,7 +99,7 @@ impl FromStr for Tool {
 
     fn from_str(s: &str) -> Result<Self> {
         match s {
-            "font-forge" => Ok(Self::FontForge),
+            "font-forge" => Ok(Self::FontForge(FontForgeParams::default())),
             "wasm-bindgen" => Ok(Self::WasmBindgen(WasmParams::default())),
             "uniffi" => Ok(Self::Uniffi),
             _ => anyhow::bail!("Invalid tool: {}", s),
