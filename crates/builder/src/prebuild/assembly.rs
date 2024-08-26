@@ -50,15 +50,15 @@ impl Assembly {
         for localized in &self.localized {
             log::info!("Processing localized assembly '{name}'");
             let variants = localized.process(info)?;
-            let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
+            // let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
 
             let filename = localized.path.iter().last().unwrap();
             let ext = &localized.file_extension;
-            let hash = localized
+            let _hash = localized
                 .out
                 .write_localized(&site_dir, filename, ext, variants)?;
 
-            generator.add_asset(Asset::from_localized(localized, hash, localizations));
+            // generator.add_asset(Asset::from_localized(localized, hash, localizations));
             watched.push(localized.path.to_string());
         }
         for file in &self.files {

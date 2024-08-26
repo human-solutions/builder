@@ -1,8 +1,8 @@
 use unic_langid::LanguageIdentifier;
 
 use crate::{
-    prebuild::{File, Localized},
-    tasks::SassParams,
+    prebuild::File,
+    tasks::{LocalizedParams, SassParams},
 };
 
 #[derive(Debug)]
@@ -26,7 +26,7 @@ impl Asset {
     }
 
     pub fn from_localized(
-        localized: &Localized,
+        localized: &LocalizedParams,
         checksum: Option<String>,
         localizations: Vec<LanguageIdentifier>,
     ) -> Self {

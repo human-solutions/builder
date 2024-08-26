@@ -1,10 +1,8 @@
 mod fontforge;
+mod localized;
 mod sass;
 mod setup;
 mod wasm;
-
-pub use sass::SassParams;
-pub use setup::Config;
 
 use std::{collections::HashSet, fmt::Display, str::FromStr};
 
@@ -13,6 +11,10 @@ use fontforge::FontForgeParams;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use wasm::WasmParams;
+
+pub use localized::LocalizedParams;
+pub use sass::SassParams;
+pub use setup::Config;
 
 use crate::{ext::value::IntoVecString, generate::Generator};
 
@@ -44,6 +46,7 @@ impl Task {
                 Tool::WasmBindgen(params)
             }
             Tool::Sass(_) => todo!(),
+            Tool::Localized(_) => todo!(),
             Tool::Uniffi => todo!(),
         };
 
@@ -75,6 +78,7 @@ impl Task {
                 Tool::FontForge(fontforge) => fontforge.process(config)?,
                 Tool::WasmBindgen(wasm) => wasm.process(config)?,
                 Tool::Sass(sass) => sass.process(config, generator, watched)?,
+                Tool::Localized(localized) => localized.process(config, generator, watched)?,
                 Tool::Uniffi => todo!(),
             }
         } else {
@@ -90,6 +94,7 @@ enum Tool {
     FontForge(FontForgeParams),
     WasmBindgen(WasmParams),
     Sass(SassParams),
+    Localized(LocalizedParams),
     Uniffi,
 }
 
@@ -99,6 +104,7 @@ impl Display for Tool {
             Tool::FontForge(_) => write!(f, "font-forge"),
             Tool::WasmBindgen(_) => write!(f, "wasm-bindgen"),
             Tool::Sass(_) => write!(f, "sass"),
+            Tool::Localized(_) => write!(f, "localized"),
             Tool::Uniffi => write!(f, "uniffi"),
         }
     }
