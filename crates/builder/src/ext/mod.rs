@@ -1,5 +1,6 @@
 pub mod anyhow;
 pub mod metadata;
+pub mod value;
 
 use base64::engine::general_purpose::URL_SAFE;
 use base64::prelude::*;
