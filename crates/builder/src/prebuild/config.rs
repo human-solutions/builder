@@ -92,7 +92,7 @@ impl PrebuildConfig {
                 }
             }
         }
-        generator.write(conf)?;
+        // generator.write(conf)?;
         for change in watched {
             println!("cargo::rerun-if-changed={}", change);
         }

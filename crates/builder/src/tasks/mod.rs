@@ -4,6 +4,7 @@ mod setup;
 mod wasm;
 
 pub use sass::SassParams;
+pub use setup::Config;
 
 use std::{collections::HashSet, fmt::Display, str::FromStr};
 
@@ -11,7 +12,6 @@ use anyhow::{Context, Result};
 use fontforge::FontForgeParams;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use setup::Config;
 use wasm::WasmParams;
 
 use crate::{ext::value::IntoVecString, generate::Generator};
@@ -146,7 +146,7 @@ impl Tasks {
             task.run(config, &mut generator, &mut watched)?;
         }
 
-        // generator.write(config)?;
+        generator.write(config)?;
 
         Ok(())
     }

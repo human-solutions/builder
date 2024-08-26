@@ -1,6 +1,6 @@
 use crate::anyhow::Result;
 use crate::ext::RustNaming;
-use crate::Config;
+use crate::tasks::Config;
 use fs_err as fs;
 
 use super::Asset;
@@ -21,8 +21,8 @@ impl Generator {
     pub fn add_asset(&mut self, asset: Asset) {
         self.assets.push(asset);
     }
-    pub fn write(&self, info: &Config) -> Result<()> {
-        self.write_assembly(info, &self.assets)
+    pub fn write(&self, config: &Config) -> Result<()> {
+        self.write_assembly(config, &self.assets)
     }
 
     pub fn write_assembly(&self, info: &Config, assets: &[Asset]) -> Result<()> {
