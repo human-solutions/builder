@@ -1,3 +1,4 @@
+mod file;
 mod fontforge;
 mod localized;
 mod sass;
@@ -7,6 +8,7 @@ mod wasm;
 use std::{collections::HashSet, fmt::Display, str::FromStr};
 
 use anyhow::{Context, Result};
+use file::FileParams;
 use fontforge::FontForgeParams;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -54,6 +56,11 @@ impl Task {
                 )?;
                 Tool::Localized(params)
             }
+            Tool::File(_) => {
+                let params: FileParams = serde_json::from_value(value.clone())
+                    .context(format!("Failed to parse file metadata: '{value}'"))?;
+                Tool::File(params)
+            }
             Tool::Uniffi => todo!(),
         };
 
@@ -86,6 +93,7 @@ impl Task {
                 Tool::WasmBindgen(wasm) => wasm.process(config)?,
                 Tool::Sass(sass) => sass.process(config, generator, watched)?,
                 Tool::Localized(localized) => localized.process(config, generator, watched)?,
+                Tool::File(_) => todo!(),
                 Tool::Uniffi => todo!(),
             }
         } else {
@@ -102,6 +110,7 @@ enum Tool {
     WasmBindgen(WasmParams),
     Sass(SassParams),
     Localized(LocalizedParams),
+    File(FileParams),
     Uniffi,
 }
 
@@ -112,6 +121,7 @@ impl Display for Tool {
             Tool::WasmBindgen(_) => write!(f, "wasm-bindgen"),
             Tool::Sass(_) => write!(f, "sass"),
             Tool::Localized(_) => write!(f, "localized"),
+            Tool::File(_) => write!(f, "file"),
             Tool::Uniffi => write!(f, "uniffi"),
         }
     }
