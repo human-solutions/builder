@@ -134,6 +134,9 @@ impl FromStr for Tool {
         match s {
             "font-forge" => Ok(Self::FontForge(FontForgeParams::default())),
             "wasm-bindgen" => Ok(Self::WasmBindgen(WasmParams::default())),
+            "sass" => Ok(Self::Sass(SassParams::default())),
+            "localized" => Ok(Self::Localized(LocalizedParams::default())),
+            "file" => Ok(Self::File(FileParams::default())),
             "uniffi" => Ok(Self::Uniffi),
             _ => anyhow::bail!("Invalid tool: {}", s),
         }
