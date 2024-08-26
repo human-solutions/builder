@@ -50,7 +50,11 @@ impl Task {
                     .context(format!("Failed to parse sass params for task '{key}'"))?;
                 Tool::Sass(params)
             }
-            Tool::Localized(_) => todo!(),
+            Tool::Localized(_) => {
+                let params: LocalizedParams = serde_json::from_value(value.clone())
+                    .context(format!("Failed to parse localized params for task '{key}'"))?;
+                Tool::Localized(params)
+            }
             Tool::Uniffi => todo!(),
         };
 
