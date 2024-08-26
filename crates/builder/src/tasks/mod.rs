@@ -34,25 +34,24 @@ impl Task {
 
         let tool = match tool {
             Tool::FontForge(_) => {
-                let params: FontForgeParams = serde_json::from_value(value.clone()).context(
-                    format!("Failed to parse font-forge params for task '{key}'"),
-                )?;
+                let params: FontForgeParams = serde_json::from_value(value.clone())
+                    .context(format!("Failed to parse font-forge metadata: '{value}'"))?;
                 Tool::FontForge(params)
             }
             Tool::WasmBindgen(_) => {
-                let params: WasmParams = serde_json::from_value(value.clone()).context(format!(
-                    "Failed to parse wasm-bindgen params for task '{key}'"
-                ))?;
+                let params: WasmParams = serde_json::from_value(value.clone())
+                    .context(format!("Failed to parse wasm-bindgen metadata: '{value}'"))?;
                 Tool::WasmBindgen(params)
             }
             Tool::Sass(_) => {
                 let params: SassParams = serde_json::from_value(value.clone())
-                    .context(format!("Failed to parse sass params for task '{key}'"))?;
+                    .context(format!("Failed to parse sass metadata: '{value}'"))?;
                 Tool::Sass(params)
             }
             Tool::Localized(_) => {
-                let params: LocalizedParams = serde_json::from_value(value.clone())
-                    .context(format!("Failed to parse localized params for task '{key}'"))?;
+                let params: LocalizedParams = serde_json::from_value(value.clone()).context(
+                    format!("Failed to parse localized assets metadata: '{value}'"),
+                )?;
                 Tool::Localized(params)
             }
             Tool::Uniffi => todo!(),
