@@ -87,7 +87,7 @@ impl Task {
             );
             match &self.tool {
                 Tool::FontForge => todo!(),
-                Tool::WasmBindgen(params) => todo!(),
+                Tool::WasmBindgen(wasm) => wasm.process(config)?,
                 Tool::Uniffi => todo!(),
             }
         } else {
@@ -353,7 +353,7 @@ struct WasmParams {
 }
 
 impl WasmParams {
-    pub fn process(&self, config: &Config, assembly: &str) -> Result<()> {
+    pub fn process(&self, config: &Config) -> Result<()> {
         let hash = timehash();
         let debug = config.args.profile != "release";
         let profile = if config.args.profile == "dev" {
@@ -376,7 +376,7 @@ impl WasmParams {
             .out_name(&format!("{hash}{}", config.package_name))
             .generate_output()?;
 
-        let site_dir = config.site_dir(assembly);
+        let site_dir = config.site_dir("wasm-bindgen");
         // check out the code for this, that's where much of the stuff done here comes from:
         // output.emit(&site_dir)?;
 
