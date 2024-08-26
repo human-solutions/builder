@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use wasm::WasmParams;
 
-pub use file::FileParams;
+pub use file::FilesParams;
 pub use localized::LocalizedParams;
 pub use sass::SassParams;
 pub use setup::Config;
@@ -56,10 +56,10 @@ impl Task {
                 )?;
                 Tool::Localized(params)
             }
-            Tool::File(_) => {
-                let params: FileParams = serde_json::from_value(value.clone())
+            Tool::Files(_) => {
+                let params: FilesParams = serde_json::from_value(value.clone())
                     .context(format!("Failed to parse file metadata: '{value}'"))?;
-                Tool::File(params)
+                Tool::Files(params)
             }
             Tool::Uniffi => todo!(),
         };
@@ -93,7 +93,7 @@ impl Task {
                 Tool::WasmBindgen(wasm) => wasm.process(config)?,
                 Tool::Sass(sass) => sass.process(config, generator, watched)?,
                 Tool::Localized(localized) => localized.process(config, generator, watched)?,
-                Tool::File(file) => file.process(config, generator, watched)?,
+                Tool::Files(file) => file.process(config, generator, watched)?,
                 Tool::Uniffi => todo!(),
             }
         } else {
@@ -110,7 +110,7 @@ enum Tool {
     WasmBindgen(WasmParams),
     Sass(SassParams),
     Localized(LocalizedParams),
-    File(FileParams),
+    Files(FilesParams),
     Uniffi,
 }
 
@@ -121,7 +121,7 @@ impl Display for Tool {
             Tool::WasmBindgen(_) => write!(f, "wasm-bindgen"),
             Tool::Sass(_) => write!(f, "sass"),
             Tool::Localized(_) => write!(f, "localized"),
-            Tool::File(_) => write!(f, "file"),
+            Tool::Files(_) => write!(f, "files"),
             Tool::Uniffi => write!(f, "uniffi"),
         }
     }
@@ -136,7 +136,7 @@ impl FromStr for Tool {
             "wasm-bindgen" => Ok(Self::WasmBindgen(WasmParams::default())),
             "sass" => Ok(Self::Sass(SassParams::default())),
             "localized" => Ok(Self::Localized(LocalizedParams::default())),
-            "file" => Ok(Self::File(FileParams::default())),
+            "files" => Ok(Self::Files(FilesParams::default())),
             "uniffi" => Ok(Self::Uniffi),
             _ => anyhow::bail!("Invalid tool: {}", s),
         }
