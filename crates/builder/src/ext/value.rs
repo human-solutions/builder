@@ -1,11 +1,11 @@
 use serde_json::Value;
 
 pub trait IntoVecString {
-    fn into_vec_string(&self, key: &str) -> Vec<String>;
+    fn into_vec_string(self, key: &str) -> Vec<String>;
 }
 
 impl IntoVecString for &Value {
-    fn into_vec_string(&self, key: &str) -> Vec<String> {
+    fn into_vec_string(self, key: &str) -> Vec<String> {
         self.get(key)
             .and_then(Value::as_array)
             .map(|t| {
