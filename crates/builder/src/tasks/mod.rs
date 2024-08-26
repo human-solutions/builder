@@ -27,29 +27,27 @@ impl Task {
         let targets = value.into_vec_string("target");
         let profiles = value.into_vec_string("profile");
 
-        match tool {
+        let tool = match tool {
             Tool::FontForge(_) => {
                 let params: FontForgeParams = serde_json::from_value(value.clone()).context(
                     format!("Failed to parse font-forge params for task '{key}'"),
                 )?;
-                Ok(Task {
-                    tool,
-                    targets,
-                    profiles,
-                })
+                Tool::FontForge(params)
             }
             Tool::WasmBindgen(_) => {
                 let params: WasmParams = serde_json::from_value(value.clone()).context(format!(
                     "Failed to parse wasm-bindgen params for task '{key}'"
                 ))?;
-                Ok(Task {
-                    tool,
-                    targets,
-                    profiles,
-                })
+                Tool::WasmBindgen(params)
             }
             Tool::Uniffi => todo!(),
-        }
+        };
+
+        Ok(Task {
+            tool,
+            targets,
+            profiles,
+        })
     }
 
     fn run(&self, config: &Config) -> Result<()> {
