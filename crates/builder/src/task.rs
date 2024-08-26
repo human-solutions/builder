@@ -161,14 +161,24 @@ impl Tasks {
 
 #[derive(Serialize, Deserialize)]
 struct Config {
+    pub package_name: String,
     pub args: CmdArgs,
     pub package_dir: Utf8PathBuf,
     pub target_dir: Utf8PathBuf,
 }
 
+impl Config {
+    pub fn site_dir(&self, assembly: &str) -> Utf8PathBuf {
+        self.target_dir
+            .join(&self.package_name)
+            .join(&self.args.target)
+            .join(assembly)
+            .join(&self.args.profile)
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 struct Setup {
-    pub name: String,
     pub config: Config,
     pub prebuild: Tasks,
     pub postbuild: Tasks,
@@ -199,13 +209,13 @@ impl Setup {
         }
 
         let config = Config {
+            package_name: package.name.clone(),
             args: args.clone(),
             package_dir: package.manifest_path.clone(),
             target_dir: metadata.target_directory.clone(),
         };
 
         Ok(Self {
-            name: package.name.clone(),
             config,
             prebuild,
             postbuild,
@@ -233,7 +243,7 @@ impl Setup {
         let string =
             serde_yaml::to_string(self).context("Failed to serialize configuration file")?;
 
-        let path = self.postbuild_file(&self.name);
+        let path = self.postbuild_file(&self.config.package_name);
 
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
@@ -271,16 +281,16 @@ impl Setup {
         }
 
         if self.prebuild.is_empty() {
-            log::info!("No prebuild tasks found for {}", self.name);
+            log::info!("No prebuild tasks found for {}", self.config.package_name);
         } else {
-            log::info!("Running prebuild for {}", self.name);
+            log::info!("Running prebuild for {}", self.config.package_name);
             self.prebuild.run(&self.config)?;
         }
 
         if self.postbuild.is_empty() {
-            log::info!("No postbuild tasks found for {}", self.name);
+            log::info!("No postbuild tasks found for {}", self.config.package_name);
         } else {
-            log::info!("Saving postbuild tasks for {}", self.name);
+            log::info!("Saving postbuild tasks for {}", self.config.package_name);
             self.save()?;
         }
 
@@ -288,11 +298,11 @@ impl Setup {
     }
 
     fn run_postbuild(&self) -> Result<()> {
-        log::info!("Running postbuild for {}", self.name);
+        log::info!("Running postbuild for {}", self.config.package_name);
         if self.postbuild.is_empty() {
-            log::info!("No postbuild tasks found for {}", self.name);
+            log::info!("No postbuild tasks found for {}", self.config.package_name);
         } else {
-            log::info!("Running postbuild for {}", self.name);
+            log::info!("Running postbuild for {}", self.config.package_name);
             self.postbuild.run(&self.config)?;
         }
 
@@ -332,15 +342,6 @@ impl Setup {
             .join(&self.config.args.target)
             .join(POSTBUILD_FILE)
     }
-
-    pub fn site_dir(&self, assembly: &str) -> Utf8PathBuf {
-        self.config
-            .target_dir
-            .join(&self.name)
-            .join(&self.config.args.target)
-            .join(assembly)
-            .join(&self.config.args.profile)
-    }
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -352,20 +353,19 @@ struct WasmParams {
 }
 
 impl WasmParams {
-    pub fn process(&self, setup: &Setup, assembly: &str) -> Result<()> {
+    pub fn process(&self, config: &Config, assembly: &str) -> Result<()> {
         let hash = timehash();
-        let debug = setup.config.args.profile != "release";
-        let profile = if setup.config.args.profile == "dev" {
+        let debug = config.args.profile != "release";
+        let profile = if config.args.profile == "dev" {
             "debug"
         } else {
-            &setup.config.args.profile
+            &config.args.profile
         };
-        let input = setup
-            .config
+        let input = config
             .target_dir
             .join("wasm32-unknown-unknown")
             .join(profile)
-            .join(&setup.name)
+            .join(&config.package_name)
             .with_extension("wasm");
 
         let mut output = Bindgen::new()
@@ -373,16 +373,16 @@ impl WasmParams {
             .browser(true)?
             .debug(debug)
             .keep_debug(debug)
-            .out_name(&format!("{hash}{}", setup.name))
+            .out_name(&format!("{hash}{}", config.package_name))
             .generate_output()?;
 
-        let site_dir = setup.site_dir(assembly);
+        let site_dir = config.site_dir(assembly);
         // check out the code for this, that's where much of the stuff done here comes from:
         // output.emit(&site_dir)?;
 
         let _wasm_hash = {
             let mut wasm = output.wasm_mut().emit_wasm();
-            let filename = format!("{}.wasm", setup.name);
+            let filename = format!("{}.wasm", config.package_name);
             if self.optimize_wasm {
                 Self::optimize_wasm(&mut wasm)?;
             }
@@ -390,7 +390,7 @@ impl WasmParams {
         }?;
 
         let _js_hash = {
-            let filename = format!("{}.js", setup.name);
+            let filename = format!("{}.js", config.package_name);
             let js = if self.minify_js {
                 Self::minify(output.js().to_string())?
             } else {
