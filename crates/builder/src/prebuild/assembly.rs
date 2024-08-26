@@ -42,9 +42,9 @@ impl Assembly {
             log::info!("Processing sass assembly '{name}'");
             let css = sass.process(info)?;
             let filename = sass.file_name(&None);
-            let hash = sass.out.write_file(css.as_bytes(), &site_dir, &filename)?;
+            let _hash = sass.out.write_file(css.as_bytes(), &site_dir, &filename)?;
 
-            generator.add_asset(Asset::from_sass(sass, hash));
+            // generator.add_asset(Asset::from_sass(sass, hash));
             watched.push(sass.watched());
         }
         for localized in &self.localized {

@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use fs4::fs_std::FileExt;
 use serde::{Deserialize, Serialize};
 
@@ -29,6 +29,19 @@ impl Config {
             .join(&self.args.target)
             .join(assembly)
             .join(&self.args.profile)
+    }
+
+    pub fn existing_manifest_dir_path(&self, path: &Utf8Path) -> Result<Utf8PathBuf> {
+        let file = if path.is_relative() {
+            self.args.dir.join(path)
+        } else {
+            anyhow::bail!("The path {path} must be relative to the manifest directory")
+        };
+
+        if !file.exists() {
+            anyhow::bail!("The path {file} doesn't exist");
+        }
+        Ok(file)
     }
 }
 

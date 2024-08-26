@@ -1,8 +1,11 @@
 mod fontforge;
+mod sass;
 mod setup;
 mod wasm;
 
-use std::{fmt::Display, str::FromStr};
+pub use sass::SassParams;
+
+use std::{collections::HashSet, fmt::Display, str::FromStr};
 
 use anyhow::{Context, Result};
 use fontforge::FontForgeParams;
@@ -11,7 +14,7 @@ use serde_json::Value;
 use setup::Config;
 use wasm::WasmParams;
 
-use crate::ext::value::IntoVecString;
+use crate::{ext::value::IntoVecString, generate::Generator};
 
 #[derive(Serialize, Deserialize)]
 struct Task {
@@ -40,6 +43,7 @@ impl Task {
                 ))?;
                 Tool::WasmBindgen(params)
             }
+            Tool::Sass(_) => todo!(),
             Tool::Uniffi => todo!(),
         };
 
@@ -50,7 +54,12 @@ impl Task {
         })
     }
 
-    fn run(&self, config: &Config) -> Result<()> {
+    fn run(
+        &self,
+        config: &Config,
+        generator: &mut Generator,
+        watched: &mut HashSet<String>,
+    ) -> Result<()> {
         let target = &config.args.target;
         let profile = &config.args.profile;
         if (self.targets.is_empty() || self.targets.contains(target))
@@ -65,6 +74,7 @@ impl Task {
             match &self.tool {
                 Tool::FontForge(fontforge) => fontforge.process(config)?,
                 Tool::WasmBindgen(wasm) => wasm.process(config)?,
+                Tool::Sass(sass) => sass.process(config, generator, watched)?,
                 Tool::Uniffi => todo!(),
             }
         } else {
@@ -79,6 +89,7 @@ impl Task {
 enum Tool {
     FontForge(FontForgeParams),
     WasmBindgen(WasmParams),
+    Sass(SassParams),
     Uniffi,
 }
 
@@ -87,6 +98,7 @@ impl Display for Tool {
         match self {
             Tool::FontForge(_) => write!(f, "font-forge"),
             Tool::WasmBindgen(_) => write!(f, "wasm-bindgen"),
+            Tool::Sass(_) => write!(f, "sass"),
             Tool::Uniffi => write!(f, "uniffi"),
         }
     }
@@ -123,10 +135,18 @@ impl Tasks {
 
         Ok(Self(tasks))
     }
+
     fn run(&self, config: &Config) -> Result<()> {
+        let mut generator = Generator::default();
+        let mut watched = HashSet::new();
+        watched.insert("Cargo.toml".to_string());
+        watched.insert("src".to_string());
+
         for task in &self.0 {
-            task.run(config)?;
+            task.run(config, &mut generator, &mut watched)?;
         }
+
+        // generator.write(config)?;
 
         Ok(())
     }
