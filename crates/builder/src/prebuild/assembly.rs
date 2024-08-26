@@ -1,6 +1,6 @@
 use super::{File, Localized, Sass};
 use crate::anyhow::Result;
-use crate::generate::{Asset, Generator};
+use crate::generate::Generator;
 use crate::Config;
 use fs_err as fs;
 use serde::{Deserialize, Serialize};
@@ -65,9 +65,9 @@ impl Assembly {
             let path = info.args.dir.join(&file.path);
             let contents = fs::read(&path)?;
             let filename = file.path.file_name().unwrap();
-            let hash = file.out.write_file(&contents, &site_dir, filename)?;
+            let _hash = file.out.write_file(&contents, &site_dir, filename)?;
 
-            generator.add_asset(Asset::from_file(file, hash));
+            // generator.add_asset(Asset::from_file(file, hash));
             watched.push(file.path.to_string());
         }
 

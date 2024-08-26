@@ -1,9 +1,6 @@
 use unic_langid::LanguageIdentifier;
 
-use crate::{
-    prebuild::File,
-    tasks::{LocalizedParams, SassParams},
-};
+use crate::tasks::{FileParams, LocalizedParams, SassParams};
 
 #[derive(Debug)]
 pub struct Asset {
@@ -38,7 +35,7 @@ impl Asset {
         }
     }
 
-    pub fn from_file(file: &File, checksum: Option<String>) -> Self {
+    pub fn from_file(file: &FileParams, checksum: Option<String>) -> Self {
         Self {
             url: file.url(checksum),
             name: file.path.iter().last().unwrap().to_string(),

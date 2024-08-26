@@ -8,12 +8,12 @@ mod wasm;
 use std::{collections::HashSet, fmt::Display, str::FromStr};
 
 use anyhow::{Context, Result};
-use file::FileParams;
 use fontforge::FontForgeParams;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use wasm::WasmParams;
 
+pub use file::FileParams;
 pub use localized::LocalizedParams;
 pub use sass::SassParams;
 pub use setup::Config;
@@ -93,7 +93,7 @@ impl Task {
                 Tool::WasmBindgen(wasm) => wasm.process(config)?,
                 Tool::Sass(sass) => sass.process(config, generator, watched)?,
                 Tool::Localized(localized) => localized.process(config, generator, watched)?,
-                Tool::File(_) => todo!(),
+                Tool::File(file) => file.process(config, generator, watched)?,
                 Tool::Uniffi => todo!(),
             }
         } else {
