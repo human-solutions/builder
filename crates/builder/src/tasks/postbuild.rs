@@ -39,9 +39,6 @@ impl PostbuildTasks {
         }
 
         generator.write(config)?;
-        for change in watched {
-            println!("cargo::rerun-if-changed={}", change);
-        }
 
         Ok(())
     }
