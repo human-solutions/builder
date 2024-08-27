@@ -135,8 +135,6 @@ impl Output {
         ext: &str,
         variants: Vec<(LanguageIdentifier, Vec<u8>)>,
     ) -> Result<Option<String>> {
-        let dir = self.full_created_dir(dir)?;
-
         let hash = self.checksum.then(|| {
             let mut checksummer = SeaHasher::new();
             variants
@@ -147,7 +145,7 @@ impl Output {
 
         for (langid, content) in variants {
             let filename = format!("{filename}.{ext}.{langid}");
-            let path = self.path(&hash, &dir, &filename)?;
+            let path = self.path(&hash, dir, &filename)?;
             self.compress_and_write(&content, &path)?;
         }
         Ok(hash)
