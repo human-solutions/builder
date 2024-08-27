@@ -16,8 +16,6 @@ impl PostbuildTasks {
     pub fn from_value(value: &Value) -> Result<Self> {
         let mut tasks = Vec::new();
 
-        println!("value: {:?}", value);
-
         for (tool, tool_val) in value.as_object().context("Invalid builder metadata")? {
             for item in tool_val
                 .as_array()
