@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{ext::metadata::MetadataExt, CmdArgs};
 
-use super::{postbuild::PostbuildTasks, prebuild::PrebuildTasks, Tasks};
+use super::{postbuild::PostbuildTasks, prebuild::PrebuildTasks};
 
 const POSTBUILD_FILE: &str = "postbuild.yaml";
 
