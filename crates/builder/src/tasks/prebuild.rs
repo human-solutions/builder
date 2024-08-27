@@ -17,11 +17,11 @@ impl PrebuildTasks {
         let mut tasks = Vec::new();
 
         for (tool, tool_val) in value.as_object().context("Invalid builder metadata")? {
-            for _ in tool_val
+            for item in tool_val
                 .as_array()
                 .context(format!("Invalid tasks for tool '{tool}'"))?
             {
-                tasks.push(Task::from_value(tool, tool_val)?);
+                tasks.push(Task::from_value(tool, item)?);
             }
         }
 
