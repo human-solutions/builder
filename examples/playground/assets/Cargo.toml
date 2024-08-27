@@ -6,50 +6,54 @@ edition = "2021"
 [build-dependencies]
 which = "6.0"
 
-[package.metadata.prebuild."*"]
+[[package.metadata.prebuild.fontforge]]
 # auto update the iconfont if fontforge is installed
-fontforge = "iconfont/polyglot.sfd"
+item = "iconfont/polyglot.sfd"
 
-[[package.metadata.prebuild."*"."*".debug.files]]
+[[package.metadata.prebuild.files]]
+profile = ["debug"]
 path = "iconfont/polyglot.woff2"
 out = { folder = "static", checksum = true }
 
-[[package.metadata.prebuild."*"."*".release.files]]
+[[package.metadata.prebuild.files]]
+profile = ["release"]
 path = "iconfont/polyglot.woff2"
 out = { folder = "static", checksum = true, brotli = true, gzip = true }
 
 ##### MOBILE DEBUG AND RELEASE #####
-[[package.metadata.prebuild."*".mobile.debug.sass]]
+
+[[package.metadata.prebuild.sass]]
+profile = ["debug"]
 file = "style/main.scss"
 
-[[package.metadata.prebuild."*".mobile.release.sass]]
+[[package.metadata.prebuild.sass]]
+profile = ["release"]
 file = "style/main.scss"
 optimize = true
 out = { brotli = true }
 
 ##### WEB DEBUG #####
 
-[[package.metadata.prebuild."*".web.debug.sass]]
+[[package.metadata.prebuild.sass]]
+profile = ["debug"]
 file = "style/main.scss"
 out = { checksum = true, folder = "static" }
 
-[[package.metadata.prebuild."*".web.debug.localized]]
+[[package.metadata.prebuild.localized]]
 path = "img/apple_store"
 file-extension = "svg"
 out = { folder = "static/badge", checksum = true }
 
-
 ##### WEB RELEASE #####
 
-[[package.metadata.prebuild."*".web.release.localized]]
+[[package.metadata.prebuild.localized]]
+profile = ["release"]
 path = "img/apple_store"
 file-extension = "svg"
 out = { folder = "static/badge", checksum = true, brotli = true, gzip = true }
 
-
-[[package.metadata.prebuild."*".web.release.sass]]
+[[package.metadata.prebuild.sass]]
+profile = ["release"]
 file = "style/main.scss"
 optimize = true
 out = { brotli = true, gzip = true, checksum = true, folder = "static" }
-
-
