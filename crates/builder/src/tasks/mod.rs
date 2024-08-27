@@ -119,8 +119,8 @@ enum Tool {
 impl Display for Tool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Tool::FontForge(_) => write!(f, "font-forge"),
-            Tool::WasmBindgen(_) => write!(f, "wasm-bindgen"),
+            Tool::FontForge(_) => write!(f, "fontforge"),
+            Tool::WasmBindgen(_) => write!(f, "wasmbindgen"),
             Tool::Sass(_) => write!(f, "sass"),
             Tool::Localized(_) => write!(f, "localized"),
             Tool::Files(_) => write!(f, "files"),
@@ -134,8 +134,8 @@ impl FromStr for Tool {
 
     fn from_str(s: &str) -> Result<Self> {
         match s {
-            "font-forge" => Ok(Self::FontForge(FontForgeParams::default())),
-            "wasm-bindgen" => Ok(Self::WasmBindgen(WasmParams::default())),
+            "fontforge" => Ok(Self::FontForge(FontForgeParams::default())),
+            "wasmbindgen" => Ok(Self::WasmBindgen(WasmParams::default())),
             "sass" => Ok(Self::Sass(SassParams::default())),
             "localized" => Ok(Self::Localized(LocalizedParams::default())),
             "files" => Ok(Self::Files(FilesParams::default())),
