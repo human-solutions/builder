@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::postbuild::PostbuildConfig;
 use crate::prebuild::PrebuildConfig;
+use crate::tasks::{BuildStep, Setup};
 use crate::{
     ext::{
         anyhow::{bail, Context, Result},
@@ -67,21 +68,6 @@ impl PackageConfig {
     }
 }
 
-#[derive(Debug)]
-enum BuildStep {
-    Prebuild,
-    Postbuild,
-}
-
-impl BuildStep {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Prebuild => "prebuild",
-            Self::Postbuild => "postbuild",
-        }
-    }
-}
-
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     Prebuild(CmdArgs),
@@ -95,16 +81,16 @@ impl Commands {
             Self::Postbuild(args) => (args, BuildStep::Postbuild),
         };
 
-        let conf = Config::new(args)?;
+        let setup = Setup::new(args)?;
 
-        let log_path = conf.target_dir.join(&conf.package.name);
+        let log_path = setup.config.target_dir.join(&setup.config.package_name);
         fs::create_dir_all(&log_path)?;
 
         let log_file = log_path.join(format!("{}-{}.log", step.as_str(), args.profile));
         setup_logging(log_file.as_str(), LevelFilter::Debug);
         log::info!("Args: {args:?}");
 
-        conf.run(step)
+        setup.run(step)
     }
 }
 

@@ -14,6 +14,21 @@ use super::{postbuild::PostbuildTasks, prebuild::PrebuildTasks};
 
 const POSTBUILD_FILE: &str = "postbuild.yaml";
 
+#[derive(Debug)]
+pub enum BuildStep {
+    Prebuild,
+    Postbuild,
+}
+
+impl BuildStep {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Prebuild => "prebuild",
+            Self::Postbuild => "postbuild",
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     pub package_name: String,
@@ -54,7 +69,7 @@ pub struct Setup {
 }
 
 impl Setup {
-    fn new(args: &CmdArgs) -> Result<Self> {
+    pub fn new(args: &CmdArgs) -> Result<Self> {
         let metadata = cargo_metadata::MetadataCommand::new()
             .manifest_path(args.dir.join("Cargo.toml"))
             .exec()?;
@@ -125,12 +140,11 @@ impl Setup {
         Ok(())
     }
 
-    fn run(&self) -> Result<()> {
-        // gather dependencies postbuild
-        // run postbuilds
-        // run current prebuilds
-        // save current postbuilds
-        todo!()
+    pub fn run(&self, step: BuildStep) -> Result<()> {
+        match step {
+            BuildStep::Prebuild => self.run_prebuild(),
+            BuildStep::Postbuild => self.run_postbuild(),
+        }
     }
 
     fn run_prebuild(&self) -> Result<()> {

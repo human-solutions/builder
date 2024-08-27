@@ -18,7 +18,7 @@ use wasm::WasmParams;
 pub use file::FilesParams;
 pub use localized::LocalizedParams;
 pub use sass::SassParams;
-pub use setup::Config;
+pub use setup::{BuildStep, Config, Setup};
 
 use crate::{ext::value::IntoVecString, generate::Generator};
 

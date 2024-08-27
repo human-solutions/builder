@@ -10,7 +10,7 @@ use crate::{
 };
 
 #[derive(Default, Serialize, Deserialize)]
-pub(super) struct PostbuildTasks(Vec<Task>);
+pub struct PostbuildTasks(Vec<Task>);
 
 impl PostbuildTasks {
     pub fn from_value(value: &Value) -> Result<Self> {
