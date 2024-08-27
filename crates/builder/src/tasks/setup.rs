@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{ext::metadata::MetadataExt, CmdArgs};
 
-use super::{prebuild::PrebuildTasks, Tasks};
+use super::{postbuild::PostbuildTasks, prebuild::PrebuildTasks, Tasks};
 
 const POSTBUILD_FILE: &str = "postbuild.yaml";
 
@@ -49,7 +49,7 @@ impl Config {
 pub struct Setup {
     pub config: Config,
     pub prebuild: PrebuildTasks,
-    pub postbuild: Tasks,
+    pub postbuild: PostbuildTasks,
     pub deps: Vec<String>,
 }
 
@@ -67,13 +67,13 @@ impl Setup {
             .collect::<Vec<_>>();
 
         let mut prebuild = PrebuildTasks::default();
-        let mut postbuild = Tasks::default();
+        let mut postbuild = PostbuildTasks::default();
 
         if let Some(prebuild_val) = package.metadata.get("prebuild") {
             prebuild = PrebuildTasks::from_value(prebuild_val)?;
         }
         if let Some(postbuild_val) = package.metadata.get("postbuild") {
-            postbuild = Tasks::from_value(postbuild_val)?;
+            postbuild = PostbuildTasks::from_value(postbuild_val)?;
         }
 
         let config = Config {

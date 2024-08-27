@@ -1,6 +1,7 @@
 mod file;
 mod fontforge;
 mod localized;
+mod postbuild;
 mod prebuild;
 mod sass;
 mod setup;
