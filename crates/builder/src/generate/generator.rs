@@ -44,7 +44,7 @@ impl Generator {
             let m = if let Some(p) = module_path {
                 p.file_stem()
                     .context(format!("Invalid module path: {p}"))?
-                    .to_rust_const()
+                    .to_camel_case()
             } else {
                 MODULE.to_owned()
             };
