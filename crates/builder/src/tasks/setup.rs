@@ -38,11 +38,11 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn site_dir(&self, assembly: &str) -> Utf8PathBuf {
+    pub fn site_dir(&self, folder: &str) -> Utf8PathBuf {
         self.target_dir
             .join(&self.package_name)
             .join(&self.args.target)
-            .join(assembly)
+            .join(folder)
             .join(&self.args.profile)
     }
 
