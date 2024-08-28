@@ -47,10 +47,11 @@ out = { folder = "static/badge", checksum = true }
 ##### WEB RELEASE #####
 
 [[package.metadata.prebuild.localized]]
-profile = ["release"]
+profile = ["debug"]
 path = "img/apple_store"
 file-extension = "svg"
 out = { folder = "static/badge", checksum = true, brotli = true, gzip = true }
+generated-module = "gen/localized.rs"
 
 [[package.metadata.prebuild.sass]]
 profile = ["release"]

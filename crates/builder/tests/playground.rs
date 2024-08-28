@@ -24,6 +24,7 @@ fn test_playground() {
     insta::assert_snapshot!(gen.ls_ascii_replace::<NoChange>(0).unwrap(), @r###"
     gen:
       generated_assets.rs
+      localized.rs
     "###);
 
     cargo(&dir, ["build", "--release"]);
@@ -48,12 +49,6 @@ fn test_playground() {
             static:
               badge:
                 MJjU0sjYbCw=apple_store.svg.en
-                MJjU0sjYbCw=apple_store.svg.fr
-                MJjU0sjYbCw=apple_store.svg.fr-CA
-          release:
-            static:
-              badge:
-                MJjU0sjYbCw=apple_store.svg.en
                 MJjU0sjYbCw=apple_store.svg.en.br
                 MJjU0sjYbCw=apple_store.svg.en.gz
                 MJjU0sjYbCw=apple_store.svg.fr
@@ -62,6 +57,12 @@ fn test_playground() {
                 MJjU0sjYbCw=apple_store.svg.fr-CA.gz
                 MJjU0sjYbCw=apple_store.svg.fr.br
                 MJjU0sjYbCw=apple_store.svg.fr.gz
+          release:
+            static:
+              badge:
+                MJjU0sjYbCw=apple_store.svg.en
+                MJjU0sjYbCw=apple_store.svg.fr
+                MJjU0sjYbCw=apple_store.svg.fr-CA
         sass:
           debug:
             main.css
