@@ -1,6 +1,9 @@
-use crate::anyhow::{anyhow, bail, Context, Result};
-use crate::generate::Output;
-use crate::Config;
+use std::{collections::HashSet, process::Command};
+
+use crate::{
+    anyhow::{anyhow, bail, Context, Result},
+    generate::{Asset, Generator},
+};
 use camino::Utf8PathBuf;
 use lightningcss::{
     printer::PrinterOptions,
@@ -8,17 +11,20 @@ use lightningcss::{
     targets::{Browsers, Targets},
 };
 use serde::{Deserialize, Serialize};
-use std::process::Command;
+
+use crate::generate::Output;
+
+use super::setup::Config;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
-pub struct Sass {
+pub struct SassParams {
     pub file: Utf8PathBuf,
     pub optimize: bool,
     pub out: Output,
 }
 
-impl Sass {
+impl SassParams {
     pub fn file_name(&self, checksum: &Option<String>) -> String {
         let filename = self
             .file
@@ -42,8 +48,26 @@ impl Sass {
         format!("{folder}/{filename}")
     }
 
-    pub fn process(&self, info: &Config) -> Result<String> {
-        let file = info
+    pub fn process(
+        &self,
+        config: &Config,
+        generator: &mut Generator,
+        watched: &mut HashSet<String>,
+    ) -> Result<()> {
+        let css = self.process_inner(config)?;
+        let filename = self.file_name(&None);
+        let hash = self
+            .out
+            .write_file(css.as_bytes(), &config.site_dir("sass"), &filename)?;
+
+        generator.add_asset(Asset::from_sass(self, hash), None);
+        watched.insert(self.watched());
+
+        Ok(())
+    }
+
+    fn process_inner(&self, config: &Config) -> Result<String> {
+        let file = config
             .existing_manifest_dir_path(&self.file)
             .context("sass file not found")?;
 

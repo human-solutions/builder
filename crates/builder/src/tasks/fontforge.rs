@@ -1,25 +1,26 @@
-use crate::anyhow::{bail, Context, Result};
-use crate::util::filehash;
-use crate::Config;
+use std::{fs, process::Command};
+
+use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use fs_err as fs;
 use serde::{Deserialize, Serialize};
-use std::process::Command;
+
+use crate::util::filehash;
+
+use super::setup::Config;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-#[serde(transparent)]
-pub struct FontForge {
-    pub file: Utf8PathBuf,
+pub(super) struct FontForgeParams {
+    pub item: Utf8PathBuf,
 }
 
-impl FontForge {
+impl FontForgeParams {
     pub fn process(&self, info: &Config) -> Result<()> {
-        let sum_file = info.args.dir.join(self.file.with_extension("sfd.hash"));
-        let sfd_file = info.args.dir.join(&self.file);
+        let sum_file = info.args.dir.join(self.item.with_extension("sfd.hash"));
+        let sfd_file = info.args.dir.join(&self.item);
 
         // check if sfd file exists
         if !sfd_file.exists() {
-            bail!("sfd file not found: {sfd_file}");
+            anyhow::bail!("sfd file not found: {sfd_file}");
         }
 
         let hash = filehash(&sfd_file)?;
@@ -44,9 +45,9 @@ impl FontForge {
     }
 
     fn generate(&self, info: &Config) -> Result<()> {
-        let name = self.file.to_string();
-        let woff = self.file.with_extension("woff2");
-        let otf = self.file.with_extension("otf");
+        let name = self.item.to_string();
+        let woff = self.item.with_extension("woff2");
+        let otf = self.item.with_extension("otf");
         let ff = format!("Open('{name}'); Generate('{woff}'); Generate('{otf}')");
 
         let cmd = Command::new("fontforge")
@@ -58,7 +59,7 @@ impl FontForge {
         let err = String::from_utf8(cmd.stderr).unwrap();
 
         if !cmd.status.success() {
-            bail!("installed binary fontforge failed with error: {err}{out}")
+            anyhow::bail!("installed binary fontforge failed with error: {err}{out}")
         }
 
         let otf_file = info.args.dir.join(otf);

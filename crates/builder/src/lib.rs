@@ -1,12 +1,11 @@
-mod config;
+mod commands;
 mod ext;
 mod generate;
 mod install;
-mod postbuild;
-mod prebuild;
+mod tasks;
 mod util;
 
-pub use config::{CmdArgs, Commands, Config};
+pub use commands::{CmdArgs, Commands};
 pub use ext::anyhow;
 use fs_err::File;
 use log::LevelFilter;

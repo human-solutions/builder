@@ -1,14 +1,19 @@
-use fs_err as fs;
+use std::{collections::HashSet, fs};
+
+use crate::{
+    anyhow::{bail, Context, Result},
+    generate::{Asset, Generator},
+};
+use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 use unic_langid::LanguageIdentifier;
 
-use crate::anyhow::{bail, Context, Result};
 use crate::generate::Output;
-use crate::Config;
-use camino::Utf8PathBuf;
+
+use super::Config;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Localized {
+pub struct LocalizedParams {
     /// the path to the folder containing the localised files
     pub path: Utf8PathBuf,
     /// The file extension (file type)
@@ -17,17 +22,45 @@ pub struct Localized {
     pub file_extension: String,
     /// output options
     pub out: Output,
+    /// path (relative to the crate directory) to the generated asset rust module
+    #[serde(rename = "generated-module")]
+    pub generated_mod: Option<Utf8PathBuf>,
 }
 
-impl Localized {
+impl LocalizedParams {
     pub fn url(&self, checksum: Option<String>) -> String {
         let ext = &self.file_extension;
         let filename = format!("{}.{ext}", self.path.iter().last().unwrap());
         self.out.url(&filename, checksum)
     }
 
-    pub fn process(&self, info: &Config) -> Result<Vec<(LanguageIdentifier, Vec<u8>)>> {
-        let folder = info
+    pub fn process(
+        &self,
+        config: &Config,
+        generator: &mut Generator,
+        watched: &mut HashSet<String>,
+    ) -> Result<()> {
+        let variants = self.process_inner(config)?;
+        let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
+        let site_dir = config.site_dir("localized");
+
+        let filename = self.path.iter().last().unwrap();
+        let ext = &self.file_extension;
+        let hash = self
+            .out
+            .write_localized(&site_dir, filename, ext, variants)?;
+
+        generator.add_asset(
+            Asset::from_localized(self, hash, localizations),
+            self.generated_mod.clone(),
+        );
+        watched.insert(self.path.to_string());
+
+        Ok(())
+    }
+
+    fn process_inner(&self, config: &Config) -> Result<Vec<(LanguageIdentifier, Vec<u8>)>> {
+        let folder = config
             .existing_manifest_dir_path(&self.path)
             .context("localized path not found")?;
         if !folder.is_dir() {

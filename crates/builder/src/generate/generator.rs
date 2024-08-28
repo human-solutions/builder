@@ -2,14 +2,20 @@ use std::collections::HashMap;
 
 use crate::anyhow::Result;
 use crate::ext::RustNaming;
-use crate::Config;
+use crate::tasks::Config;
+use anyhow::Context;
+use camino::Utf8PathBuf;
 use fs_err as fs;
 
 use super::Asset;
 
+const MODULE_DIR: &str = "gen";
+const MODULE_FILE: &str = "generated_assets";
+const MODULE: &str = "Generated";
+
 #[derive(Default)]
 pub struct Generator {
-    assets: HashMap<String, Vec<Asset>>,
+    assets: HashMap<Option<Utf8PathBuf>, Vec<Asset>>,
 }
 
 impl Generator {
@@ -17,28 +23,58 @@ impl Generator {
         "gen".to_string()
     }
 
-    pub fn add_asset(&mut self, assembly: &str, asset: Asset) {
-        self.assets
-            .entry(assembly.to_string())
-            .or_default()
-            .push(asset);
+    pub fn add_asset(&mut self, asset: Asset, module_path: Option<Utf8PathBuf>) {
+        self.assets.entry(module_path).or_default().push(asset);
     }
-    pub fn write(&self, info: &Config) -> Result<()> {
-        for (module, assets) in &self.assets {
-            self.write_assembly(module, info, assets)?;
+    pub fn write(&self, config: &Config) -> Result<()> {
+        for (module_path, assets) in &self.assets {
+            self.write_assembly(config, assets, module_path)?;
         }
+
         Ok(())
     }
 
-    pub fn write_assembly(&self, module: &str, info: &Config, assets: &[Asset]) -> Result<()> {
-        let module = module.to_rust_module();
-        let text = self.text(&module, assets);
-        let dir = info.args.dir.join("gen");
+    fn write_assembly(
+        &self,
+        config: &Config,
+        assets: &[Asset],
+        module_path: &Option<Utf8PathBuf>,
+    ) -> Result<()> {
+        let module_name = {
+            let m = if let Some(p) = module_path {
+                p.file_stem()
+                    .context(format!("Invalid module path: {p}"))?
+                    .to_camel_case()
+            } else {
+                MODULE.to_owned()
+            };
+            format!("{m}Assets")
+        };
+
+        let file_name = if let Some(p) = module_path {
+            p.file_stem()
+                .context(format!("Failed to get module file name: {p}"))?
+                .to_rust_module()
+        } else {
+            MODULE_FILE.to_owned()
+        };
+
+        let dir = if let Some(p) = module_path {
+            config.args.dir.join(
+                p.parent()
+                    .context(format!("Failed to get module parent path : {p}"))?,
+            )
+        } else {
+            config.args.dir.join(MODULE_DIR)
+        };
+
         if !dir.exists() {
             fs::create_dir_all(&dir)?;
         }
 
-        let path = dir.join(module).with_extension("rs");
+        let text = self.text(assets, &module_name, &file_name);
+
+        let path = dir.join(file_name).with_extension("rs");
         let changed = if path.exists() {
             fs::read_to_string(&path)? != text
         } else {
@@ -51,14 +87,14 @@ impl Generator {
         Ok(())
     }
 
-    pub fn text(&self, module: &str, assets: &[Asset]) -> String {
+    fn text(&self, assets: &[Asset], module_name: &str, file_name: &str) -> String {
         let constants = self.constants(assets);
         let matching = self.match_list(assets);
         format!(
             r#"
 /// This is a generated file. Do not edit. It is updated depending on the build profile used (i.e. dev, release).
-/// Instead it should be included with an include! macro: `include!("../gen/{module}.rs");`
-pub mod {module} {{
+/// Instead it should be included with an include! macro: `include!("../gen/{file_name}.rs");`
+pub mod {module_name} {{
     #![allow(dead_code)]
 {constants}
 

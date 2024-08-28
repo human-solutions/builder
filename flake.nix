@@ -89,6 +89,8 @@
             dart-sass
             fontforge
             (rust-bin.stable.latest.default.override {
+              # The rust-src is needed for the rust analyzer
+              extensions = [ "rust-src" ];
               targets = [ "wasm32-unknown-unknown" ];
             })
           ];

@@ -1,5 +1,6 @@
 pub mod anyhow;
 pub mod metadata;
+pub mod value;
 
 use base64::engine::general_purpose::URL_SAFE;
 use base64::prelude::*;
@@ -19,6 +20,7 @@ impl ByteVecExt for [u8] {
 pub trait RustNaming {
     fn to_rust_module(&self) -> String;
     fn to_rust_const(&self) -> String;
+    fn to_camel_case(&self) -> String;
 }
 
 impl RustNaming for str {
@@ -42,6 +44,28 @@ impl RustNaming for str {
                 s.push(char);
             } else {
                 s.push(char.to_ascii_uppercase());
+            }
+        }
+        s
+    }
+
+    fn to_camel_case(&self) -> String {
+        let mut s = String::with_capacity(self.len());
+        let mut uppercase = true;
+        for char in self.chars() {
+            if s.is_empty() && (char.is_ascii_digit() || char == '-' || char == '.' || char == '_')
+            {
+                continue;
+            } else if char == '.' || char == '_' || char == '-' {
+                uppercase = true;
+                continue;
+            } else if char.is_ascii_alphanumeric() {
+                if uppercase {
+                    s.push(char.to_ascii_uppercase());
+                    uppercase = false;
+                } else {
+                    s.push(char);
+                }
             }
         }
         s

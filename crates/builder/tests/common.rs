@@ -69,7 +69,7 @@ impl PathExt for Utf8PathBuf {
         }
 
         dirs.sort();
-        
+
         let mut files = files
             .iter()
             .map(|file| R::replace(file.file_name().unwrap_or_default()))

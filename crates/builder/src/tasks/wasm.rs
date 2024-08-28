@@ -1,41 +1,46 @@
-use std::collections::HashMap;
-use std::io::{Read, Write};
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    io::{Read, Write},
+    sync::Arc,
+};
 
-use crate::anyhow::{Context, Result};
-use crate::generate::Output;
-use crate::util::timehash;
-use crate::Config;
+use anyhow::{Context, Result};
 use camino::Utf8Path;
 use serde::{Deserialize, Serialize};
-use swc::config::{IsModule, JsMinifyOptions};
-use swc::{try_with_handler, BoolOrDataConfig};
+use swc::{
+    config::{IsModule, JsMinifyOptions},
+    try_with_handler, BoolOrDataConfig,
+};
 use swc_common::{FileName, SourceMap, GLOBALS};
 use tempfile::NamedTempFile;
 use wasm_bindgen_cli_support::Bindgen;
 
+use crate::{generate::Output, util::timehash};
+
+use super::setup::Config;
+
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
-pub struct WasmBindgen {
+pub(super) struct WasmParams {
     optimize_wasm: bool,
     minify_js: bool,
     out: Output,
 }
 
-impl WasmBindgen {
-    pub fn process(&self, info: &Config, assembly: &str) -> Result<()> {
+impl WasmParams {
+    pub fn process(&self, config: &Config) -> Result<()> {
         let hash = timehash();
-        let debug = info.args.profile != "release";
-        let profile = if info.args.profile == "dev" {
+        let debug = config.args.profile != "release";
+        let profile = if config.args.profile == "dev" {
             "debug"
         } else {
-            &info.args.profile
+            &config.args.profile
         };
-        let input = info
+        let input = config
             .target_dir
             .join("wasm32-unknown-unknown")
             .join(profile)
-            .join(&info.package.name)
+            .join(&config.package_name)
             .with_extension("wasm");
 
         let mut output = Bindgen::new()
@@ -43,16 +48,16 @@ impl WasmBindgen {
             .browser(true)?
             .debug(debug)
             .keep_debug(debug)
-            .out_name(&format!("{hash}{}", info.package.name))
+            .out_name(&format!("{hash}{}", config.package_name))
             .generate_output()?;
 
-        let site_dir = info.site_dir(assembly);
+        let site_dir = config.site_dir("wasm-bindgen");
         // check out the code for this, that's where much of the stuff done here comes from:
         // output.emit(&site_dir)?;
 
         let _wasm_hash = {
             let mut wasm = output.wasm_mut().emit_wasm();
-            let filename = format!("{}.wasm", info.package.name);
+            let filename = format!("{}.wasm", config.package_name);
             if self.optimize_wasm {
                 Self::optimize_wasm(&mut wasm)?;
             }
@@ -60,7 +65,7 @@ impl WasmBindgen {
         }?;
 
         let _js_hash = {
-            let filename = format!("{}.js", info.package.name);
+            let filename = format!("{}.js", config.package_name);
             let js = if self.minify_js {
                 Self::minify(output.js().to_string())?
             } else {

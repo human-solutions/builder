@@ -1,6 +1,6 @@
 use unic_langid::LanguageIdentifier;
 
-use crate::prebuild::{File, Localized, Sass};
+use crate::tasks::{FilesParams, LocalizedParams, SassParams};
 
 #[derive(Debug)]
 pub struct Asset {
@@ -13,7 +13,7 @@ pub struct Asset {
 }
 
 impl Asset {
-    pub fn from_sass(sass: &Sass, checksum: Option<String>) -> Self {
+    pub fn from_sass(sass: &SassParams, checksum: Option<String>) -> Self {
         Self {
             url: sass.url(&checksum),
             name: sass.file_name(&None),
@@ -23,7 +23,7 @@ impl Asset {
     }
 
     pub fn from_localized(
-        localized: &Localized,
+        localized: &LocalizedParams,
         checksum: Option<String>,
         localizations: Vec<LanguageIdentifier>,
     ) -> Self {
@@ -35,7 +35,7 @@ impl Asset {
         }
     }
 
-    pub fn from_file(file: &File, checksum: Option<String>) -> Self {
+    pub fn from_file(file: &FilesParams, checksum: Option<String>) -> Self {
         Self {
             url: file.url(checksum),
             name: file.path.iter().last().unwrap().to_string(),
