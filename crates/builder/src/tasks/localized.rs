@@ -22,6 +22,9 @@ pub struct LocalizedParams {
     pub file_extension: String,
     /// output options
     pub out: Output,
+    /// path (relative to the crate directory) to the generated asset rust module
+    #[serde(rename = "generated-module")]
+    pub generated_mod: Option<Utf8PathBuf>,
 }
 
 impl LocalizedParams {
@@ -47,7 +50,10 @@ impl LocalizedParams {
             .out
             .write_localized(&site_dir, filename, ext, variants)?;
 
-        generator.add_asset(Asset::from_localized(self, hash, localizations));
+        generator.add_asset(
+            Asset::from_localized(self, hash, localizations),
+            self.generated_mod.clone(),
+        );
         watched.insert(self.path.to_string());
 
         Ok(())

@@ -18,10 +18,14 @@ impl ByteVecExt for [u8] {
 }
 
 pub trait RustNaming {
+    fn to_rust_module(&self) -> String;
     fn to_rust_const(&self) -> String;
 }
 
 impl RustNaming for str {
+    fn to_rust_module(&self) -> String {
+        self.replace('-', "_")
+    }
     fn to_rust_const(&self) -> String {
         let mut s = String::with_capacity(self.len());
         for (i, char) in self.chars().enumerate() {

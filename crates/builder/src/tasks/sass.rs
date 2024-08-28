@@ -60,7 +60,7 @@ impl SassParams {
             .out
             .write_file(css.as_bytes(), &config.site_dir("sass"), &filename)?;
 
-        generator.add_asset(Asset::from_sass(self, hash));
+        generator.add_asset(Asset::from_sass(self, hash), None);
         watched.insert(self.watched());
 
         Ok(())

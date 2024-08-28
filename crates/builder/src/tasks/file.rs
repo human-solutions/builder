@@ -33,7 +33,7 @@ impl FilesParams {
             .out
             .write_file(&contents, &config.site_dir("files"), filename)?;
 
-        generator.add_asset(Asset::from_file(self, hash));
+        generator.add_asset(Asset::from_file(self, hash), None);
         watched.insert(self.path.to_string());
 
         Ok(())
