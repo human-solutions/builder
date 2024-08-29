@@ -1,0 +1,24 @@
+[package]
+edition = "2021"
+name = "library"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+name = "library"
+
+[dependencies]
+uniffi = { workspace = true }
+
+[build-dependencies]
+uniffi = { workspace = true, features = ["build"] }
+which = "6.0"
+
+######################
+##### POST build #####
+######################
+
+[[package.metadata.postbuild.uniffi]]
+udl-path = "src/library.udl"
+language = "kotlin"
+out = { folder = "main/java/" }

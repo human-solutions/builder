@@ -100,6 +100,29 @@ fn test_wasm() {
 }
 
 #[test]
+fn test_uniffi() {
+    let dir = Utf8PathBuf::from("../../examples/uniffi-wksp");
+
+    cargo(&dir, ["clean"]);
+    cargo(&dir, ["build"]);
+
+    let out = dir.join("target").join("library");
+
+    insta::assert_snapshot!(out.ls_ascii_replace::<RemoveTargetAndChecksum>(0).unwrap(), @r###"
+    library:
+      prebuild-debug.log
+      <target>:
+        uniffi:
+          debug:
+            main:
+              java:
+                uniffi:
+                  library:
+                    library.kt
+    "###);
+}
+
+#[test]
 fn test_playground() {
     let dir = Utf8PathBuf::from("../../examples/playground");
     let gen = dir.join("assets").join("gen");
