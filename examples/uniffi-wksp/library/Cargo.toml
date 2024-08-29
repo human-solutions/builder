@@ -21,4 +21,4 @@ which = "6.0"
 [[package.metadata.postbuild.uniffi]]
 udl-path = "src/library.udl"
 language = "kotlin"
-out = { folder = "main/java/" }
+out.folder = "main/java/"
