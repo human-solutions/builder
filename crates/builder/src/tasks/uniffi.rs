@@ -32,6 +32,7 @@ impl fmt::Display for UniffiLanguage {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub(super) struct UniffiParams {
+    #[serde(rename = "udl-path")]
     pub udl_path: Utf8PathBuf,
     pub language: UniffiLanguage,
     pub out: Output,
