@@ -42,11 +42,12 @@ impl UniffiParams {
     pub fn process(&self, config: &Config) -> Result<()> {
         let out_folder = self.out.folder.as_deref().unwrap_or("".into());
         let out_dir = config.site_dir("uniffi").join(out_folder);
+        let udl_file = config.args.dir.join(&self.udl_path);
 
         match self.language {
             UniffiLanguage::Kotlin => generate_external_bindings(
                 &KotlinBindingGenerator,
-                &self.udl_path,
+                &udl_file,
                 None::<&Utf8PathBuf>,
                 Some(out_dir),
                 None::<&Utf8PathBuf>,
