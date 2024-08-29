@@ -5,6 +5,7 @@ mod postbuild;
 mod prebuild;
 mod sass;
 mod setup;
+mod uniffi;
 mod wasm;
 
 use std::{collections::HashSet, fmt::Display, str::FromStr};
@@ -13,6 +14,7 @@ use anyhow::{Context, Result};
 use fontforge::FontForgeParams;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use uniffi::UniffiParams;
 use wasm::WasmParams;
 
 pub use file::FilesParams;
@@ -63,7 +65,11 @@ impl Task {
                     .context(format!("Failed to parse file metadata: '{value}'"))?;
                 Tool::Files(params)
             }
-            Tool::Uniffi => todo!(),
+            Tool::Uniffi(_) => {
+                let params: UniffiParams = serde_json::from_value(value.clone())
+                    .context(format!("Failed to parse uniffi metadata: '{value}'"))?;
+                Tool::Uniffi(params)
+            }
         };
 
         Ok(Task {
@@ -96,7 +102,7 @@ impl Task {
                 Tool::Sass(sass) => sass.process(config, generator, watched)?,
                 Tool::Localized(localized) => localized.process(config, generator, watched)?,
                 Tool::Files(file) => file.process(config, generator, watched)?,
-                Tool::Uniffi => todo!(),
+                Tool::Uniffi(uniffi) => uniffi.process(config)?,
             }
         } else {
             log::info!("Skipping task for {}", self.tool);
@@ -113,7 +119,7 @@ enum Tool {
     Sass(SassParams),
     Localized(LocalizedParams),
     Files(FilesParams),
-    Uniffi,
+    Uniffi(UniffiParams),
 }
 
 impl Display for Tool {
@@ -124,7 +130,7 @@ impl Display for Tool {
             Tool::Sass(_) => write!(f, "sass"),
             Tool::Localized(_) => write!(f, "localized"),
             Tool::Files(_) => write!(f, "files"),
-            Tool::Uniffi => write!(f, "uniffi"),
+            Tool::Uniffi(_) => write!(f, "uniffi"),
         }
     }
 }
@@ -139,7 +145,7 @@ impl FromStr for Tool {
             "sass" => Ok(Self::Sass(SassParams::default())),
             "localized" => Ok(Self::Localized(LocalizedParams::default())),
             "files" => Ok(Self::Files(FilesParams::default())),
-            "uniffi" => Ok(Self::Uniffi),
+            "uniffi" => Ok(Self::Uniffi(UniffiParams::default())),
             _ => anyhow::bail!("Invalid tool: {}", s),
         }
     }

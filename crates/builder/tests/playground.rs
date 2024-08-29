@@ -5,16 +5,11 @@ use common::{cargo, PathExt, Replacer};
 use fs_err as fs;
 
 #[test]
-fn test_playground() {
-    let dir = Utf8PathBuf::from("../../examples/playground");
+fn test_assets() {
+    let dir = Utf8PathBuf::from("../../examples/assets-wksp");
     let gen = dir.join("assets").join("gen");
 
     cargo(&dir, ["clean"]);
-    cargo(
-        &dir,
-        ["build", "-p=client", "--target=wasm32-unknown-unknown"],
-    );
-
     if gen.exists() {
         fs::remove_dir_all(&gen).unwrap();
     }
@@ -74,6 +69,20 @@ fn test_playground() {
               4xved-FTXA0=main.css.br
               4xved-FTXA0=main.css.gz
     "###);
+}
+
+#[test]
+fn test_wasm() {
+    let dir = Utf8PathBuf::from("../../examples/wasm-wksp");
+
+    cargo(&dir, ["clean"]);
+    cargo(
+        &dir,
+        ["build", "-p=client", "--target=wasm32-unknown-unknown"],
+    );
+
+    cargo(&dir, ["build"]);
+    cargo(&dir, ["build", "--release"]);
 
     let out_wasm = dir.join("target").join("client");
 
@@ -88,6 +97,33 @@ fn test_playground() {
 /client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm.br
 /client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm.gz
 "###)
+}
+
+#[test]
+fn test_uniffi() {
+    let dir = Utf8PathBuf::from("../../examples/uniffi-wksp");
+
+    cargo(&dir, ["clean"]);
+    cargo(&dir, ["build"]);
+
+    let out = dir.join("target").join("library");
+
+    insta::assert_snapshot!(out.ls_ascii_replace::<RemoveTargetAndChecksum>(0).unwrap(), @r###"
+    library:
+      prebuild-debug.log
+      <target>:
+        uniffi:
+          debug:
+            bindings:
+              library.swift
+              libraryFFI.h
+              libraryFFI.modulemap
+            main:
+              java:
+                uniffi:
+                  library:
+                    library.kt
+    "###);
 }
 
 struct NoChange;
