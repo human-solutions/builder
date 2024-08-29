@@ -56,7 +56,7 @@ impl UniffiParams {
             ),
             UniffiLanguage::Swift => generate_external_bindings(
                 &SwiftBindingGenerator,
-                &self.udl_path,
+                &udl_file,
                 None::<&Utf8PathBuf>,
                 Some(out_dir),
                 None::<&Utf8PathBuf>,
