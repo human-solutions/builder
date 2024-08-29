@@ -114,6 +114,10 @@ fn test_uniffi() {
       <target>:
         uniffi:
           debug:
+            bindings:
+              library.swift
+              libraryFFI.h
+              libraryFFI.modulemap
             main:
               java:
                 uniffi:
