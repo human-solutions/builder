@@ -1,0 +1,22 @@
+name: "Nix package"
+
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install fontforge
+        run: sudo apt-get install fontforge
+      - name: Install sass
+        run: sudo apt-get install sass
+      - name: Run tests
+        run: cargo test
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Building package
+        run: cargo build
