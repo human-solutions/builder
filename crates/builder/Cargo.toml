@@ -34,6 +34,7 @@ unic-langid = "0.9"
 uniffi_bindgen = "0.28.1"
 wasm-bindgen-cli-support = "0.2"
 wasm-opt = "0.116.1"
+which = "6.0.3"
 
 [dev-dependencies]
 insta = "1.39"
