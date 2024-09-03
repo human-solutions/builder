@@ -13,6 +13,8 @@ jobs:
       - name: Install sass
         run: |
           curl -L https://github.com/sass/dart-sass/releases/download/1.77.8/dart-sass-1.77.8-linux-x64.tar.gz | tar xz -C /usr/local/bin --strip-components=1 sass
+      - name: Install wasm target
+        run: rustup target add wasm32-unknown-unknown
       - name: Run tests
         run: cargo test
   build:
