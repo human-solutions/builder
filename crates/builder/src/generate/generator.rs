@@ -20,7 +20,7 @@ pub struct Generator {
 
 impl Generator {
     pub fn watched(&self) -> String {
-        "gen".to_string()
+        MODULE_DIR.to_string()
     }
 
     pub fn add_asset(&mut self, asset: Asset, module_path: Option<Utf8PathBuf>) {

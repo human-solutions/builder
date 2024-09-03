@@ -47,20 +47,6 @@ impl Output {
         format!("{folder}/{}{filename}", checksum.unwrap_or_default(),)
     }
 
-    pub fn hash_and_path(
-        &self,
-        contents: &[u8],
-        dir: &Utf8Path,
-        filename: &str,
-    ) -> Result<(Option<String>, Utf8PathBuf)> {
-        let hash = self.checksum.then(|| contents.base64_checksum());
-        let prefix = hash.as_deref().unwrap_or_default();
-        let dir = self.full_created_dir(dir)?;
-        let filename = format!("{prefix}{filename}");
-        let path = dir.join(filename);
-        Ok((hash, path))
-    }
-
     pub fn path(
         &self,
         hash: &Option<String>,
