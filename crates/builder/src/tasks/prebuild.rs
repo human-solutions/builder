@@ -39,6 +39,7 @@ impl PrebuildTasks {
         }
 
         generator.write(config)?;
+        watched.insert(generator.watched());
         for change in watched {
             println!("cargo::rerun-if-changed={}", change);
         }

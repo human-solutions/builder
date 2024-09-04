@@ -3,6 +3,7 @@ use std::{fs, process::Command};
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
+use which::which;
 
 use crate::util::filehash;
 
@@ -50,7 +51,11 @@ impl FontForgeParams {
         let otf = self.item.with_extension("otf");
         let ff = format!("Open('{name}'); Generate('{woff}'); Generate('{otf}')");
 
-        let cmd = Command::new("fontforge")
+        let Ok(fontforge) = which("fontforge") else {
+            anyhow::bail!("fontforge is not installed");
+        };
+
+        let cmd = Command::new(fontforge)
             .args(["-lang=ff", "-c", &ff])
             .current_dir(info.args.dir.as_path())
             .output()

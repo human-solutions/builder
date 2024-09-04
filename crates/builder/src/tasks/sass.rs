@@ -11,6 +11,7 @@ use lightningcss::{
     targets::{Browsers, Targets},
 };
 use serde::{Deserialize, Serialize};
+use which::which;
 
 use crate::generate::Output;
 
@@ -71,7 +72,11 @@ impl SassParams {
             .existing_manifest_dir_path(&self.file)
             .context("sass file not found")?;
 
-        let cmd = Command::new("sass")
+        let Ok(sass) = which("sass") else {
+            bail!("sass is not installed");
+        };
+
+        let cmd = Command::new(sass)
             .args(["--embed-sources", "--embed-source-map", file.as_str()])
             .output()
             .context("Failed to run sass binary")?;
