@@ -32,8 +32,6 @@ impl fmt::Display for UniffiLanguage {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub(super) struct UniffiParams {
-    #[serde(rename = "udl-path")]
-    pub udl_path: Utf8PathBuf,
     pub language: UniffiLanguage,
     pub out: Output,
 }
@@ -42,7 +40,11 @@ impl UniffiParams {
     pub fn process(&self, config: &Config) -> Result<()> {
         let out_folder = self.out.folder.as_deref().unwrap_or("".into());
         let out_dir = config.site_dir("uniffi").join(out_folder);
-        let udl_file = config.args.dir.join(&self.udl_path);
+
+        let udl_file = config
+            .args
+            .dir
+            .join(format!("src/{}.udl", config.package_name));
 
         match self.language {
             UniffiLanguage::Kotlin => generate_external_bindings(
