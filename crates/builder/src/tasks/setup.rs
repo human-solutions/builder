@@ -32,6 +32,7 @@ impl BuildStep {
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     pub package_name: String,
+    pub library_name: Option<String>,
     pub args: CmdArgs,
     pub package_dir: Utf8PathBuf,
     pub target_dir: Utf8PathBuf,
@@ -93,6 +94,7 @@ impl Setup {
 
         let config = Config {
             package_name: package.name.clone(),
+            library_name: metadata.library_name(),
             args: args.clone(),
             package_dir: package.manifest_path.clone(),
             target_dir: metadata.target_directory.clone(),
