@@ -19,9 +19,11 @@ which = "6.0"
 ######################
 
 [[package.metadata.postbuild.uniffi]]
+udl-path = "src/library.udl"
 language = "kotlin"
 out.folder = "main/java/"
 
 [[package.metadata.postbuild.uniffi]]
+udl-path = "src/library.udl"
 language = "swift"
 out.folder = "bindings/"
