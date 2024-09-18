@@ -85,7 +85,7 @@ impl UniffiParams {
                 None::<&Utf8PathBuf>,
                 Some(out_dir),
                 Some(library_file),
-                Some(&config.package_name),
+                Some(lib_name),
                 true,
             ),
             UniffiLanguage::Swift => generate_external_bindings(
@@ -94,7 +94,7 @@ impl UniffiParams {
                 None::<&Utf8PathBuf>,
                 Some(out_dir),
                 Some(library_file),
-                Some(&config.package_name),
+                Some(lib_name),
                 true,
             ),
         }
