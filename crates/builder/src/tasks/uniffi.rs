@@ -67,9 +67,16 @@ impl UniffiParams {
         let is_mac = cfg!(target_os = "macos");
         let ext = if is_mac { "dylib" } else { "so" };
 
+        let Some(lib_name) = config.library_name.as_deref() else {
+            anyhow::bail!(
+                "The library name is not found in the {} Cargo.toml file",
+                config.package_name
+            )
+        };
+
         let library_file = config
             .target_dir
-            .join(format!("{}/lib{}.{}", profile, config.package_name, ext));
+            .join(format!("{}/lib{}.{}", profile, lib_name, ext));
 
         match self.language {
             UniffiLanguage::Kotlin => generate_external_bindings(
