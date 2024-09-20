@@ -9,7 +9,7 @@ use camino::Utf8Path;
 use serde::{Deserialize, Serialize};
 use swc::{
     config::{IsModule, JsMinifyOptions},
-    try_with_handler, BoolOrDataConfig,
+    try_with_handler, BoolOrDataConfig, JsMinifyExtras,
 };
 use swc_common::{FileName, SourceMap, GLOBALS};
 use tempfile::NamedTempFile;
@@ -157,6 +157,7 @@ impl WasmParams {
                         module: IsModule::Bool(true),
                         ..Default::default()
                     },
+                    JsMinifyExtras::default(),
                 )
                 .context("failed to minify")
             })
