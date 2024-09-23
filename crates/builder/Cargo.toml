@@ -37,4 +37,4 @@ wasm-opt = "0.116.1"
 which = "6.0.3"
 
 [dev-dependencies]
-insta = "1.39"
+insta = "1.40"
