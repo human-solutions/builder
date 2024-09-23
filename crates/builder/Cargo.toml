@@ -19,7 +19,7 @@ colorful = "0.2"
 flate2 = "1.0"
 fs-err = "2.11"
 fs4 = "0.9.1"
-lightningcss = { version = "1.0.0-alpha.57", features = ["browserslist"] }
+lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }
 log = "0.4"
 seahash = { workspace = true }
 serde = "1.0"
