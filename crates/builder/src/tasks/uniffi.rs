@@ -49,6 +49,8 @@ impl UniffiParams {
 
         let profile = if config.args.profile.is_empty() {
             DEFAULT_PROFILE.to_string()
+        } else if config.args.profile == "debug" || config.args.profile == "release" {
+            config.args.profile.to_owned()
         } else {
             env::var("OUT_DIR")
                 .context("Failed to get OUT_DIR environment variable")?
