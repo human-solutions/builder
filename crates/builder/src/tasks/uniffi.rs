@@ -58,12 +58,6 @@ impl UniffiParams {
                 .to_string()
         };
 
-        let profile = if profile == "release" {
-            "lib-release".to_owned()
-        } else {
-            profile
-        };
-
         let is_mac = cfg!(target_os = "macos");
         let ext = if is_mac { "dylib" } else { "so" };
 
