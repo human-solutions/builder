@@ -34,7 +34,9 @@ impl Commands {
 
         let setup = Setup::new(args)?;
 
-        let log_path = setup.config.target_dir.join(&setup.config.package_name);
+        let log_path = setup
+            .config
+            .package_target_dir(&setup.config.package_name, &step);
         fs::create_dir_all(&log_path)?;
 
         let log_file = log_path.join(format!("{}-{}.log", step.as_str(), args.profile));

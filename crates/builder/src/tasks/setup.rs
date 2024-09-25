@@ -37,12 +37,15 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn site_dir(&self, folder: &str) -> Utf8PathBuf {
-        self.target_dir
-            .join(&self.package_name)
+    pub fn site_dir(&self, folder: &str, phase: &BuildStep) -> Utf8PathBuf {
+        self.package_target_dir(&self.package_name, phase)
             .join(&self.args.target)
-            .join(folder)
             .join(&self.args.profile)
+            .join(folder)
+    }
+
+    pub fn package_target_dir(&self, package_name: &str, phase: &BuildStep) -> Utf8PathBuf {
+        self.target_dir.join(phase.as_str()).join(package_name)
     }
 
     pub fn existing_manifest_dir_path(&self, path: &Utf8Path) -> Result<Utf8PathBuf> {
@@ -192,7 +195,9 @@ impl Setup {
     }
 
     fn postbuild_files(&self, package_name: &str) -> Result<Vec<Utf8PathBuf>> {
-        let target_dir = self.config.target_dir.join(package_name);
+        let target_dir = self
+            .config
+            .package_target_dir(package_name, &BuildStep::Postbuild);
 
         if !target_dir.exists() {
             return Ok(Vec::new());
@@ -220,6 +225,7 @@ impl Setup {
     fn postbuild_file(&self, package_name: &str) -> Utf8PathBuf {
         self.config
             .target_dir
+            .join(BuildStep::Postbuild.as_str())
             .join(package_name)
             .join(&self.config.args.target)
             .join(POSTBUILD_FILE)

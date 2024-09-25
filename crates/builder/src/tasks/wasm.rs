@@ -17,7 +17,7 @@ use wasm_bindgen_cli_support::Bindgen;
 
 use crate::{generate::Output, util::timehash};
 
-use super::setup::Config;
+use super::{setup::Config, BuildStep};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
@@ -28,7 +28,7 @@ pub(super) struct WasmParams {
 }
 
 impl WasmParams {
-    pub fn process(&self, config: &Config) -> Result<()> {
+    pub fn process(&self, config: &Config, phase: &BuildStep) -> Result<()> {
         let hash = timehash();
         let debug = config.args.profile != "release";
         let profile = if config.args.profile == "dev" {
@@ -51,7 +51,7 @@ impl WasmParams {
             .out_name(&format!("{hash}{}", config.package_name))
             .generate_output()?;
 
-        let site_dir = config.site_dir("wasm-bindgen");
+        let site_dir = config.site_dir("wasm-bindgen", phase);
         // check out the code for this, that's where much of the stuff done here comes from:
         // output.emit(&site_dir)?;
 

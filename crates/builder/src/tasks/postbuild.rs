@@ -9,6 +9,8 @@ use crate::{
     tasks::{Config, Task},
 };
 
+use super::BuildStep;
+
 #[derive(Default, Serialize, Deserialize)]
 pub struct PostbuildTasks(Vec<Task>);
 
@@ -33,7 +35,7 @@ impl PostbuildTasks {
         let mut watched = HashSet::new();
 
         for task in &self.0 {
-            task.run(config, &mut generator, &mut watched)?;
+            task.run(config, &BuildStep::Postbuild, &mut generator, &mut watched)?;
         }
 
         generator.write(config)?;
