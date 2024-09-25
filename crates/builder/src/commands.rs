@@ -17,6 +17,9 @@ pub struct CmdArgs {
     pub package: String,
     #[clap(long, env = "TARGET")]
     pub target: String,
+    /// The packages to check for a postbuild file: a comma separated list without spaces
+    #[clap(long)]
+    pub deps: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
