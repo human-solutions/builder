@@ -10,7 +10,7 @@ use uniffi_bindgen::{
 
 use crate::{anyhow::Context, generate::Output};
 
-use super::Config;
+use super::{BuildStep, Config};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub(super) enum UniffiLanguage {
@@ -39,16 +39,18 @@ pub(super) struct UniffiParams {
 }
 
 impl UniffiParams {
-    pub fn process(&self, config: &Config) -> Result<()> {
+    pub fn process(&self, config: &Config, phase: &BuildStep) -> Result<()> {
         const DEFAULT_PROFILE: &str = "debug";
 
         let out_folder = self.out.folder.as_deref().unwrap_or("".into());
-        let out_dir = config.site_dir("uniffi").join(out_folder);
+        let out_dir = config.site_dir("uniffi", phase).join(out_folder);
 
         let udl_file = config.args.dir.join(self.udl_path.as_str());
 
         let profile = if config.args.profile.is_empty() {
             DEFAULT_PROFILE.to_string()
+        } else if config.args.profile == "debug" || config.args.profile == "release" {
+            config.args.profile.to_owned()
         } else {
             env::var("OUT_DIR")
                 .context("Failed to get OUT_DIR environment variable")?

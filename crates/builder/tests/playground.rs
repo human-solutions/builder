@@ -24,23 +24,18 @@ fn test_assets() {
 
     cargo(&dir, ["build", "--release"]);
 
-    let out = dir.join("target").join("assets");
+    let out = dir.join("target").join("prebuild").join("assets");
 
     insta::assert_snapshot!(out.ls_ascii_replace::<RemoveTargetAndChecksum>(0).unwrap(), @r###"
     assets:
       prebuild-debug.log
       prebuild-release.log
       <target>:
-        files:
-          debug:
+        debug:
+          files:
             static:
               <checksum>polyglot.woff2
-          release:
-            static:
-              hfT-f2u761M=polyglot.woff2.br
-              hfT-f2u761M=polyglot.woff2.gz
-        localized:
-          debug:
+          localized:
             static:
               badge:
                 MJjU0sjYbCw=apple_store.svg.en
@@ -52,18 +47,22 @@ fn test_assets() {
                 MJjU0sjYbCw=apple_store.svg.fr-CA.gz
                 MJjU0sjYbCw=apple_store.svg.fr.br
                 MJjU0sjYbCw=apple_store.svg.fr.gz
-          release:
+          sass:
+            main.css
+            static:
+              <checksum>main.css
+        release:
+          files:
+            static:
+              hfT-f2u761M=polyglot.woff2.br
+              hfT-f2u761M=polyglot.woff2.gz
+          localized:
             static:
               badge:
                 MJjU0sjYbCw=apple_store.svg.en
                 MJjU0sjYbCw=apple_store.svg.fr
                 MJjU0sjYbCw=apple_store.svg.fr-CA
-        sass:
-          debug:
-            main.css
-            static:
-              <checksum>main.css
-          release:
+          sass:
             main.css.br
             static:
               4xved-FTXA0=main.css.br
@@ -84,18 +83,16 @@ fn test_wasm() {
     cargo(&dir, ["build"]);
     cargo(&dir, ["build", "--release"]);
 
-    let out_wasm = dir.join("target").join("client");
+    let out_wasm = dir.join("target").join("postbuild").join("client");
 
     insta::assert_snapshot!(out_wasm.ls_replace_checksum("<checksum>").unwrap(), @r###"
-/client/prebuild-debug.log
-/client/prebuild-release.log
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.js
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.js.br
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.js.gz
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm.br
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm.gz
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.js
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.js.br
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.js.gz
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.wasm
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.wasm
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.wasm.br
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.wasm.gz
 "###)
 }
 
@@ -106,14 +103,13 @@ fn test_uniffi() {
     cargo(&dir, ["clean"]);
     cargo(&dir, ["build"]);
 
-    let out = dir.join("target").join("library");
+    let out = dir.join("target").join("postbuild").join("library");
 
     insta::assert_snapshot!(out.ls_ascii_replace::<RemoveTargetAndChecksum>(0).unwrap(), @r###"
     library:
-      prebuild-debug.log
       <target>:
-        uniffi:
-          debug:
+        debug:
+          uniffi:
             bindings:
               library.swift
               libraryFFI.h

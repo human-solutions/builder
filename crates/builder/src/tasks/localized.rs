@@ -1,16 +1,16 @@
-use std::{collections::HashSet, fs};
-
 use crate::{
     anyhow::{bail, Context, Result},
     generate::{Asset, Generator},
 };
 use camino::Utf8PathBuf;
+use fs_err as fs;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use unic_langid::LanguageIdentifier;
 
 use crate::generate::Output;
 
-use super::Config;
+use super::{BuildStep, Config};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct LocalizedParams {
@@ -37,12 +37,13 @@ impl LocalizedParams {
     pub fn process(
         &self,
         config: &Config,
+        phase: &BuildStep,
         generator: &mut Generator,
         watched: &mut HashSet<String>,
     ) -> Result<()> {
         let variants = self.process_inner(config)?;
         let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
-        let site_dir = config.site_dir("localized");
+        let site_dir = config.site_dir("localized", phase);
 
         let filename = self.path.iter().last().unwrap();
         let ext = &self.file_extension;
