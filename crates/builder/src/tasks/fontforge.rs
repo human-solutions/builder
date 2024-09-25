@@ -1,8 +1,8 @@
-use std::{fs, process::Command};
-
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
+use fs_err as fs;
 use serde::{Deserialize, Serialize};
+use std::process::Command;
 use which::which;
 
 use crate::util::filehash;

@@ -1,7 +1,5 @@
-use std::{
-    fs::{self, File},
-    io::{Read, Write},
-};
+use fs_err as fs;
+use std::io::{Read, Write};
 
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
@@ -109,7 +107,7 @@ impl Setup {
     }
 
     fn load(path: &Utf8PathBuf) -> Result<Self> {
-        let mut file = File::open(path)?;
+        let mut file = std::fs::File::open(path)?;
         file.try_lock_exclusive()?;
 
         let mut string = String::new();
@@ -134,7 +132,7 @@ impl Setup {
             fs::create_dir_all(parent)?;
         }
 
-        let mut file = File::create(&path)
+        let mut file = fs::File::create(&path)
             .context(format!("Failed to create configuration file to '{path}'"))?;
         file.write_all(string.as_bytes())
             .context("Failed to write configuration file")?;

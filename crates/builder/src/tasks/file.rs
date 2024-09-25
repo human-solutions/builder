@@ -1,6 +1,6 @@
-use std::{collections::HashSet, fs};
-
 use crate::generate::{Asset, Generator, Output};
+use fs_err as fs;
+use std::collections::HashSet;
 
 use anyhow::Result;
 use camino::Utf8PathBuf;

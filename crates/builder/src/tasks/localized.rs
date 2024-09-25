@@ -1,11 +1,11 @@
-use std::{collections::HashSet, fs};
-
 use crate::{
     anyhow::{bail, Context, Result},
     generate::{Asset, Generator},
 };
 use camino::Utf8PathBuf;
+use fs_err as fs;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use unic_langid::LanguageIdentifier;
 
 use crate::generate::Output;
