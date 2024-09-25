@@ -83,18 +83,16 @@ fn test_wasm() {
     cargo(&dir, ["build"]);
     cargo(&dir, ["build", "--release"]);
 
-    let out_wasm = dir.join("target").join("client");
+    let out_wasm = dir.join("target").join("postbuild").join("client");
 
     insta::assert_snapshot!(out_wasm.ls_replace_checksum("<checksum>").unwrap(), @r###"
-/client/prebuild-debug.log
-/client/prebuild-release.log
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.js
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.js.br
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.js.gz
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm.br
-/client/wasm32-unknown-unknown/wasm-bindgen/debug/static/<checksum>client.wasm.gz
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.js
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.js.br
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.js.gz
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.wasm
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.wasm
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.wasm.br
+/client/wasm32-unknown-unknown/debug/wasm-bindgen/static/<checksum>client.wasm.gz
 "###)
 }
 
