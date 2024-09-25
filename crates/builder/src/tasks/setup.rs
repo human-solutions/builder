@@ -77,14 +77,10 @@ impl Setup {
 
         let package = metadata.root_package().context("root package not found")?;
 
-        let deps = if let Some(deps) = &args.deps {
-            deps.split(',').map(|s| s.to_string()).collect()
-        } else {
-            metadata
-                .local_dependency_packages()
-                .map(|p| p.name.to_string())
-                .collect::<Vec<_>>()
-        };
+        let deps = metadata
+            .local_dependency_packages()
+            .map(|p| p.name.to_string())
+            .collect::<Vec<_>>();
 
         let mut prebuild = PrebuildTasks::default();
         let mut postbuild = PostbuildTasks::default();
