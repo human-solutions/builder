@@ -103,14 +103,13 @@ fn test_uniffi() {
     cargo(&dir, ["clean"]);
     cargo(&dir, ["build"]);
 
-    let out = dir.join("target").join("library");
+    let out = dir.join("target").join("postbuild").join("library");
 
     insta::assert_snapshot!(out.ls_ascii_replace::<RemoveTargetAndChecksum>(0).unwrap(), @r###"
     library:
-      prebuild-debug.log
       <target>:
-        uniffi:
-          debug:
+        debug:
+          uniffi:
             bindings:
               library.swift
               libraryFFI.h
