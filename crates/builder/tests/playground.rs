@@ -24,23 +24,18 @@ fn test_assets() {
 
     cargo(&dir, ["build", "--release"]);
 
-    let out = dir.join("target").join("assets");
+    let out = dir.join("target").join("prebuild").join("assets");
 
     insta::assert_snapshot!(out.ls_ascii_replace::<RemoveTargetAndChecksum>(0).unwrap(), @r###"
     assets:
       prebuild-debug.log
       prebuild-release.log
       <target>:
-        files:
-          debug:
+        debug:
+          files:
             static:
               <checksum>polyglot.woff2
-          release:
-            static:
-              hfT-f2u761M=polyglot.woff2.br
-              hfT-f2u761M=polyglot.woff2.gz
-        localized:
-          debug:
+          localized:
             static:
               badge:
                 MJjU0sjYbCw=apple_store.svg.en
@@ -52,18 +47,22 @@ fn test_assets() {
                 MJjU0sjYbCw=apple_store.svg.fr-CA.gz
                 MJjU0sjYbCw=apple_store.svg.fr.br
                 MJjU0sjYbCw=apple_store.svg.fr.gz
-          release:
+          sass:
+            main.css
+            static:
+              <checksum>main.css
+        release:
+          files:
+            static:
+              hfT-f2u761M=polyglot.woff2.br
+              hfT-f2u761M=polyglot.woff2.gz
+          localized:
             static:
               badge:
                 MJjU0sjYbCw=apple_store.svg.en
                 MJjU0sjYbCw=apple_store.svg.fr
                 MJjU0sjYbCw=apple_store.svg.fr-CA
-        sass:
-          debug:
-            main.css
-            static:
-              <checksum>main.css
-          release:
+          sass:
             main.css.br
             static:
               4xved-FTXA0=main.css.br
