@@ -77,6 +77,8 @@ impl SassParams {
             bail!("sass is not installed");
         };
 
+        log::info!("Processing sass file: {file}");
+
         let cmd = Command::new(sass)
             .args(["--embed-sources", "--embed-source-map", file.as_str()])
             .output()
@@ -90,6 +92,8 @@ impl SassParams {
         }
 
         if self.optimize {
+            log::info!("Optimizing css");
+
             let stylesheet =
                 StyleSheet::parse(&out, Default::default()).map_err(|e| anyhow!("{e}"))?;
 

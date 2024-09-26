@@ -1,3 +1,4 @@
+use anyhow::Context;
 use fs_err as fs;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
@@ -32,12 +33,12 @@ impl Commands {
             Self::Postbuild(args) => (args, BuildStep::Postbuild),
         };
 
-        let setup = Setup::new(args)?;
+        let setup = Setup::new(args).context("Failed to create builder setup")?;
 
         let log_path = setup
             .config
             .package_target_dir(&setup.config.package_name, &step);
-        fs::create_dir_all(&log_path)?;
+        fs::create_dir_all(&log_path).context("Failed to create log output directory")?;
 
         let log_file = log_path.join(format!("{}-{}.log", step.as_str(), args.profile));
         setup_logging(log_file.as_str(), LevelFilter::Debug);

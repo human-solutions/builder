@@ -89,6 +89,8 @@ impl Command {
     }
 
     pub fn run(program: &'static str, arguments: &[&str]) -> Self {
+        log::info!("Running {program} {}", arguments.join(" "));
+
         let child = process::Command::new(program)
             .args(arguments)
             .stdout(Stdio::piped())
@@ -100,6 +102,8 @@ impl Command {
     }
 
     pub fn check(cmd: &str, version: &Option<String>) -> Option<UpdateAction> {
+        log::info!("Checking {cmd} version");
+
         let command_result = if cmd == "cargo-ndk" {
             process::Command::new("cargo")
                 .args(["ndk", "-v"])

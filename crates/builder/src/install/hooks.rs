@@ -27,7 +27,7 @@ pub fn setup(verbose: bool, cargo_install_section: &Map<String, Value>) -> Optio
         for hook in &hooks {
             let create = fs::metadata(hook.git_path()).is_err();
 
-            verbose.then(|| println!("Setting up {} script ...", hook.stage));
+            verbose.then(|| log::info!("Setting up {} script ...", hook.stage));
 
             if let Err(e) = hook.install(create) {
                 warn("hook", &e);
@@ -40,11 +40,11 @@ pub fn setup(verbose: bool, cargo_install_section: &Map<String, Value>) -> Optio
 }
 
 pub fn warn(prefix: &str, msg: &str) {
-    println!("{} {msg}", prefix.yellow());
+    log::info!("{} {msg}", prefix.yellow());
 }
 
 pub fn success(prefix: &str, msg: &str) {
     if !msg.is_empty() {
-        println!("{} {msg}", prefix.green());
+        log::info!("{} {msg}", prefix.green());
     }
 }

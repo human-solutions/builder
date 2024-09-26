@@ -43,6 +43,8 @@ impl WasmParams {
             .join(&config.package_name)
             .with_extension("wasm");
 
+        log::info!("Processing wasm: {input}");
+
         let mut output = Bindgen::new()
             .input_path(input)
             .browser(true)?
@@ -81,6 +83,8 @@ impl WasmParams {
     }
 
     fn write_snippets(&self, snippets: &HashMap<String, Vec<String>>) {
+        log::info!("Writing wasm snippets");
+
         // Provide inline JS files
         let mut snippet_list = Vec::new();
         for (identifier, list) in snippets.iter() {
@@ -100,6 +104,8 @@ impl WasmParams {
     }
 
     fn write_modules(&self, modules: &HashMap<String, String>, _site_dir: &Utf8Path) -> Result<()> {
+        log::info!("Writing wasm modules");
+
         // Provide snippet files from JS snippets
         for (path, _js) in modules.iter() {
             println!("module: {path}");
@@ -125,6 +131,8 @@ impl WasmParams {
     }
 
     fn optimize_wasm(wasm: &mut Vec<u8>) -> Result<()> {
+        log::info!("Optimizing wasm");
+
         let mut infile = NamedTempFile::new()?;
         infile.write_all(wasm)?;
 
@@ -139,6 +147,8 @@ impl WasmParams {
     }
 
     fn minify(js: String) -> Result<String> {
+        log::info!("Minifying js");
+
         let cm = Arc::<SourceMap>::default();
 
         let c = swc::Compiler::new(cm.clone());

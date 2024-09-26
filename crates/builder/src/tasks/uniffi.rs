@@ -75,24 +75,30 @@ impl UniffiParams {
             .join(format!("{}/lib{}.{}", profile, lib_name, ext));
 
         match self.language {
-            UniffiLanguage::Kotlin => generate_external_bindings(
-                &KotlinBindingGenerator,
-                &udl_file,
-                None::<&Utf8PathBuf>,
-                Some(out_dir),
-                Some(library_file),
-                Some(lib_name),
-                true,
-            ),
-            UniffiLanguage::Swift => generate_external_bindings(
-                &SwiftBindingGenerator,
-                &udl_file,
-                None::<&Utf8PathBuf>,
-                Some(out_dir),
-                Some(library_file),
-                Some(lib_name),
-                true,
-            ),
+            UniffiLanguage::Kotlin => {
+                log::info!("Generating Kotlin bindings for {}", config.package_name);
+                generate_external_bindings(
+                    &KotlinBindingGenerator,
+                    &udl_file,
+                    None::<&Utf8PathBuf>,
+                    Some(out_dir),
+                    Some(library_file),
+                    Some(lib_name),
+                    true,
+                )
+            }
+            UniffiLanguage::Swift => {
+                log::info!("Generating Swift bindings for {}", config.package_name);
+                generate_external_bindings(
+                    &SwiftBindingGenerator,
+                    &udl_file,
+                    None::<&Utf8PathBuf>,
+                    Some(out_dir),
+                    Some(library_file),
+                    Some(lib_name),
+                    true,
+                )
+            }
         }
         .context(format!(
             "Failed to generate {} bindings for {}",

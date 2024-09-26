@@ -28,7 +28,11 @@ impl Generator {
     }
     pub fn write(&self, config: &Config) -> Result<()> {
         for (module_path, assets) in &self.assets {
-            self.write_assembly(config, assets, module_path)?;
+            self.write_assembly(config, assets, module_path)
+                .context(format!(
+                    "Failed to write assembly file to {:?}",
+                    module_path
+                ))?;
         }
 
         Ok(())
@@ -40,6 +44,8 @@ impl Generator {
         assets: &[Asset],
         module_path: &Option<Utf8PathBuf>,
     ) -> Result<()> {
+        log::info!("Writing assembly file for {:?}", module_path);
+
         let module_name = {
             let m = if let Some(p) = module_path {
                 p.file_stem()
