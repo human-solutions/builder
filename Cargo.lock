@@ -349,6 +349,7 @@ dependencies = [
  "swc",
  "swc_common",
  "tempfile",
+ "time",
  "toml 0.8.19",
  "unic-langid",
  "uniffi_bindgen",
