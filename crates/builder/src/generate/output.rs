@@ -90,10 +90,13 @@ impl Output {
         let default_uncompressed = !self.uncompressed && !self.brotli && !self.gzip;
 
         if self.uncompressed || default_uncompressed {
+            log::info!("Writing uncompressed file '{:?}'", path);
             fs::write(path, contents)?;
         }
         if self.brotli {
             let path = path.push_ext("br");
+            log::info!("Writing brotli file '{:?}'", path);
+
             let mut file = fs::File::create(path)?;
             let mut cursor = Cursor::new(&contents);
 
@@ -106,6 +109,8 @@ impl Output {
 
         if self.gzip {
             let path = path.push_ext("gz");
+            log::info!("Writing gzip file '{:?}'", path);
+
             let f = fs::File::create(path)?;
             let mut gz = GzBuilder::new().write(f, Compression::default());
             gz.write_all(contents)?;
@@ -132,6 +137,7 @@ impl Output {
         for (langid, content) in variants {
             let filename = format!("{filename}.{ext}.{langid}");
             let path = self.path(&hash, dir, &filename)?;
+            log::info!("Creating localized file '{:?}'", path);
             self.compress_and_write(&content, &path)?;
         }
         Ok(hash)

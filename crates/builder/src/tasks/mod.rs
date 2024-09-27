@@ -33,7 +33,7 @@ struct Task {
 
 impl Task {
     fn from_value(key: &str, value: &Value) -> Result<Self> {
-        let tool = Tool::from_str(key).context(format!("Invalid tool '{key}'"))?;
+        let tool = Tool::from_str(key)?;
 
         let targets = value.into_vec_string("target");
         let profiles = value.into_vec_string("profile");
@@ -149,7 +149,7 @@ impl FromStr for Tool {
             "localized" => Ok(Self::Localized(LocalizedParams::default())),
             "files" => Ok(Self::Files(FilesParams::default())),
             "uniffi" => Ok(Self::Uniffi(UniffiParams::default())),
-            _ => anyhow::bail!("Invalid tool: {}", s),
+            _ => anyhow::bail!("Failed to parse tool: {}", s),
         }
     }
 }

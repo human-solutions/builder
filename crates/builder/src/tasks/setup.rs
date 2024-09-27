@@ -72,9 +72,13 @@ pub struct Setup {
 
 impl Setup {
     pub fn new(args: &CmdArgs) -> Result<Self> {
+        let cargo_path = args.dir.join("Cargo.toml");
+
+        log::info!("Retrieving metadata from '{cargo_path}'");
         let metadata = cargo_metadata::MetadataCommand::new()
-            .manifest_path(args.dir.join("Cargo.toml"))
-            .exec()?;
+            .manifest_path(&cargo_path)
+            .exec()
+            .context(format!("Failed to retrieve metadata from {cargo_path}",))?;
 
         let package = metadata.root_package().context("root package not found")?;
 
@@ -87,10 +91,14 @@ impl Setup {
         let mut postbuild = PostbuildTasks::default();
 
         if let Some(prebuild_val) = package.metadata.get("prebuild") {
-            prebuild = PrebuildTasks::from_value(prebuild_val)?;
+            log::info!("Retrieving prebuild metadata");
+            prebuild = PrebuildTasks::from_value(prebuild_val)
+                .context("Failed to retrieve prebuild metadata")?;
         }
         if let Some(postbuild_val) = package.metadata.get("postbuild") {
-            postbuild = PostbuildTasks::from_value(postbuild_val)?;
+            log::info!("Retrieving postbuild metadata");
+            postbuild = PostbuildTasks::from_value(postbuild_val)
+                .context("Failed to retrieve postbuild metadata")?;
         }
 
         let config = Config {
@@ -110,17 +118,21 @@ impl Setup {
     }
 
     fn load(path: &Utf8PathBuf) -> Result<Self> {
+        log::info!("Loading setup file '{:?}'", path);
+
         let mut file = std::fs::File::open(path)?;
+        log::info!("Locking file '{:?}'", path);
         file.try_lock_exclusive()?;
 
         let mut string = String::new();
         file.read_to_string(&mut string)?;
 
         file.unlock()?;
+        log::info!("Unlocking file '{:?}'", path);
         fs::remove_file(path)?;
 
-        let setup: Self = serde_yaml::from_str(&string)
-            .context(format!("Failed to parse output file '{}'", path))?;
+        let setup: Self =
+            serde_yaml::from_str(&string).context(format!("Failed to parse file '{}'", path))?;
 
         Ok(setup)
     }
@@ -132,7 +144,7 @@ impl Setup {
         let path = self.postbuild_file(&self.config.package_name);
 
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)?;
+            fs::create_dir_all(parent).context(format!("Failed to create path '{parent}'"))?;
         }
 
         let mut file = fs::File::create(&path)
@@ -155,8 +167,8 @@ impl Setup {
             for postbuild_file in self.postbuild_files(package)? {
                 let setup = match Self::load(&postbuild_file) {
                     Ok(s) => s,
-                    Err(_) => {
-                        log::warn!("Failed to load setup file '{:?}'", postbuild_file);
+                    Err(e) => {
+                        log::warn!("Failed to load setup file '{:?}': {e}", postbuild_file);
                         continue;
                     }
                 };
@@ -176,14 +188,14 @@ impl Setup {
             log::info!("No postbuild tasks found for {}", self.config.package_name);
         } else {
             log::info!("Saving postbuild tasks for {}", self.config.package_name);
-            self.save()?;
+            self.save()
+                .context("Failed to save postbuild configuration file")?;
         }
 
         Ok(())
     }
 
     fn run_postbuild(&self) -> Result<()> {
-        log::info!("Running postbuild for {}", self.config.package_name);
         if self.postbuild.is_empty() {
             log::info!("No postbuild tasks found for {}", self.config.package_name);
         } else {
@@ -205,6 +217,8 @@ impl Setup {
 
         let mut files = Vec::new();
 
+        log::info!("Searching for postbuild files in '{target_dir}'");
+
         for entry in fs::read_dir(target_dir)? {
             let entry = entry?;
             let path = entry.path();
@@ -224,9 +238,7 @@ impl Setup {
 
     fn postbuild_file(&self, package_name: &str) -> Utf8PathBuf {
         self.config
-            .target_dir
-            .join(BuildStep::Postbuild.as_str())
-            .join(package_name)
+            .package_target_dir(package_name, &BuildStep::Postbuild)
             .join(&self.config.args.target)
             .join(POSTBUILD_FILE)
     }

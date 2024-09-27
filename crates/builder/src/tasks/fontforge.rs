@@ -55,6 +55,7 @@ impl FontForgeParams {
             anyhow::bail!("fontforge is not installed");
         };
 
+        log::info!("Generating {woff} and {otf} from {name}");
         let cmd = Command::new(fontforge)
             .args(["-lang=ff", "-c", &ff])
             .current_dir(info.args.dir.as_path())
@@ -71,14 +72,15 @@ impl FontForgeParams {
 
         // copy otf file to font directory (only macos)
         if cfg!(target_os = "macos") {
+            log::info!("Copying {otf_file} to ~/Library/Fonts");
             let home = std::env::var("HOME").unwrap();
             let dest = Utf8Path::new(&home)
                 .join("Library/Fonts")
                 .join(otf_file.file_name().unwrap());
             fs::copy(&otf_file, dest)?;
         }
-        fs::remove_file(&otf_file)?;
-        println!("removed {otf_file}    ");
+        fs::remove_file(&otf_file).context(format!("Failed to delete font file {otf_file}"))?;
+        log::info!("Removed {otf_file}");
         Ok(())
     }
 }
