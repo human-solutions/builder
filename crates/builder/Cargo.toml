@@ -11,7 +11,7 @@ version = "0.0.10"
 [dependencies]
 anyhow = "1.0"
 base64 = "0.22"
-brotli = "6.0"
+brotli = "7.0"
 camino = "1.1"
 cargo_metadata = "0.18"
 clap = { version = "4.5", features = ["derive", "env"] }
