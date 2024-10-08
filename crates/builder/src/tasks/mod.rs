@@ -24,7 +24,7 @@ pub use setup::{BuildStep, Config, Setup};
 
 use crate::{ext::value::IntoVecString, generate::Generator};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct Task {
     pub tool: Tool,
     pub targets: Vec<String>,
@@ -82,7 +82,6 @@ impl Task {
     fn run(
         &self,
         config: &Config,
-        phase: &BuildStep,
         generator: &mut Generator,
         watched: &mut HashSet<String>,
     ) -> Result<()> {
@@ -99,13 +98,11 @@ impl Task {
             );
             match &self.tool {
                 Tool::FontForge(fontforge) => fontforge.process(config)?,
-                Tool::WasmBindgen(wasm) => wasm.process(config, phase)?,
-                Tool::Sass(sass) => sass.process(config, phase, generator, watched)?,
-                Tool::Localized(localized) => {
-                    localized.process(config, phase, generator, watched)?
-                }
-                Tool::Files(file) => file.process(config, phase, generator, watched)?,
-                Tool::Uniffi(uniffi) => uniffi.process(config, phase)?,
+                Tool::WasmBindgen(wasm) => wasm.process(config)?,
+                Tool::Sass(sass) => sass.process(config, generator, watched)?,
+                Tool::Localized(localized) => localized.process(config, generator, watched)?,
+                Tool::Files(file) => file.process(config, generator, watched)?,
+                Tool::Uniffi(uniffi) => uniffi.process(config)?,
             }
         } else {
             log::info!("Skipping task for {}", self.tool);
@@ -115,7 +112,7 @@ impl Task {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 enum Tool {
     FontForge(FontForgeParams),
     WasmBindgen(WasmParams),

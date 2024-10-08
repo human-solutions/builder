@@ -15,9 +15,9 @@ use which::which;
 
 use crate::generate::Output;
 
-use super::{setup::Config, BuildStep};
+use super::setup::Config;
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 #[serde(default)]
 pub struct SassParams {
     pub file: Utf8PathBuf,
@@ -52,15 +52,14 @@ impl SassParams {
     pub fn process(
         &self,
         config: &Config,
-        phase: &BuildStep,
         generator: &mut Generator,
         watched: &mut HashSet<String>,
     ) -> Result<()> {
         let css = self.process_inner(config)?;
         let filename = self.file_name(&None);
-        let hash =
-            self.out
-                .write_file(css.as_bytes(), &config.site_dir("sass", phase), &filename)?;
+        let hash = self
+            .out
+            .write_file(css.as_bytes(), &config.site_dir("sass"), &filename)?;
 
         generator.add_asset(Asset::from_sass(self, hash), None);
         watched.insert(self.watched());

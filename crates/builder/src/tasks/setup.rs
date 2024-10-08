@@ -1,3 +1,4 @@
+use cargo_metadata::Metadata;
 use fs_err as fs;
 use std::io::{Read, Write};
 
@@ -12,7 +13,7 @@ use super::{postbuild::PostbuildTasks, prebuild::PrebuildTasks};
 
 const POSTBUILD_FILE: &str = "postbuild.yaml";
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub enum BuildStep {
     Prebuild,
     Postbuild,
@@ -27,25 +28,46 @@ impl BuildStep {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    pub phase: BuildStep,
     pub package_name: String,
     pub library_name: Option<String>,
     pub args: CmdArgs,
-    pub package_dir: Utf8PathBuf,
     pub target_dir: Utf8PathBuf,
 }
 
 impl Config {
-    pub fn site_dir(&self, folder: &str, phase: &BuildStep) -> Utf8PathBuf {
-        self.package_target_dir(&self.package_name, phase)
+    pub fn new(metadata: Metadata, args: &CmdArgs, phase: BuildStep) -> Self {
+        let package = metadata.root_package().unwrap();
+
+        Self {
+            phase,
+            package_name: package.name.clone(),
+            library_name: metadata.library_name(),
+            args: args.clone(),
+            target_dir: metadata.target_directory.clone(),
+        }
+    }
+
+    /// The dir <target_dir>/<phase>/<package_name>
+    pub fn package_target_dir(&self) -> Utf8PathBuf {
+        self.target_dir
+            .join(self.phase.as_str())
+            .join(&self.package_name)
+    }
+
+    pub fn site_dir(&self, folder: &str) -> Utf8PathBuf {
+        self.package_target_dir()
             .join(&self.args.target)
             .join(&self.args.profile)
             .join(folder)
     }
 
-    pub fn package_target_dir(&self, package_name: &str, phase: &BuildStep) -> Utf8PathBuf {
-        self.target_dir.join(phase.as_str()).join(package_name)
+    pub fn postbuild_package_target_dir(&self, package_name: &str) -> Utf8PathBuf {
+        self.target_dir
+            .join(BuildStep::Postbuild.as_str())
+            .join(package_name)
     }
 
     pub fn existing_manifest_dir_path(&self, path: &Utf8Path) -> Result<Utf8PathBuf> {
@@ -62,7 +84,7 @@ impl Config {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Setup {
     pub config: Config,
     pub prebuild: PrebuildTasks,
@@ -71,7 +93,7 @@ pub struct Setup {
 }
 
 impl Setup {
-    pub fn new(args: &CmdArgs) -> Result<Self> {
+    pub fn new(args: &CmdArgs, phase: BuildStep) -> Result<Self> {
         let cargo_path = args.dir.join("Cargo.toml");
 
         log::info!("Retrieving metadata from '{cargo_path}'");
@@ -101,13 +123,7 @@ impl Setup {
                 .context("Failed to retrieve postbuild metadata")?;
         }
 
-        let config = Config {
-            package_name: package.name.clone(),
-            library_name: metadata.library_name(),
-            args: args.clone(),
-            package_dir: package.manifest_path.clone(),
-            target_dir: metadata.target_directory.clone(),
-        };
+        let config = Config::new(metadata, args, phase);
 
         Ok(Self {
             config,
@@ -188,7 +204,9 @@ impl Setup {
             log::info!("No postbuild tasks found for {}", self.config.package_name);
         } else {
             log::info!("Saving postbuild tasks for {}", self.config.package_name);
-            self.save()
+            let mut conf = self.clone();
+            conf.config.phase = BuildStep::Postbuild;
+            conf.save()
                 .context("Failed to save postbuild configuration file")?;
         }
 
@@ -207,9 +225,7 @@ impl Setup {
     }
 
     fn postbuild_files(&self, package_name: &str) -> Result<Vec<Utf8PathBuf>> {
-        let target_dir = self
-            .config
-            .package_target_dir(package_name, &BuildStep::Postbuild);
+        let target_dir = self.config.postbuild_package_target_dir(package_name);
 
         if !target_dir.exists() {
             return Ok(Vec::new());
@@ -238,7 +254,7 @@ impl Setup {
 
     fn postbuild_file(&self, package_name: &str) -> Utf8PathBuf {
         self.config
-            .package_target_dir(package_name, &BuildStep::Postbuild)
+            .postbuild_package_target_dir(package_name)
             .join(&self.config.args.target)
             .join(POSTBUILD_FILE)
     }

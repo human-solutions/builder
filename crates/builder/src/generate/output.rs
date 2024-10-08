@@ -11,7 +11,7 @@ use std::hash::Hasher;
 use std::io::{Cursor, Write};
 use unic_langid::LanguageIdentifier;
 
-#[derive(Default, Debug, Deserialize, Serialize)]
+#[derive(Default, Debug, Deserialize, Serialize, Clone)]
 #[serde(default)]
 pub struct Output {
     pub brotli: bool,

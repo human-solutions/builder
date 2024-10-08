@@ -10,9 +10,9 @@ use unic_langid::LanguageIdentifier;
 
 use crate::generate::Output;
 
-use super::{BuildStep, Config};
+use super::Config;
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct LocalizedParams {
     /// the path to the folder containing the localised files
     pub path: Utf8PathBuf,
@@ -37,13 +37,12 @@ impl LocalizedParams {
     pub fn process(
         &self,
         config: &Config,
-        phase: &BuildStep,
         generator: &mut Generator,
         watched: &mut HashSet<String>,
     ) -> Result<()> {
         let variants = self.process_inner(config)?;
         let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
-        let site_dir = config.site_dir("localized", phase);
+        let site_dir = config.site_dir("localized");
 
         let filename = self.path.iter().last().unwrap();
         let ext = &self.file_extension;

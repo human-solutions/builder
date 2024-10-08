@@ -9,7 +9,7 @@ use crate::util::filehash;
 
 use super::setup::Config;
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub(super) struct FontForgeParams {
     pub item: Utf8PathBuf,
 }

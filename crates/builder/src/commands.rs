@@ -33,11 +33,9 @@ impl Commands {
             Self::Postbuild(args) => (args, BuildStep::Postbuild),
         };
 
-        let setup = Setup::new(args).context("Failed to create builder setup")?;
+        let setup = Setup::new(args, step).context("Failed to create builder setup")?;
 
-        let log_path = setup
-            .config
-            .package_target_dir(&setup.config.package_name, &step);
+        let log_path = setup.config.package_target_dir();
         fs::create_dir_all(&log_path).context("Failed to create log output directory")?;
 
         let log_file = log_path.join(format!("{}-{}.log", step.as_str(), args.profile));

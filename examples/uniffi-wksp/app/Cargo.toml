@@ -3,6 +3,9 @@ edition = "2021"
 name = "app"
 version = "0.1.0"
 
+[dependencies]
+library = { workspace = true }
+
 [build-dependencies]
 which = "6.0"
 library = { workspace = true }

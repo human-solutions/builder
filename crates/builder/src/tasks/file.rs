@@ -6,9 +6,9 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
-use super::{BuildStep, Config};
+use super::Config;
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct FilesParams {
     pub path: Utf8PathBuf,
     pub out: Output,
@@ -23,7 +23,6 @@ impl FilesParams {
     pub fn process(
         &self,
         config: &Config,
-        phase: &BuildStep,
         generator: &mut Generator,
         watched: &mut HashSet<String>,
     ) -> Result<()> {
@@ -32,7 +31,7 @@ impl FilesParams {
         let filename = self.path.file_name().unwrap();
         let hash = self
             .out
-            .write_file(&contents, &config.site_dir("files", phase), filename)?;
+            .write_file(&contents, &config.site_dir("files"), filename)?;
 
         generator.add_asset(Asset::from_file(self, hash), None);
         watched.insert(self.path.to_string());

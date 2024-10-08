@@ -10,9 +10,9 @@ use uniffi_bindgen::{
 
 use crate::{anyhow::Context, generate::Output};
 
-use super::{BuildStep, Config};
+use super::Config;
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub(super) enum UniffiLanguage {
     #[default]
     #[serde(rename = "kotlin")]
@@ -30,7 +30,7 @@ impl fmt::Display for UniffiLanguage {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub(super) struct UniffiParams {
     #[serde(rename = "udl-path")]
     pub udl_path: Utf8PathBuf,
@@ -39,11 +39,11 @@ pub(super) struct UniffiParams {
 }
 
 impl UniffiParams {
-    pub fn process(&self, config: &Config, phase: &BuildStep) -> Result<()> {
+    pub fn process(&self, config: &Config) -> Result<()> {
         const DEFAULT_PROFILE: &str = "debug";
 
         let out_folder = self.out.folder.as_deref().unwrap_or("".into());
-        let out_dir = config.site_dir("uniffi", phase).join(out_folder);
+        let out_dir = config.site_dir("uniffi").join(out_folder);
 
         let udl_file = config.args.dir.join(self.udl_path.as_str());
 

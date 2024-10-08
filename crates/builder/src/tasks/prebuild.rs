@@ -9,9 +9,7 @@ use crate::{
     tasks::{Config, Task},
 };
 
-use super::BuildStep;
-
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct PrebuildTasks(Vec<Task>);
 
 impl PrebuildTasks {
@@ -37,7 +35,7 @@ impl PrebuildTasks {
         watched.insert("src".to_string());
 
         for task in &self.0 {
-            task.run(config, &BuildStep::Prebuild, &mut generator, &mut watched)?;
+            task.run(config, &mut generator, &mut watched)?;
         }
 
         generator.write(config)?;
