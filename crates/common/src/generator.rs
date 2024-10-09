@@ -5,6 +5,19 @@ use camino::Utf8PathBuf;
 use common::RustNaming;
 use fs_err as fs;
 
+impl Cli {
+    pub fn input_dir_name(&self) -> String {
+        self.input_dir.iter().last().unwrap().to_string()
+    }
+
+    pub fn url(&self, checksum: Option<String>) -> String {
+        let ext = &self.file_extension;
+        let name = self.input_dir_name();
+        let sum = checksum.as_deref().unwrap_or_default();
+        format!("{sum}{name}.{ext}")
+    }
+}
+
 #[derive(Default)]
 pub struct Generator {
     assets: HashMap<Utf8PathBuf, Vec<Asset>>,

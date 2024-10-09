@@ -1,0 +1,12 @@
+[package]
+name = "builder-fontforge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fs-err.workspace = true
+camino.workspace = true
+clap.workspace = true
+common = { path = "../common" }
+log.workspace = true
+seahash.workspace = true

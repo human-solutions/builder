@@ -1,0 +1,13 @@
+[package]
+name = "builder-sass"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+
+camino.workspace = true
+clap.workspace = true
+fs-err.workspace = true
+lightningcss.workspace = true
+log.workspace = true

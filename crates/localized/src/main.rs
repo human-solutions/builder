@@ -1,18 +1,14 @@
-mod asset;
-mod generator;
 #[cfg(test)]
 mod tests;
 
-use asset::Asset;
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::Parser;
 use common::{
     dir::remove_content_of_dir,
-    out::{write_checksummed_variants, OutputParams},
+    out::{write_checksummed_variants, OutputParams, VariantOutputParams},
     setup_logging,
 };
 use fs_err as fs;
-use generator::Generator;
 use std::process::ExitCode;
 use unic_langid::LanguageIdentifier;
 
@@ -36,21 +32,17 @@ struct Cli {
     /// Folder where the output files should be written
     output_dir: Utf8PathBuf,
 
-    #[arg(short, long, value_name = "FILE-PATH")]
-    /// Where the generated code should be written
-    generate_code: Utf8PathBuf,
+    #[arg(long)]
+    no_brotli: bool,
 
     #[arg(long)]
-    brotli: bool,
+    no_gzip: bool,
 
     #[arg(long)]
-    gzip: bool,
+    no_uncompressed: bool,
 
     #[arg(long)]
-    uncompressed: bool,
-
-    #[arg(long)]
-    checksum: bool,
+    no_checksum: bool,
 
     #[arg(short, long)]
     verbose: bool,
@@ -58,17 +50,20 @@ struct Cli {
 
 impl OutputParams for Cli {
     fn brotli(&self) -> bool {
-        self.brotli
+        !self.no_brotli
     }
     fn gzip(&self) -> bool {
-        self.gzip
+        !self.no_gzip
     }
     fn uncompressed(&self) -> bool {
-        self.uncompressed
+        !self.no_uncompressed
     }
     fn checksum(&self) -> bool {
-        self.checksum
+        !self.no_checksum
     }
+}
+
+impl VariantOutputParams for Cli {
     fn output_dir(&self) -> &Utf8Path {
         &self.output_dir
     }
@@ -77,38 +72,20 @@ impl OutputParams for Cli {
     }
 }
 
-impl Cli {
-    pub fn input_dir_name(&self) -> String {
-        self.input_dir.iter().last().unwrap().to_string()
-    }
-
-    pub fn url(&self, checksum: Option<String>) -> String {
-        let ext = &self.file_extension;
-        let name = self.input_dir_name();
-        let sum = checksum.as_deref().unwrap_or_default();
-        format!("{sum}{name}.{ext}")
-    }
-}
-
 fn run(cli: Cli) {
     setup_logging(cli.verbose);
 
+    log::info!("Running builder-localized");
+
     remove_content_of_dir(&cli.output_dir);
+
     if !cli.output_dir.exists() {
         fs::create_dir_all(&cli.output_dir).unwrap();
     }
 
     let variants = get_variants(&cli);
-    let localizations = variants.iter().map(|(lang, _)| lang.clone()).collect();
 
-    let hash = write_checksummed_variants(&cli, &variants);
-
-    let generator = &mut Generator::default();
-    generator.add_asset(
-        Asset::from_localized(&cli, hash, localizations),
-        cli.generate_code.clone(),
-    );
-    generator.write(&cli);
+    write_checksummed_variants(&cli, &variants);
 }
 
 fn get_variants(cli: &Cli) -> Vec<(String, Vec<u8>)> {

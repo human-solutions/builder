@@ -359,6 +359,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "builder-fontforge"
+version = "0.1.0"
+dependencies = [
+ "camino",
+ "clap",
+ "common",
+ "fs-err",
+ "log",
+ "seahash",
+]
+
+[[package]]
 name = "builder-localized"
 version = "0.1.0"
 dependencies = [
@@ -368,6 +380,18 @@ dependencies = [
  "fs-err",
  "log",
  "unic-langid",
+]
+
+[[package]]
+name = "builder-sass"
+version = "0.1.0"
+dependencies = [
+ "camino",
+ "clap",
+ "common",
+ "fs-err",
+ "lightningcss",
+ "log",
 ]
 
 [[package]]

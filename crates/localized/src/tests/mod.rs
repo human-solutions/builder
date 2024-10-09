@@ -16,17 +16,14 @@ fn clean_out_dir(dir: &str) -> Utf8PathBuf {
 fn test_localized() {
     let output_dir = clean_out_dir("src/tests/output/localized");
 
-    let generated_code_file = output_dir.join("apple_store.rs");
-
     let cli = Cli {
         input_dir: Utf8PathBuf::from("src/tests/data/apple_store"),
         output_dir,
-        generate_code: generated_code_file,
         file_extension: "svg".to_string(),
-        brotli: true,
-        gzip: true,
-        uncompressed: true,
-        checksum: true,
+        no_brotli: false,
+        no_gzip: false,
+        no_uncompressed: false,
+        no_checksum: false,
         verbose: true,
     };
 

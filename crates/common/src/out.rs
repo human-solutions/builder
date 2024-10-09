@@ -17,8 +17,6 @@ pub trait OutputParams {
     fn brotli(&self) -> bool;
     fn uncompressed(&self) -> bool;
     fn checksum(&self) -> bool;
-    fn output_dir(&self) -> &Utf8Path;
-    fn file_extension(&self) -> &str;
 
     fn encodings(&self) -> Vec<String> {
         let mut encodings = vec![];
@@ -34,11 +32,15 @@ pub trait OutputParams {
         encodings
     }
 }
+pub trait VariantOutputParams: OutputParams {
+    fn output_dir(&self) -> &Utf8Path;
+    fn file_extension(&self) -> &str;
+}
 
-pub fn write_checksummed_variants<P: OutputParams>(
+pub fn write_checksummed_variants<P: VariantOutputParams>(
     opts: &P,
     variants: &[(String, Vec<u8>)],
-) -> Option<String> {
+) {
     let hash = if opts.checksum() {
         let mut checksummer = SeaHasher::new();
         variants
@@ -54,10 +56,27 @@ pub fn write_checksummed_variants<P: OutputParams>(
         let path = opts.output_dir().join(format!("{hash}{filename}.{ext}"));
         compress_and_write(opts, content, &path);
     }
-    opts.checksum().then_some(hash)
 }
 
-pub fn compress_and_write<P: OutputParams>(opts: &P, contents: &[u8], path: &Utf8Path) {
+pub fn write<P: OutputParams>(opts: &P, content: &[u8], file: &Utf8Path) {
+    let dir = file.parent().unwrap();
+    let file = file.file_name().unwrap();
+
+    if !dir.exists() {
+        fs::create_dir_all(dir).unwrap();
+    }
+    let filename = if opts.checksum() {
+        let mut checksummer = SeaHasher::new();
+        checksummer.write(content);
+        let hash = URL_SAFE.encode(checksummer.finish().to_be_bytes());
+        format!("{hash}-{file}")
+    } else {
+        file.to_string()
+    };
+    compress_and_write(opts, content, &dir.join(filename));
+}
+
+fn compress_and_write<P: OutputParams>(opts: &P, contents: &[u8], path: &Utf8Path) {
     // if none are set, then default to uncompressed
     let default_uncompressed = !opts.uncompressed() && !opts.brotli() && !opts.gzip();
 
