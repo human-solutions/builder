@@ -1,0 +1,15 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+base64.workspace = true
+camino.workspace = true
+fs-err.workspace = true
+log.workspace = true
+brotli.workspace = true
+flate2.workspace = true
+seahash.workspace = true
+simplelog.workspace = true
+time.workspace = true

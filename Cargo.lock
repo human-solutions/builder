@@ -359,6 +359,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "builder-localized"
+version = "0.1.0"
+dependencies = [
+ "camino",
+ "clap",
+ "common",
+ "fs-err",
+ "log",
+ "unic-langid",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -537,6 +549,21 @@ name = "colorful"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ffb474a9c3219a8254ead020421ecf1b90427f29b55f6aae9a2471fa62c126ef"
+
+[[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "brotli",
+ "camino",
+ "flate2",
+ "fs-err",
+ "log",
+ "seahash",
+ "simplelog",
+ "time",
+]
 
 [[package]]
 name = "console"

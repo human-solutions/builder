@@ -4,9 +4,6 @@ resolver = "2"
 
 members = ["crates/*"]
 
-[workspace.dependencies]
-seahash = "4.1"
-
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
@@ -31,3 +28,17 @@ targets = [
 pr-run-mode = "plan"
 # Whether to install an updater program
 install-updater = false
+
+[workspace.dependencies]
+base64 = "0.22"
+brotli = "7.0"
+clap = { version = "4.5", features = ["derive", "env"] }
+camino = "1.1"
+flate2 = "1.0"
+fs-err = "2.11"
+lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }
+log = "0.4"
+seahash = "4.1"
+simplelog = "0.12"
+unic-langid = "0.9"
+time = "0.3"
