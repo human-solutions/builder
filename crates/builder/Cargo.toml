@@ -19,21 +19,21 @@ colorful = "0.3"
 flate2 = "1.0"
 fs-err = "2.11"
 fs4 = "0.9.1"
-lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }
+lightningcss.workspace = true
 log = "0.4"
 seahash = { workspace = true }
 serde = "1.0"
 serde_json = "1.0"
 serde_yaml = "0.9"
 simplelog = "0.12"
-swc = "0.289"
-swc_common = "0.40.1"
+swc.workspace = true
+swc_common.workspace = true
 tempfile = "3.13"
 time = "0.3.36"
 toml = "0.8"
 unic-langid = "0.9"
 uniffi_bindgen = "0.28.1"
-wasm-bindgen-cli-support = "0.2"
+wasm-bindgen-cli-support.workspace = true
 wasm-opt = "0.116.1"
 which = "6.0.3"
 

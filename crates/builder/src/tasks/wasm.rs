@@ -77,12 +77,12 @@ impl WasmParams {
             self.out.write_file(contents, &site_dir, &filename)
         }?;
 
-        self.write_snippets(output.snippets());
-        self.write_modules(output.local_modules(), &site_dir)?;
+        // self.write_snippets(output.snippets());
+        // self.write_modules(output.local_modules(), &site_dir)?;
         Ok(())
     }
 
-    fn write_snippets(&self, snippets: &HashMap<String, Vec<String>>) {
+    fn _write_snippets(&self, snippets: &HashMap<String, Vec<String>>) {
         log::info!("Writing wasm snippets");
 
         // Provide inline JS files
@@ -103,7 +103,11 @@ impl WasmParams {
         }
     }
 
-    fn write_modules(&self, modules: &HashMap<String, String>, _site_dir: &Utf8Path) -> Result<()> {
+    fn _write_modules(
+        &self,
+        modules: &HashMap<String, String>,
+        _site_dir: &Utf8Path,
+    ) -> Result<()> {
         log::info!("Writing wasm modules");
 
         // Provide snippet files from JS snippets
