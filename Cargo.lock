@@ -395,6 +395,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "builder-uniffi"
+version = "0.1.0"
+dependencies = [
+ "camino",
+ "clap",
+ "common",
+ "fs-err",
+ "log",
+ "serde",
+ "serde_json",
+ "uniffi_bindgen",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
