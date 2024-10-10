@@ -9,33 +9,11 @@ repository = "https://github.com/human-solutions/builder"
 version = "0.0.10"
 
 [dependencies]
-anyhow = "1.0"
-base64 = "0.22"
-brotli = "7.0"
-camino = "1.1"
-cargo_metadata = "0.18"
-clap = { version = "4.5", features = ["derive", "env"] }
-colorful = "0.3"
-flate2 = "1.0"
-fs-err = "2.11"
-fs4 = "0.9.1"
-lightningcss.workspace = true
-log = "0.4"
-seahash = { workspace = true }
-serde = "1.0"
-serde_json = "1.0"
-serde_yaml = "0.9"
-simplelog = "0.12"
-swc.workspace = true
-swc_common.workspace = true
-tempfile = "3.13"
-time = "0.3.36"
-toml = "0.8"
-unic-langid = "0.9"
-uniffi_bindgen = "0.28.1"
-wasm-bindgen-cli-support.workspace = true
-wasm-opt = "0.116.1"
-which = "6.0.3"
+clap.workspace = true
+builder-fontforge = { path = "../fontforge" }
+builder-sass = { path = "../sass" }
+builder-localized = { path = "../localized" }
+builder-uniffi = { path = "../uniffi" }
 
 [dev-dependencies]
 insta = "1.40"

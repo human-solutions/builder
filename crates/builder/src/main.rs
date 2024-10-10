@@ -1,20 +1,26 @@
-use builder::Commands;
 use clap::Parser;
-use std::process::ExitCode;
 
-fn main() -> ExitCode {
-    match Cli::parse().command.run() {
-        Ok(_) => ExitCode::SUCCESS,
-        Err(e) => {
-            eprintln!("builder error: {e:?}");
-            ExitCode::FAILURE
-        }
-    }
+fn main() {
+    let cmd = Cli::parse();
+    cmd.run();
 }
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-struct Cli {
-    #[clap(subcommand)]
-    command: Commands,
+enum Cli {
+    Sass(builder_sass::Cli),
+    Localized(builder_localized::Cli),
+    Uniffi(builder_uniffi::Cli),
+    Fontforge(builder_fontforge::Cli),
+}
+
+impl Cli {
+    fn run(&self) {
+        match self {
+            Self::Sass(args) => builder_sass::run(args),
+            Self::Localized(args) => builder_localized::run(args),
+            Self::Uniffi(args) => builder_uniffi::run(args),
+            Self::Fontforge(args) => builder_fontforge::fontforge(args),
+        }
+    }
 }

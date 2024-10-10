@@ -27,5 +27,5 @@ fn test_localized() {
         verbose: true,
     };
 
-    run(cli);
+    run(&cli);
 }
