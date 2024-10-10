@@ -3,6 +3,4 @@
 .git
 .DS_Store
 **/gen/*
-result
 pkg
-.direnv/
