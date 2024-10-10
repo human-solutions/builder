@@ -250,12 +250,25 @@ dependencies = [
 name = "builder"
 version = "0.0.10"
 dependencies = [
+ "builder-assemble",
  "builder-fontforge",
  "builder-localized",
  "builder-sass",
  "builder-uniffi",
  "clap",
  "insta",
+]
+
+[[package]]
+name = "builder-assemble"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "camino",
+ "clap",
+ "common",
+ "fs-err",
+ "log",
 ]
 
 [[package]]

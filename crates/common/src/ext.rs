@@ -57,6 +57,7 @@ impl RustNaming for str {
 
 pub trait Utf8PathExt {
     fn push_ext(&self, ext: &str) -> Utf8PathBuf;
+    fn ls_files(&self) -> Vec<Utf8PathBuf>;
 }
 
 impl Utf8PathExt for Utf8Path {
@@ -65,5 +66,15 @@ impl Utf8PathExt for Utf8Path {
         s.push('.');
         s.push_str(ext);
         Utf8PathBuf::from(s)
+    }
+    fn ls_files(&self) -> Vec<Utf8PathBuf> {
+        let mut entries = self.read_dir_utf8().unwrap();
+        let mut files = Vec::new();
+        while let Some(Ok(entry)) = entries.next() {
+            if entry.file_type().unwrap().is_file() {
+                files.push(entry.path().to_path_buf());
+            }
+        }
+        files
     }
 }

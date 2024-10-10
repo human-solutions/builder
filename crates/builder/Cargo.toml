@@ -10,6 +10,7 @@ version = "0.0.10"
 
 [dependencies]
 clap.workspace = true
+builder-assemble = { path = "../assemble" }
 builder-fontforge = { path = "../fontforge" }
 builder-sass = { path = "../sass" }
 builder-localized = { path = "../localized" }

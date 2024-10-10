@@ -69,7 +69,7 @@ pub fn write<P: OutputParams>(opts: &P, content: &[u8], file: &Utf8Path) {
         let mut checksummer = SeaHasher::new();
         checksummer.write(content);
         let hash = URL_SAFE.encode(checksummer.finish().to_be_bytes());
-        format!("{hash}-{file}")
+        format!("{hash}{file}")
     } else {
         file.to_string()
     };

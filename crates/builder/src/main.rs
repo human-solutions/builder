@@ -12,6 +12,7 @@ enum Cli {
     Localized(builder_localized::Cli),
     Uniffi(builder_uniffi::Cli),
     Fontforge(builder_fontforge::Cli),
+    Assemble(builder_assemble::Cli),
 }
 
 impl Cli {
@@ -21,6 +22,7 @@ impl Cli {
             Self::Localized(args) => builder_localized::run(args),
             Self::Uniffi(args) => builder_uniffi::run(args),
             Self::Fontforge(args) => builder_fontforge::fontforge(args),
+            Self::Assemble(args) => builder_assemble::run(args),
         }
     }
 }

@@ -1,7 +1,3 @@
-use common::out::OutputParams;
-
-use crate::Cli;
-
 #[derive(Debug)]
 pub struct Asset {
     /// the url used to access the asset
@@ -13,15 +9,6 @@ pub struct Asset {
 }
 
 impl Asset {
-    pub fn from_localized(cli: &Cli, checksum: Option<String>, localizations: Vec<String>) -> Self {
-        Self {
-            url: cli.url(checksum),
-            name: cli.input_dir_name(),
-            encodings: cli.encodings(),
-            localizations,
-        }
-    }
-
     pub fn quoted_encoding_list(&self) -> (usize, String) {
         let count = self.encodings.len();
         let encodings = self
