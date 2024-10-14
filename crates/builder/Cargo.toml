@@ -18,7 +18,7 @@ clap = { version = "4.5", features = ["derive", "env"] }
 colorful = "0.3"
 flate2 = "1.0"
 fs-err = "2.11"
-fs4 = "0.9.1"
+fs4 = "0.10.0"
 lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }
 log = "0.4"
 seahash = { workspace = true }
