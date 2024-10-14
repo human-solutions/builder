@@ -3,59 +3,27 @@ mod file_name_parts;
 mod generator;
 
 use asset::Asset;
+use builder_command::AssembleCmd;
 use camino::Utf8PathBuf;
-use clap::Parser;
-use common::{setup_logging, Utf8PathExt};
+use common::Utf8PathExt;
 use file_name_parts::FileNameParts;
 use fs_err as fs;
 use generator::generate_code;
 use std::vec;
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-pub struct Cli {
-    #[arg(short, long, value_name = "DIR LIST")]
-    /// Input sfd file path
-    localized: Vec<Utf8PathBuf>,
-
-    #[arg(short, long, value_name = "FILE LIST")]
-    /// Path to one of the asset files. If there are other
-    /// versions of it (e.g. compressed), then they'll be
-    /// automatically detected.
-    files: Vec<Utf8PathBuf>,
-
-    /// Where to write the generated code. If not provided, it will be printed to stdout.
-    #[arg(long)]
-    out_file: Option<Utf8PathBuf>,
-
-    #[arg(long)]
-    no_brotli: bool,
-
-    #[arg(long)]
-    no_gzip: bool,
-
-    #[arg(long)]
-    no_uncompressed: bool,
-
-    #[arg(short, long)]
-    verbose: bool,
-}
-
-pub fn run(cli: &Cli) {
-    setup_logging(cli.verbose);
-
+pub fn run(cmd: &AssembleCmd) {
     let mut assets = vec![];
-    for file in &cli.files {
+    for file in &cmd.files {
         let asset = asset_for_file(file);
         assets.push(asset);
     }
-    for localized in &cli.localized {
+    for localized in &cmd.localized {
         let asset = asset_for_localised(localized);
         assets.push(asset);
     }
 
     let out = generate_code(&assets, "module_path");
-    if let Some(out_file) = &cli.out_file {
+    if let Some(out_file) = &cmd.out_file {
         fs::write(out_file, out).unwrap();
     } else {
         println!("{out}");

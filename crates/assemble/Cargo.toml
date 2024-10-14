@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+builder-command = { path = "../command" }
+common = { path = "../common" }
+
 base64.workspace = true
 camino.workspace = true
-common = { path = "../common" }
-clap.workspace = true
 fs-err.workspace = true
 log = "0.4"

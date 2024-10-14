@@ -1,0 +1,10 @@
+[package]
+name = "builder-command"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+camino.workspace = true
+serde.workspace = true
+toml.workspace = true
+typed-builder.workspace = true

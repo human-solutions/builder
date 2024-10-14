@@ -1,7 +1,8 @@
+use builder_command::Output;
 use camino::Utf8PathBuf;
 use fs_err as fs;
 
-use crate::{run, Cli};
+use crate::{run, LocalizedCmd};
 
 fn clean_out_dir(dir: &str) -> Utf8PathBuf {
     let output_dir = Utf8PathBuf::from(dir);
@@ -16,16 +17,17 @@ fn clean_out_dir(dir: &str) -> Utf8PathBuf {
 fn test_localized() {
     let output_dir = clean_out_dir("src/tests/output/localized");
 
-    let cli = Cli {
-        input_dir: Utf8PathBuf::from("src/tests/data/apple_store"),
-        output_dir,
-        file_extension: "svg".to_string(),
-        no_brotli: false,
-        no_gzip: false,
-        no_uncompressed: false,
-        no_checksum: false,
-        verbose: true,
-    };
+    let cli = LocalizedCmd::builder()
+        .input_dir("src/tests/data/apple_store")
+        .file_extension("svg")
+        .output(vec![Output::builder()
+            .dir(output_dir)
+            .brotli(true)
+            .gzip(true)
+            .uncompressed(true)
+            .checksum(true)
+            .build()])
+        .build();
 
     run(&cli);
 }

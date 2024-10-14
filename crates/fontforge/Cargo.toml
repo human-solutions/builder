@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+common = { path = "../common" }
+builder-command = { path = "../command" }
+
 fs-err.workspace = true
 camino.workspace = true
-clap.workspace = true
-common = { path = "../common" }
 log.workspace = true
 seahash.workspace = true

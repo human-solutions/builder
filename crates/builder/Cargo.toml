@@ -9,12 +9,18 @@ repository = "https://github.com/human-solutions/builder"
 version = "0.0.10"
 
 [dependencies]
-clap.workspace = true
 builder-assemble = { path = "../assemble" }
 builder-fontforge = { path = "../fontforge" }
 builder-sass = { path = "../sass" }
 builder-localized = { path = "../localized" }
 builder-uniffi = { path = "../uniffi" }
+builder-command = { path = "../command" }
+common = { path = "../common" }
+
+camino.workspace = true
+fs-err.workspace = true
+typed-builder.workspace = true
+toml.workspace = true
 
 [dev-dependencies]
 insta = "1.40"

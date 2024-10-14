@@ -1,65 +1,15 @@
 use std::process::Command;
 
-use camino::{Utf8Path, Utf8PathBuf};
-use clap::Parser;
-use common::{
-    dir::{self, remove_content_of_dir},
-    out::{self, OutputParams},
-    setup_logging,
-};
+use builder_command::FontForgeCmd;
+use camino::Utf8Path;
+use common::out;
 use fs_err as fs;
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-pub struct Cli {
-    #[arg(short, long, value_name = "FILE")]
-    /// Input sfd file path
-    font_file: Utf8PathBuf,
-
-    #[arg(short, long, value_name = "DIR")]
-    /// Where to write the woff2 files
-    output_dir: Utf8PathBuf,
-
-    #[arg(long)]
-    no_brotli: bool,
-
-    #[arg(long)]
-    no_gzip: bool,
-
-    #[arg(long)]
-    no_uncompressed: bool,
-
-    #[arg(long)]
-    no_checksum: bool,
-
-    #[arg(short, long)]
-    verbose: bool,
-}
-
-impl OutputParams for Cli {
-    fn brotli(&self) -> bool {
-        !self.no_brotli
-    }
-    fn gzip(&self) -> bool {
-        !self.no_gzip
-    }
-    fn uncompressed(&self) -> bool {
-        !self.no_uncompressed
-    }
-    fn checksum(&self) -> bool {
-        !self.no_checksum
-    }
-}
-
-pub fn fontforge(cli: &Cli) {
-    setup_logging(cli.verbose);
-
+pub fn run(cmd: &FontForgeCmd) {
     log::info!("Running builder-fontforge");
-    let sfd_file = Utf8Path::new(&cli.font_file);
+    let sfd_file = Utf8Path::new(&cmd.font_file);
     let sum_file = sfd_file.with_extension("hash");
     let name = sfd_file.file_stem().unwrap();
-
-    dir::remove_files_containing(&cli.output_dir, &format!("{name}.woff2"));
 
     if !sfd_file.exists() {
         panic!("File not found: {:?}", sfd_file);
@@ -87,14 +37,10 @@ pub fn fontforge(cli: &Cli) {
         }
     }
 
-    remove_content_of_dir(&cli.output_dir);
     let contents = fs::read(&sfd_dir.join(name).with_extension("woff2")).unwrap();
-    out::write(
-        cli,
-        &contents,
-        &cli.output_dir.join(name).with_extension("woff2"),
-    );
-    // fs::write(&sum_file, hash).unwrap();
+
+    log::info!("Generating output for {name}");
+    out::write(&cmd.output, &contents, &format!("{name}.woff2"));
 }
 
 fn generate_woff2_otf(sfd_dir: &Utf8Path, name: &str) {

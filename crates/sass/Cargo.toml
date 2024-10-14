@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 common = { path = "../common" }
+builder-command = { path = "../command" }
 
 camino.workspace = true
-clap.workspace = true
 fs-err.workspace = true
 lightningcss.workspace = true
 log.workspace = true

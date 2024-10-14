@@ -1,98 +1,38 @@
 #[cfg(test)]
 mod tests;
 
-use camino::{Utf8Path, Utf8PathBuf};
-use clap::Parser;
-use common::{
-    dir::remove_content_of_dir,
-    out::{write_checksummed_variants, OutputParams, VariantOutputParams},
-    setup_logging,
-};
+use builder_command::LocalizedCmd;
+use common::{dir::remove_content_of_dir, out::write_checksummed_variants};
 use fs_err as fs;
 use unic_langid::LanguageIdentifier;
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-pub struct Cli {
-    #[arg(short, long, value_name = "DIR-PATH")]
-    input_dir: Utf8PathBuf,
-
-    #[arg(short = 'x', long, value_name = "FILE-EXT")]
-    /// File extensions that should be processed when searching for files in the input directory
-    file_extension: String,
-
-    #[arg(short, long, value_name = "DIR-PATH")]
-    /// Folder where the output files should be written
-    output_dir: Utf8PathBuf,
-
-    #[arg(long)]
-    no_brotli: bool,
-
-    #[arg(long)]
-    no_gzip: bool,
-
-    #[arg(long)]
-    no_uncompressed: bool,
-
-    #[arg(long)]
-    no_checksum: bool,
-
-    #[arg(short, long)]
-    verbose: bool,
-}
-
-impl OutputParams for Cli {
-    fn brotli(&self) -> bool {
-        !self.no_brotli
-    }
-    fn gzip(&self) -> bool {
-        !self.no_gzip
-    }
-    fn uncompressed(&self) -> bool {
-        !self.no_uncompressed
-    }
-    fn checksum(&self) -> bool {
-        !self.no_checksum
-    }
-}
-
-impl VariantOutputParams for Cli {
-    fn output_dir(&self) -> &Utf8Path {
-        &self.output_dir
-    }
-    fn file_extension(&self) -> &str {
-        &self.file_extension
-    }
-}
-
-pub fn run(cli: &Cli) {
-    setup_logging(cli.verbose);
-
+pub fn run(cmd: &LocalizedCmd) {
     log::info!("Running builder-localized");
 
-    remove_content_of_dir(&cli.output_dir);
+    let variants = get_variants(cmd);
 
-    if !cli.output_dir.exists() {
-        fs::create_dir_all(&cli.output_dir).unwrap();
+    for out in &cmd.output {
+        remove_content_of_dir(&out.dir);
+
+        if !out.dir.exists() {
+            fs::create_dir_all(&out.dir).unwrap();
+        }
+        write_checksummed_variants(out, &cmd.file_extension, &variants);
     }
-
-    let variants = get_variants(&cli);
-
-    write_checksummed_variants(cli, &variants);
 }
 
-fn get_variants(cli: &Cli) -> Vec<(String, Vec<u8>)> {
+fn get_variants(cmd: &LocalizedCmd) -> Vec<(String, Vec<u8>)> {
     let mut variants: Vec<(String, Vec<u8>)> = Vec::new();
 
     // list all file names in folder
-    for file in cli.input_dir.read_dir_utf8().unwrap() {
+    for file in cmd.input_dir.read_dir_utf8().unwrap() {
         let file = file.unwrap();
         let file_type = file.file_type().unwrap();
 
         let file_extension_match = file
             .path()
             .extension()
-            .map(|ext| ext == cli.file_extension)
+            .map(|ext| ext == cmd.file_extension)
             .unwrap_or_default();
 
         if file_type.is_file() && file_extension_match {

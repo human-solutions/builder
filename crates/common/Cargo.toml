@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+builder-command = { path = "../command" }
+
 base64.workspace = true
 camino.workspace = true
 fs-err.workspace = true

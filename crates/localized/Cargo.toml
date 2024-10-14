@@ -4,11 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-camino.workspace = true
 common = { path = "../common" }
-clap.workspace = true
+builder-command = { path = "../command" }
+
+camino.workspace = true
 fs-err.workspace = true
 log = "0.4"
 unic-langid.workspace = true
-
-[dev-dependencies]

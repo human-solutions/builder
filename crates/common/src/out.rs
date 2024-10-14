@@ -1,47 +1,25 @@
 use std::{
+    collections::HashMap,
     hash::Hasher,
     io::{Cursor, Write},
 };
 
 use base64::{engine::general_purpose::URL_SAFE, Engine};
 use brotli::{enc::BrotliEncoderParams, BrotliCompress};
+use builder_command::{Encoding, Output};
 use camino::Utf8Path;
 use flate2::{Compression, GzBuilder};
 use fs_err as fs;
 use seahash::SeaHasher;
 
-use crate::ext::Utf8PathExt;
+use crate::{dir, ext::Utf8PathExt};
 
-pub trait OutputParams {
-    fn gzip(&self) -> bool;
-    fn brotli(&self) -> bool;
-    fn uncompressed(&self) -> bool;
-    fn checksum(&self) -> bool;
-
-    fn encodings(&self) -> Vec<String> {
-        let mut encodings = vec![];
-        if self.brotli() {
-            encodings.push("br".to_string());
-        }
-        if self.gzip() {
-            encodings.push("gzip".to_string());
-        }
-        if self.uncompressed() {
-            encodings.push("".to_string());
-        }
-        encodings
-    }
-}
-pub trait VariantOutputParams: OutputParams {
-    fn output_dir(&self) -> &Utf8Path;
-    fn file_extension(&self) -> &str;
-}
-
-pub fn write_checksummed_variants<P: VariantOutputParams>(
-    opts: &P,
+pub fn write_checksummed_variants(
+    opts: &Output,
+    file_extension: &str,
     variants: &[(String, Vec<u8>)],
 ) {
-    let hash = if opts.checksum() {
+    let hash = if opts.checksum {
         let mut checksummer = SeaHasher::new();
         variants
             .iter()
@@ -51,36 +29,47 @@ pub fn write_checksummed_variants<P: VariantOutputParams>(
         String::new()
     };
 
-    let ext = opts.file_extension();
+    let ext = file_extension;
     for (filename, content) in variants {
-        let path = opts.output_dir().join(format!("{hash}{filename}.{ext}"));
+        let path = opts.dir.join(format!("{hash}{filename}.{ext}"));
         compress_and_write(opts, content, &path);
     }
 }
 
-pub fn write<P: OutputParams>(opts: &P, content: &[u8], file: &Utf8Path) {
-    let dir = file.parent().unwrap();
-    let file = file.file_name().unwrap();
+pub fn write<'a, It>(opts: It, content: &[u8], filename: &str)
+where
+    It: IntoIterator<Item = &'a Output>,
+{
+    let mut outputs: HashMap<Encoding, Vec<u8>> = Default::default();
 
-    if !dir.exists() {
-        fs::create_dir_all(dir).unwrap();
+    for out in opts {
+        if !out.dir.exists() {
+            fs::create_dir_all(&out.dir).unwrap();
+        } else {
+            dir::remove_files_containing(&out.dir, filename);
+        }
+        let filename = if out.checksum {
+            let mut checksummer = SeaHasher::new();
+            checksummer.write(content);
+            let hash = URL_SAFE.encode(checksummer.finish().to_be_bytes());
+            format!("{hash}{filename}")
+        } else {
+            filename.to_string()
+        };
+        let path = out.dir.join(&filename);
+
+        log::info!("Writing file '{path}' for encodings: {:?}", out.encodings());
+        for enc in out.encodings() {
+            let contents = outputs.entry(enc).or_insert_with(|| enc.encode(content));
+            enc.write(&path, contents);
+        }
     }
-    let filename = if opts.checksum() {
-        let mut checksummer = SeaHasher::new();
-        checksummer.write(content);
-        let hash = URL_SAFE.encode(checksummer.finish().to_be_bytes());
-        format!("{hash}{file}")
-    } else {
-        file.to_string()
-    };
-    compress_and_write(opts, content, &dir.join(filename));
 }
 
-fn compress_and_write<P: OutputParams>(opts: &P, contents: &[u8], path: &Utf8Path) {
+fn compress_and_write(opts: &Output, contents: &[u8], path: &Utf8Path) {
     // if none are set, then default to uncompressed
-    let default_uncompressed = !opts.uncompressed() && !opts.brotli() && !opts.gzip();
 
-    if opts.uncompressed() || default_uncompressed {
+    if opts.uncompressed() {
         log::info!("Writing uncompressed file '{:?}'", path);
         fs::write(path, contents).unwrap();
     }
@@ -107,4 +96,44 @@ fn compress_and_write<P: OutputParams>(opts: &P, contents: &[u8], path: &Utf8Pat
         gz.write_all(contents).unwrap();
         gz.finish().unwrap();
     }
+}
+
+pub trait EncodingOutput {
+    fn encode(&self, contents: &[u8]) -> Vec<u8>;
+    fn write(&self, path: &Utf8Path, contents: &[u8]);
+}
+
+impl EncodingOutput for Encoding {
+    fn encode(&self, contents: &[u8]) -> Vec<u8> {
+        match self {
+            Encoding::Brotli => brotli(contents),
+            Encoding::Gzip => gzip(contents),
+            Encoding::Identity => contents.to_vec(),
+        }
+    }
+
+    fn write(&self, path: &Utf8Path, contents: &[u8]) {
+        let path = self.add_encoding(path);
+        fs::write(&path, contents).unwrap();
+    }
+}
+
+fn brotli(contents: &[u8]) -> Vec<u8> {
+    let mut cursor = Cursor::new(&contents);
+
+    let params = BrotliEncoderParams {
+        quality: 10,
+        ..Default::default()
+    };
+    let mut bytes = vec![];
+    BrotliCompress(&mut cursor, &mut bytes, &params).unwrap();
+    bytes
+}
+
+fn gzip(contents: &[u8]) -> Vec<u8> {
+    let mut bytes = vec![];
+    let mut gz = GzBuilder::new().write(&mut bytes, Compression::default());
+    gz.write_all(contents).unwrap();
+    gz.finish().unwrap();
+    bytes
 }
