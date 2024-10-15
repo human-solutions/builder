@@ -1,0 +1,21 @@
+[package]
+name = "common"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+builder-command = { path = "../command" }
+
+base64.workspace = true
+camino.workspace = true
+fs-err.workspace = true
+log.workspace = true
+brotli.workspace = true
+flate2.workspace = true
+seahash.workspace = true
+simplelog.workspace = true
+time.workspace = true

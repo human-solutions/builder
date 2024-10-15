@@ -1,41 +1,26 @@
 
 [package]
-authors = ["henrik akesson"]
-description = "Command line tool for building web assets, wasm and mobile libs"
-edition = "2021"
-license = "MIT"
 name = "builder"
-repository = "https://github.com/human-solutions/builder"
-version = "0.0.10"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
-anyhow = "1.0"
-base64 = "0.22"
-brotli = "7.0"
-camino = "1.1"
-cargo_metadata = "0.18"
-clap = { version = "4.5", features = ["derive", "env"] }
-colorful = "0.3"
-flate2 = "1.0"
-fs-err = "2.11"
-fs4 = "0.9.1"
-lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }
-log = "0.4"
-seahash = { workspace = true }
-serde = "1.0"
-serde_json = "1.0"
-serde_yaml = "0.9"
-simplelog = "0.12"
-swc = "0.289"
-swc_common = "0.40.1"
-tempfile = "3.13"
-time = "0.3.36"
-toml = "0.8"
-unic-langid = "0.9"
-uniffi_bindgen = "0.28.1"
-wasm-bindgen-cli-support = "0.2"
-wasm-opt = "0.116.1"
-which = "6.0.3"
+builder-assemble = { path = "../assemble" }
+builder-fontforge = { path = "../fontforge" }
+builder-sass = { path = "../sass" }
+builder-localized = { path = "../localized" }
+builder-uniffi = { path = "../uniffi" }
+builder-command = { path = "../command" }
+builder-wasm = { path = "../wasm" }
+common = { path = "../common" }
+
+camino.workspace = true
+fs-err.workspace = true
+toml.workspace = true
 
 [dev-dependencies]
 insta = "1.40"

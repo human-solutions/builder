@@ -1,0 +1,19 @@
+[package]
+name = "builder-wasm"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+common = { path = "../common" }
+builder-command = { path = "../command" }
+
+base64.workspace = true
+camino.workspace = true
+fs-err.workspace = true
+log.workspace = true
+seahash.workspace = true
+wasm-pack.workspace = true

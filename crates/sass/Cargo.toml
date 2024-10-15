@@ -1,0 +1,16 @@
+[package]
+name = "builder-sass"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+common = { path = "../common" }
+builder-command = { path = "../command" }
+
+camino.workspace = true
+lightningcss.workspace = true
+log.workspace = true

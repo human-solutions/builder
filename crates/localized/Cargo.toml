@@ -1,0 +1,18 @@
+[package]
+name = "builder-localized"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+
+[dependencies]
+common = { path = "../common" }
+builder-command = { path = "../command" }
+
+camino.workspace = true
+fs-err.workspace = true
+log = "0.4"
+unic-langid.workspace = true

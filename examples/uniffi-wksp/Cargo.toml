@@ -1,8 +1,0 @@
-[workspace]
-members = ["app", "library"]
-resolver = "2"
-
-[workspace.dependencies]
-library = { path = "library" }
-
-uniffi = "0.28"

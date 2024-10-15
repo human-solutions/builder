@@ -1,0 +1,17 @@
+[package]
+name = "builder-assemble"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+builder-command = { path = "../command" }
+common = { path = "../common" }
+
+base64.workspace = true
+camino.workspace = true
+fs-err.workspace = true
+log.workspace = true

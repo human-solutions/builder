@@ -1,8 +1,0 @@
-[package]
-edition = "2021"
-name = "app"
-version = "0.1.0"
-
-[build-dependencies]
-which = "6.0"
-library = { workspace = true }

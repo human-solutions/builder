@@ -1,0 +1,17 @@
+[package]
+name = "builder-uniffi"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+builder-command = { path = "../command" }
+
+camino.workspace = true
+fs-err.workspace = true
+log.workspace = true
+uniffi_bindgen.workspace = true
+serde_json.workspace = true

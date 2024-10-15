@@ -1,0 +1,17 @@
+[package]
+name = "builder-fontforge"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+common = { path = "../common" }
+builder-command = { path = "../command" }
+
+fs-err.workspace = true
+camino.workspace = true
+log.workspace = true
+seahash.workspace = true
