@@ -1,5 +1,5 @@
 [package]
-name = "builder-sass"
+name = "builder-wasm"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,6 +7,9 @@ edition = "2021"
 common = { path = "../common" }
 builder-command = { path = "../command" }
 
+base64.workspace = true
 camino.workspace = true
-lightningcss.workspace = true
+fs-err.workspace = true
 log.workspace = true
+seahash.workspace = true
+wasm-pack.workspace = true

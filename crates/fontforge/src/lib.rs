@@ -19,28 +19,40 @@ pub fn run(cmd: &FontForgeCmd) {
 
     let sfd_dir = sfd_file.parent().unwrap();
 
-    if sum_file.exists() {
+    let generate_woff2 = if sum_file.exists() {
+        log::debug!("Reading hash from {sum_file}");
         let current_hash = fs::read_to_string(&sum_file).unwrap();
+        hash != current_hash
+    } else {
+        true
+    };
 
-        if hash == current_hash {
-            log::info!("No change detected, skipping {sfd_file}");
-        } else {
-            generate_woff2_otf(sfd_dir, name);
-            let otf_file = sfd_dir.join(name).with_extension("otf");
+    if generate_woff2 {
+        generate_woff2_otf(sfd_dir, name);
 
-            // copy otf file to font directory (only macos)
-            if cfg!(target_os = "macos") {
-                macos_install_font(&otf_file, name);
-            }
-            fs::remove_file(&otf_file).unwrap();
-            log::info!("Removed {otf_file}");
+        log::debug!("Writing hash to {sum_file}");
+        fs::write(sum_file, hash.as_bytes()).unwrap();
+
+        let otf_file = sfd_dir.join(name).with_extension("otf");
+
+        // copy otf file to font directory (only macos)
+        if cfg!(target_os = "macos") {
+            macos_install_font(&otf_file, name);
         }
+        fs::remove_file(&otf_file).unwrap();
+        log::info!("Removed {otf_file}");
+    } else {
+        log::info!("No change detected, skipping {sfd_file}");
     }
 
     let contents = fs::read(&sfd_dir.join(name).with_extension("woff2")).unwrap();
 
     log::info!("Generating output for {name}");
-    out::write(&cmd.output, &contents, &format!("{name}.woff2"));
+    out::write(
+        &cmd.output,
+        &contents,
+        &Utf8Path::new(name).with_extension("woff2"),
+    );
 }
 
 fn generate_woff2_otf(sfd_dir: &Utf8Path, name: &str) {

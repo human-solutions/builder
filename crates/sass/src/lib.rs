@@ -1,12 +1,12 @@
-use std::process::Command;
-
 use builder_command::SassCmd;
+use camino::Utf8Path;
 use common::out;
 use lightningcss::{
     printer::PrinterOptions,
     stylesheet::StyleSheet,
     targets::{Browsers, Targets},
 };
+use std::process::Command;
 
 pub fn run(sass_cmd: &SassCmd) {
     log::info!("Running builder-sass");
@@ -49,8 +49,12 @@ pub fn run(sass_cmd: &SassCmd) {
                 ..Default::default()
             })
             .unwrap();
-        out::write(&sass_cmd.output, out_css.code.as_bytes(), &name);
+        out::write(
+            &sass_cmd.output,
+            out_css.code.as_bytes(),
+            &Utf8Path::new(&name),
+        );
     } else {
-        out::write(&sass_cmd.output, out.as_bytes(), &name);
+        out::write(&sass_cmd.output, out.as_bytes(), &Utf8Path::new(&name));
     }
 }

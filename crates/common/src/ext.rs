@@ -1,4 +1,6 @@
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::{Utf8DirEntry, Utf8Path, Utf8PathBuf};
+use fs_err as fs;
+use std::collections::VecDeque;
 
 pub trait RustNaming {
     fn to_rust_module(&self) -> String;
@@ -58,9 +60,20 @@ impl RustNaming for str {
 pub trait Utf8PathExt {
     fn push_ext(&self, ext: &str) -> Utf8PathBuf;
     fn ls_files(&self) -> Vec<Utf8PathBuf>;
+    fn ls_files_matching<P: Fn(&Self) -> bool>(&self, predicate: P) -> Vec<Utf8PathBuf>;
+    fn relative_to(&self, base: &Utf8Path) -> Result<Utf8PathBuf, String>;
+    fn create_dir_if_missing(&self) -> std::io::Result<()>;
 }
 
 impl Utf8PathExt for Utf8Path {
+    fn create_dir_if_missing(&self) -> std::io::Result<()> {
+        if !self.exists() {
+            fs::create_dir_all(self)
+        } else {
+            Ok(())
+        }
+    }
+
     fn push_ext(&self, ext: &str) -> Utf8PathBuf {
         let mut s = self.to_string();
         s.push('.');
@@ -68,13 +81,39 @@ impl Utf8PathExt for Utf8Path {
         Utf8PathBuf::from(s)
     }
     fn ls_files(&self) -> Vec<Utf8PathBuf> {
-        let mut entries = self.read_dir_utf8().unwrap();
-        let mut files = Vec::new();
-        while let Some(Ok(entry)) = entries.next() {
-            if entry.file_type().unwrap().is_file() {
-                files.push(entry.path().to_path_buf());
+        files_matching(self, &|_| true)
+    }
+
+    fn ls_files_matching<P: Fn(&Self) -> bool>(&self, predicate: P) -> Vec<Utf8PathBuf> {
+        files_matching(self, &predicate)
+    }
+
+    fn relative_to(&self, base: &Utf8Path) -> Result<Utf8PathBuf, String> {
+        let mut base = base.components();
+        let mut self_components = self.components();
+        while let Some(base) = base.next() {
+            if self_components.next() != Some(base) {
+                return Err(format!("{self} is not a subpath of {base}"));
             }
         }
-        files
+        Ok(Utf8PathBuf::from(
+            self_components.collect::<Utf8PathBuf>().to_string(),
+        ))
     }
+}
+
+fn files_matching<P: Fn(&Utf8Path) -> bool>(path: &Utf8Path, predicate: &P) -> Vec<Utf8PathBuf> {
+    let mut entries: VecDeque<Utf8DirEntry> =
+        path.read_dir_utf8().unwrap().map(|e| e.unwrap()).collect();
+    let mut files = Vec::new();
+    while let Some(entry) = entries.pop_front() {
+        let filetype = entry.file_type().unwrap();
+        if filetype.is_file() && predicate(&entry.path()) {
+            files.push(entry.path().to_path_buf());
+        }
+        if filetype.is_dir() {
+            entries.extend(entry.path().read_dir_utf8().unwrap().map(|e| e.unwrap()));
+        }
+    }
+    files
 }

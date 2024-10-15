@@ -17,17 +17,8 @@ fn clean_out_dir(dir: &str) -> Utf8PathBuf {
 fn test_localized() {
     let output_dir = clean_out_dir("src/tests/output/localized");
 
-    let cli = LocalizedCmd::builder()
-        .input_dir("src/tests/data/apple_store")
-        .file_extension("svg")
-        .output(vec![Output::builder()
-            .dir(output_dir)
-            .brotli(true)
-            .gzip(true)
-            .uncompressed(true)
-            .checksum(true)
-            .build()])
-        .build();
+    let cli = LocalizedCmd::new("src/tests/data/apple_store", "svg")
+        .add_output(Output::new_compress_and_sum(output_dir));
 
     run(&cli);
 }

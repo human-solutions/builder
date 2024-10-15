@@ -2,7 +2,6 @@ use std::fmt::Display;
 
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
-use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Encoding {
@@ -30,16 +29,15 @@ impl Encoding {
         if *self == Encoding::Identity {
             path.to_path_buf()
         } else {
-            path.with_extension(self.as_str())
+            let ext = path.extension().unwrap_or_default();
+            path.with_extension(format!("{ext}.{self}"))
         }
     }
 }
 
-#[derive(TypedBuilder, Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[builder(field_defaults(default))]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Output {
     /// Folder where the output files should be written
-    #[builder(setter(into))]
     pub dir: Utf8PathBuf,
 
     brotli: bool,
@@ -55,6 +53,28 @@ pub struct Output {
 }
 
 impl Output {
+    pub fn new<P: Into<Utf8PathBuf>>(dir: P) -> Self {
+        Self {
+            dir: dir.into(),
+            brotli: false,
+            gzip: false,
+            uncompressed: false,
+            all_encodings: false,
+            checksum: false,
+        }
+    }
+
+    pub fn new_compress_and_sum<P: Into<Utf8PathBuf>>(dir: P) -> Self {
+        Self {
+            dir: dir.into(),
+            brotli: true,
+            gzip: true,
+            uncompressed: true,
+            all_encodings: true,
+            checksum: true,
+        }
+    }
+
     pub fn uncompressed(&self) -> bool {
         // if none are set, then default to uncompressed
         let default_uncompressed = !self.uncompressed && !self.brotli && !self.gzip;

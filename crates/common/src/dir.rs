@@ -34,7 +34,7 @@ pub fn remove_files_containing<P: AsRef<Path>>(dir: P, name: &str) {
         let entry = entry.unwrap();
         let path = entry.path();
         if path.is_file() && filename(&path).contains(name) {
-            log::info!("Removing {:?} because its name contains '{name}'", path);
+            log::debug!("Removing {:?} because its name contains '{name}'", path);
             fs::remove_file(&path).unwrap();
         }
     }

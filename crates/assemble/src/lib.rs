@@ -12,6 +12,8 @@ use generator::generate_code;
 use std::vec;
 
 pub fn run(cmd: &AssembleCmd) {
+    log::info!("Running builder-assemble");
+
     let mut assets = vec![];
     for file in &cmd.files {
         let asset = asset_for_file(file);

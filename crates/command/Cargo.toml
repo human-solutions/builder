@@ -7,4 +7,3 @@ edition = "2021"
 camino.workspace = true
 serde.workspace = true
 toml.workspace = true
-typed-builder.workspace = true

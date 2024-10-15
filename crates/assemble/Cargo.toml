@@ -10,4 +10,4 @@ common = { path = "../common" }
 base64.workspace = true
 camino.workspace = true
 fs-err.workspace = true
-log = "0.4"
+log.workspace = true
