@@ -336,7 +336,7 @@ dependencies = [
 
 [[package]]
 name = "builder"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "builder-assemble",
  "builder-command",
@@ -354,7 +354,7 @@ dependencies = [
 
 [[package]]
 name = "builder-assemble"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "base64",
  "builder-command",
@@ -366,7 +366,7 @@ dependencies = [
 
 [[package]]
 name = "builder-command"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "camino",
  "serde",
@@ -375,7 +375,7 @@ dependencies = [
 
 [[package]]
 name = "builder-fontforge"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "builder-command",
  "camino",
@@ -387,7 +387,7 @@ dependencies = [
 
 [[package]]
 name = "builder-localized"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "builder-command",
  "camino",
@@ -399,12 +399,11 @@ dependencies = [
 
 [[package]]
 name = "builder-sass"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "builder-command",
  "camino",
  "common",
- "fs-err",
  "grass",
  "lightningcss",
  "log",
@@ -413,7 +412,7 @@ dependencies = [
 
 [[package]]
 name = "builder-uniffi"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "builder-command",
  "camino",
@@ -425,7 +424,7 @@ dependencies = [
 
 [[package]]
 name = "builder-wasm"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "base64",
  "builder-command",
@@ -626,7 +625,7 @@ checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 
 [[package]]
 name = "common"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "base64",
  "brotli",

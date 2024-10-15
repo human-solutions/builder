@@ -1,7 +1,6 @@
 use builder_command::SassCmd;
 use camino::Utf8Path;
 use common::out;
-use fs_err as fs;
 use lightningcss::{
     printer::PrinterOptions,
     stylesheet::StyleSheet,
@@ -34,8 +33,7 @@ pub fn run(sass_cmd: &SassCmd) {
         out
     } else {
         log::debug!("No installed sass compiler found. Compiling with builtin grass compiler");
-        let scss = fs::read_to_string(&sass_cmd.in_scss).unwrap();
-        grass::from_string(scss, &grass::Options::default()).unwrap()
+        grass::from_path(&sass_cmd.in_scss, &Default::default()).unwrap()
     };
 
     let name = format!("{}.css", sass_cmd.in_scss.file_stem().unwrap());
