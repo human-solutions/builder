@@ -12,5 +12,8 @@ common = { path = "../common" }
 builder-command = { path = "../command" }
 
 camino.workspace = true
+fs-err.workspace = true
+grass.workspace = true
 lightningcss.workspace = true
 log.workspace = true
+which.workspace = true

@@ -1,4 +1,5 @@
 use core::panic;
+use std::env;
 
 use builder_command::{BuilderCmd, Cmd};
 use camino::Utf8Path;
@@ -21,7 +22,9 @@ fn main() {
     let builder: BuilderCmd = toml::from_str(&bytes).unwrap();
 
     RELEASE.set(builder.release).unwrap();
-    setup_logging(builder.verbose);
+
+    let is_ci = env::var("CI").is_ok();
+    setup_logging(builder.verbose || is_ci);
     run(builder);
 }
 

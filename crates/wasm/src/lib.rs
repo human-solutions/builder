@@ -11,6 +11,7 @@ use wasm_pack::{
     },
     install::InstallMode,
 };
+use which::which;
 
 pub fn run(cmd: &WasmCmd) {
     let tmp_dir = cmd.output_dir.join("tmp");
@@ -20,6 +21,13 @@ pub fn run(cmd: &WasmCmd) {
     tmp_dir.create_dir_if_missing().unwrap();
 
     log::debug!("package_relative_tmp_dir: {package_relative_tmp_dir}");
+
+    if let Ok(wasm_cli) = which("wasm-bindgen") {
+        log::debug!("wasm-bindgen found at {wasm_cli:?}");
+    } else {
+        log::debug!("wasm-bindgen not found");
+    }
+
     let release = is_release();
 
     let wasm = Command::Build(BuildOptions {

@@ -17,3 +17,4 @@ fs-err.workspace = true
 log.workspace = true
 seahash.workspace = true
 wasm-pack.workspace = true
+which.workspace = true

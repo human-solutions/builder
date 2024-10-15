@@ -5,7 +5,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 repository = "https://github.com/human-solutions/builder"
 license = "MIT"
 edition = "2021"
@@ -42,6 +42,7 @@ brotli = "7.0"
 camino = "1.1"
 flate2 = "1.0"
 fs-err = "2.11"
+grass = "0.13"
 lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }
 log = "0.4"
 seahash = "4.1"
@@ -54,3 +55,4 @@ uniffi_bindgen = "0.28"
 tempfile = "3.13"
 time = "0.3"
 wasm-pack = "0.13"
+which = "6.0"
