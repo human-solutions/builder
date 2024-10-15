@@ -4,6 +4,14 @@ resolver = "2"
 
 members = ["crates/*"]
 
+[workspace.package]
+version = "0.1.0"
+repository = "https://github.com/human-solutions/builder"
+license = "MIT"
+edition = "2021"
+description = "Command line tool for building web assets, wasm and mobile libs"
+authors = ["henrik akesson"]
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"

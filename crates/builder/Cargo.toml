@@ -1,12 +1,12 @@
 
 [package]
-authors = ["henrik akesson"]
-description = "Command line tool for building web assets, wasm and mobile libs"
-edition = "2021"
-license = "MIT"
 name = "builder"
-repository = "https://github.com/human-solutions/builder"
-version = "0.0.10"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 builder-assemble = { path = "../assemble" }
