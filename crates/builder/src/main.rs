@@ -25,6 +25,22 @@ fn main() {
 
     let is_ci = env::var("CI").is_ok();
     setup_logging(builder.verbose || is_ci);
+
+    let bin_version = env!("CARGO_PKG_VERSION");
+    let metadata = cargo_metadata::MetadataCommand::new().exec().unwrap();
+
+    let lib_version = metadata
+        .packages
+        .iter()
+        .find(|pack| pack.name == "builder-command")
+        .unwrap()
+        .version
+        .to_string();
+    if bin_version != lib_version {
+        panic!(
+            "Version mismatch: builder-command binary is {bin_version} but library is {lib_version}",
+        );
+    }
     run(builder);
 }
 

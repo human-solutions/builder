@@ -40,6 +40,7 @@ install-updater = false
 base64 = "0.22"
 brotli = "7.0"
 camino = "1.1"
+cargo_metadata = "0.18"
 flate2 = "1.0"
 fs-err = "2.11"
 grass = "0.13"

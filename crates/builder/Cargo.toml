@@ -19,6 +19,7 @@ builder-wasm = { path = "../wasm" }
 common = { path = "../common" }
 
 camino.workspace = true
+cargo_metadata.workspace = true
 fs-err.workspace = true
 toml.workspace = true
 
