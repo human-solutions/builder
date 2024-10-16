@@ -16,5 +16,6 @@ camino.workspace = true
 fs-err.workspace = true
 log.workspace = true
 seahash.workspace = true
-wasm-pack.workspace = true
+wasm-bindgen-cli-support.workspace = true
+wasm-opt.workspace = true
 which.workspace = true

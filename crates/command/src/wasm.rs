@@ -1,36 +1,21 @@
-use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::Output;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct WasmCmd {
-    pub package_dir: Utf8PathBuf,
-    pub output_dir: Utf8PathBuf,
-    pub name: String,
-    pub optimize: bool,
+    /// The package name
+    pub package: String,
 
     pub output: Vec<Output>,
 }
 
 impl WasmCmd {
-    pub fn new(
-        name: &str,
-        package_dir: impl Into<Utf8PathBuf>,
-        output_dir: impl Into<Utf8PathBuf>,
-    ) -> Self {
+    pub fn new(package: &str) -> Self {
         Self {
-            package_dir: package_dir.into(),
-            output_dir: output_dir.into(),
-            name: name.to_string(),
-            optimize: false,
+            package: package.to_string(),
             output: Vec::new(),
         }
-    }
-
-    pub fn optimize(mut self, optimize: bool) -> Self {
-        self.optimize = optimize;
-        self
     }
 
     pub fn output(mut self, it: impl IntoIterator<Item = Output>) -> Self {

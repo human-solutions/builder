@@ -3,60 +3,62 @@ use builder_command::WasmCmd;
 use camino::Utf8PathBuf;
 use common::{is_release, out, Utf8PathExt};
 use fs_err as fs;
-use std::hash::Hasher;
-use wasm_pack::{
-    command::{
-        build::{BuildOptions, Target},
-        run_wasm_pack, Command,
-    },
-    install::InstallMode,
-};
-use which::which;
+use std::{hash::Hasher, process::Command};
+use wasm_opt::OptimizationOptions;
 
+// "cargo" "build" "--lib" "--target" "wasm32-unknown-unknown"
+// wasm-bindgen target/wasm32-unknown-unknown/debug/app_web.wasm --out-dir target/wasm/tmp --no-typescript --target web --out-name app --debug
 pub fn run(cmd: &WasmCmd) {
-    let tmp_dir = cmd.output_dir.join("tmp");
-    let package_relative_tmp_dir =
-        Utf8PathBuf::from_iter(cmd.package_dir.components().map(|_| "..")).join(&tmp_dir);
+    let release = is_release();
+    let mut cargo = Command::new("cargo");
 
-    tmp_dir.create_dir_if_missing().unwrap();
+    let package_name = cmd.package.replace("-", "_");
+    cargo
+        .arg("build")
+        .arg("--package")
+        .arg(&cmd.package)
+        .arg("--lib")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown");
 
-    log::debug!("package_relative_tmp_dir: {package_relative_tmp_dir}");
-
-    if let Ok(wasm_cli) = which("wasm-bindgen") {
-        log::debug!("wasm-bindgen found at {wasm_cli:?}");
-    } else {
-        log::debug!("wasm-bindgen not found");
+    if release {
+        cargo.arg("--release");
     }
 
-    let release = is_release();
+    let cargo_status = cargo.status().unwrap();
+    if !cargo_status.success() {
+        panic!("cargo build failed");
+    }
 
-    let wasm = Command::Build(BuildOptions {
-        path: Some(cmd.package_dir.as_std_path().to_path_buf()),
-        scope: None,
-        mode: InstallMode::Noinstall,
-        // no typescript
-        disable_dts: true,
-        // enable JS weak refs proposal
-        weak_refs: false,
-        // enable WebAssembly reference types proposal
-        reference_types: false,
-        target: Target::Web,
-        // deprecated
-        debug: false,
-        dev: !release,
-        release,
-        profiling: false,
-        out_dir: package_relative_tmp_dir.as_str().to_string(),
-        out_name: Some(cmd.name.clone()),
-        no_pack: true,
-        no_opt: !cmd.optimize,
-        extra_options: vec![],
-    });
-    run_wasm_pack(wasm).unwrap();
+    let tmp_dir = Utf8PathBuf::from("target/wasm_tmp");
+    tmp_dir.create_dir_if_missing().unwrap();
+
+    let wasm_path = format!(
+        "target/wasm32-unknown-unknown/{}/{package_name}.wasm",
+        if release { "release" } else { "debug" },
+    );
+    wasm_bindgen_cli_support::Bindgen::new()
+        .input_path(wasm_path)
+        .typescript(false)
+        .omit_default_module_path(false)
+        .web(true)
+        .unwrap()
+        .out_name(&package_name)
+        .debug(true)
+        .generate(&tmp_dir)
+        .unwrap();
 
     let files =
         tmp_dir.ls_files_matching(|p| p.extension() == Some("wasm") || p.extension() == Some("js"));
 
+    if release {
+        let tmp = tmp_dir.with_extension("wasm-opt.wasm");
+        let wasm_path = tmp_dir.join(format!("{package_name}_bg.wasm"));
+        OptimizationOptions::new_optimize_for_size_aggressively()
+            .run(&wasm_path, &tmp)
+            .unwrap();
+        fs::rename(&tmp, &wasm_path).unwrap();
+    }
     let mut hasher = seahash::SeaHasher::new();
     let file_and_content = files
         .into_iter()
