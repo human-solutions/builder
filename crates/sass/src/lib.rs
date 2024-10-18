@@ -13,7 +13,7 @@ pub fn run(sass_cmd: &SassCmd) {
     log::info!("Running builder-sass");
 
     log::info!("Running sass on {}", sass_cmd.in_scss);
-    let css = if let Ok(sass) = which("sass") {
+    let mut css = if let Ok(sass) = which("sass") {
         log::debug!("Compiling sass with {sass:?}");
 
         let cmd = Command::new(sass)
@@ -35,6 +35,9 @@ pub fn run(sass_cmd: &SassCmd) {
         log::debug!("No installed sass compiler found. Compiling with builtin grass compiler");
         grass::from_path(&sass_cmd.in_scss, &Default::default()).unwrap()
     };
+    for (from, to) in &sass_cmd.replacements {
+        css = css.replace(from, to);
+    }
 
     let name = format!("{}.css", sass_cmd.in_scss.file_stem().unwrap());
 

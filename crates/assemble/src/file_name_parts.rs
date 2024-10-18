@@ -11,7 +11,7 @@ impl Compression {
     fn from(s: &str) -> Self {
         match s {
             "br" => Self::Brotli,
-            "gz" => Self::Gzip,
+            "gzip" => Self::Gzip,
             _ => panic!("Invalid compression: {}", s),
         }
     }
@@ -21,7 +21,7 @@ impl Display for Compression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Brotli => f.write_str("br"),
-            Self::Gzip => f.write_str("gz"),
+            Self::Gzip => f.write_str("gzip"),
             Self::Uncompressed => f.write_str(""),
         }
     }
@@ -89,7 +89,7 @@ fn filenamecomponents() {
         }
     );
 
-    let components = FileNameParts::from("test.txt.gz");
+    let components = FileNameParts::from("test.txt.gzip");
     assert_eq!(
         components,
         FileNameParts {
@@ -122,7 +122,7 @@ fn filenamecomponents() {
         }
     );
 
-    let components = FileNameParts::from("1234567890a=test.txt.gz");
+    let components = FileNameParts::from("1234567890a=test.txt.gzip");
     assert_eq!(
         components,
         FileNameParts {

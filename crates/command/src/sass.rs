@@ -10,6 +10,7 @@ pub struct SassCmd {
     pub optimize: bool,
 
     pub output: Vec<Output>,
+    pub replacements: Vec<(String, String)>,
 }
 
 impl SassCmd {
@@ -18,7 +19,14 @@ impl SassCmd {
             in_scss: in_scss.into(),
             optimize: false,
             output: Vec::new(),
+            replacements: Vec::new(),
         }
+    }
+
+    pub fn add_css_replacement<S1: AsRef<str>, S2: AsRef<str>>(mut self, from: S1, to: S2) -> Self {
+        self.replacements
+            .push((from.as_ref().to_string(), to.as_ref().to_string()));
+        self
     }
 
     pub fn optimize(mut self, optimize: bool) -> Self {

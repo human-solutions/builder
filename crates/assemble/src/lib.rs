@@ -9,7 +9,8 @@ use common::Utf8PathExt;
 use file_name_parts::FileNameParts;
 use fs_err as fs;
 use generator::generate_code;
-use std::vec;
+use std::{process::Command, vec};
+use tempfile::NamedTempFile;
 
 pub fn run(cmd: &AssembleCmd) {
     log::info!("Running builder-assemble");
@@ -24,12 +25,27 @@ pub fn run(cmd: &AssembleCmd) {
         assets.push(asset);
     }
 
-    let out = generate_code(&assets, "module_path");
-    if let Some(out_file) = &cmd.out_file {
-        fs::write(out_file, out).unwrap();
-    } else {
-        println!("{out}");
+    let out = generate_code(&assets, &cmd.url_prefix);
+
+    let tmp_file = NamedTempFile::new().unwrap();
+    let tmp_path = Utf8PathBuf::from_path_buf(tmp_file.path().to_path_buf()).unwrap();
+    fs::write(&tmp_path, out).unwrap();
+
+    log::debug!("Formatting {tmp_path}");
+    let status = Command::new("rustfmt").arg(&tmp_path).status().unwrap();
+    if !status.success() {
+        log::warn!("Failed to format {tmp_path}");
     }
+
+    let formatted = fs::read(&tmp_path).unwrap();
+    if cmd.out_file.exists() {
+        let current = fs::read(&cmd.out_file).unwrap();
+        if current == formatted {
+            log::info!("No change detected, skipping {}", cmd.out_file);
+            return;
+        }
+    }
+    fs::write(&cmd.out_file, formatted).unwrap();
 }
 
 fn asset_for_file(file: &Utf8PathBuf) -> Asset {

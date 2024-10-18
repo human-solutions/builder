@@ -33,10 +33,23 @@ pub fn run(cmd: &WasmCmd) {
     let tmp_dir = Utf8PathBuf::from("target/wasm_tmp");
     tmp_dir.create_dir_if_missing().unwrap();
 
-    let wasm_path = format!(
+    let wasm_path = Utf8PathBuf::from(format!(
         "target/wasm32-unknown-unknown/{}/{package_name}.wasm",
         if release { "release" } else { "debug" },
-    );
+    ));
+    let wasm_bytes = fs::read(&wasm_path).unwrap();
+    let hash = format!("{:x}", seahash::hash(&wasm_bytes));
+    let wasm_sum_path = wasm_path.with_extension("wasm.sum");
+
+    if wasm_sum_path.exists() {
+        let current_hash = fs::read_to_string(&wasm_sum_path).unwrap();
+        if hash == current_hash {
+            log::debug!("No change detected, skipping {wasm_path}");
+            return;
+        }
+    }
+    fs::write(wasm_sum_path, hash.as_bytes()).unwrap();
+
     wasm_bindgen_cli_support::Bindgen::new()
         .input_path(wasm_path)
         .typescript(false)
@@ -87,6 +100,7 @@ pub fn run(cmd: &WasmCmd) {
         for (file, contents) in file_and_content.iter() {
             log::debug!("Join file {file} with dir {hash_dir}");
             let path = hash_dir.join(&file);
+
             out::write(opts.iter(), &contents, &path);
         }
     }

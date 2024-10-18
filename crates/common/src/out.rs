@@ -95,7 +95,7 @@ fn compress_and_write(opts: &Output, contents: &[u8], path: &Utf8Path) {
     }
 
     if opts.gzip() {
-        let path = path.push_ext("gz");
+        let path = path.push_ext("gzip");
         log::debug!("Writing gzip file '{:?}'", path);
 
         let f = fs::File::create(path).unwrap();

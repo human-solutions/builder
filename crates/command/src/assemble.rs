@@ -6,17 +6,35 @@ pub struct AssembleCmd {
     /// Input sfd file path
     pub localized: Vec<Utf8PathBuf>,
 
+    /// Prefix added to the URL. It should end with a slash.
+    pub url_prefix: String,
+
     /// Path to one of the asset files. If there are other
     /// versions of it (e.g. compressed), then they'll be
     /// automatically detected.
     pub files: Vec<Utf8PathBuf>,
 
-    /// Where to write the generated code. If not provided, it will be printed to stdout.
-    pub out_file: Option<Utf8PathBuf>,
+    /// Where to write the generated code.
+    pub out_file: Utf8PathBuf,
+}
 
-    pub no_brotli: bool,
+impl AssembleCmd {
+    pub fn new<P: Into<Utf8PathBuf>, S: AsRef<str>>(out_file: P, url_prefix: S) -> Self {
+        Self {
+            localized: Vec::new(),
+            url_prefix: url_prefix.as_ref().into(),
+            files: Vec::new(),
+            out_file: out_file.into(),
+        }
+    }
 
-    pub no_gzip: bool,
+    pub fn add_localized<P: Into<Utf8PathBuf>>(mut self, localized: P) -> Self {
+        self.localized.push(localized.into());
+        self
+    }
 
-    pub no_uncompressed: bool,
+    pub fn add_file<P: Into<Utf8PathBuf>>(mut self, file: P) -> Self {
+        self.files.push(file.into());
+        self
+    }
 }
