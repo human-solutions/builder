@@ -254,7 +254,7 @@ dependencies = [
 
 [[package]]
 name = "builder"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "builder-assemble",
  "builder-command",
@@ -273,7 +273,7 @@ dependencies = [
 
 [[package]]
 name = "builder-assemble"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "base64",
  "builder-command",
@@ -286,7 +286,7 @@ dependencies = [
 
 [[package]]
 name = "builder-command"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "camino",
  "serde",
@@ -295,7 +295,7 @@ dependencies = [
 
 [[package]]
 name = "builder-fontforge"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "builder-command",
  "camino",
@@ -307,7 +307,7 @@ dependencies = [
 
 [[package]]
 name = "builder-localized"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "builder-command",
  "camino",
@@ -319,7 +319,7 @@ dependencies = [
 
 [[package]]
 name = "builder-sass"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "builder-command",
  "camino",
@@ -332,7 +332,7 @@ dependencies = [
 
 [[package]]
 name = "builder-uniffi"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "builder-command",
  "camino",
@@ -344,7 +344,7 @@ dependencies = [
 
 [[package]]
 name = "builder-wasm"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "base64",
  "builder-command",
@@ -524,7 +524,7 @@ checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 
 [[package]]
 name = "common"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "base64",
  "brotli",
@@ -1630,18 +1630,18 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.210"
+version = "1.0.211"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8e3592472072e6e22e0a54d5904d9febf8508f65fb8552499a1abc7d1078c3a"
+checksum = "1ac55e59090389fb9f0dd9e0f3c09615afed1d19094284d0b200441f13550793"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.210"
+version = "1.0.211"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "243902eda00fad750862fc144cea25caca5e20d615af0a81bee94ca738f1df1f"
+checksum = "54be4f245ce16bc58d57ef2716271d0d4519e0f6defa147f6e081005bcb278ff"
 dependencies = [
  "proc-macro2",
  "quote",

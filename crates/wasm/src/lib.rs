@@ -98,7 +98,7 @@ pub fn run(cmd: &WasmCmd) {
 
     for opts in cmd.output.iter() {
         opts.dir
-            .ls_dirs_matching(|dir| dir.ends_with("wasm"))
+            .ls_dirs_matching(|dir| dir.as_str().ends_with("wasm"))
             .iter()
             .for_each(|dir| {
                 log::debug!("Removing old wasm dir {dir}");

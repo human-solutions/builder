@@ -26,4 +26,9 @@ impl LocalizedCmd {
         self.output.push(output);
         self
     }
+
+    pub fn output(mut self, it: impl IntoIterator<Item = Output>) -> Self {
+        self.output.extend(it);
+        self
+    }
 }
