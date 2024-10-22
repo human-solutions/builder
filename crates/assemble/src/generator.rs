@@ -3,33 +3,31 @@ use common::RustNaming;
 
 pub fn generate_code(assets: &[Asset], url_prefix: &str) -> String {
     let constants = constants(assets, url_prefix);
-    let matching = match_list(assets, url_prefix);
+    let matching = match_list(assets);
     format!(
         r#"
-#![allow(dead_code)]
-// This is a generated file. Do not edit. It is updated depending on the build profile used (i.e. dev, release).
+// This is a generated file. Do not edit.
 {constants}
 
-#[derive(Debug)]
-pub struct AssetOptions {{
-    pub langs: Option<&'static [&'static str]>,
-    pub encodings: &'static [&'static str],
-}}
+{asset_rs}
 
-pub fn localisations_and_compressions_for_url(url: &str) -> Option<AssetOptions> {{
-    match url {{
-{matching}
-        _ => None,
+impl Asset {{
+
+    pub fn from_url(url: &str) -> Option<Asset> {{
+        match url {{
+    {matching}
+            _ => None,
+        }}
     }}
 }}
 "#,
+        asset_rs = include_str!("asset_incl.rs")
     )
 }
 
-fn match_list(assets: &[Asset], url_prefix: &str) -> String {
+fn match_list(assets: &[Asset]) -> String {
     let mut matches = vec![];
     for asset in assets {
-        let url = &asset.url;
         let const_name = asset.name.to_rust_const();
         let encodings = if asset.encodings.is_empty() {
             panic!("Asset {} has no encodings", asset.name);
@@ -41,8 +39,10 @@ fn match_list(assets: &[Asset], url_prefix: &str) -> String {
         } else {
             format!("Some(&{const_name}_LANGS)")
         };
+        let mime = &asset.mime;
         matches.push(format!(
-            r#"        "{url_prefix}{url}" => Some(AssetOptions {{
+            r#"        {const_name}_URL => Some(Asset {{
+                mime: "{mime}",
                 langs: {langs},
                 encodings: {encodings},
             }}),"#,
@@ -55,24 +55,21 @@ fn constants(assets: &[Asset], url_prefix: &str) -> String {
     let mut constants = vec![];
     for asset in assets {
         let name = asset.name.to_rust_const();
-        let url = &asset.url;
-        constants.push(format!(
-            r#"pub const {name}_URL: &str = "{url_prefix}{url}";"#,
-        ));
+        constants.push(asset.url_const(url_prefix));
 
         let (count, encodings) = asset.quoted_encoding_list();
         if count > 0 {
-            let count = asset.encodings.len();
             constants.push(format!(
                 r#"pub const {name}_ENC: [&str; {count}] = [{encodings}];"#,
+                count = asset.encodings.len()
             ));
         }
 
         let (count, langs) = asset.quoted_lang_list();
         if count > 0 {
-            let count = asset.localizations.len();
             constants.push(format!(
                 r#"pub const {name}_LANGS: [&str; {count}] = [{langs}];"#,
+                count = asset.localizations.len()
             ));
         }
     }

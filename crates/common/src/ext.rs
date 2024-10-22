@@ -1,6 +1,6 @@
 use camino::{Utf8DirEntry, Utf8Path, Utf8PathBuf};
 use fs_err as fs;
-use std::collections::VecDeque;
+use std::{collections::VecDeque, time::SystemTime};
 
 pub trait RustNaming {
     fn to_rust_module(&self) -> String;
@@ -61,11 +61,19 @@ pub trait Utf8PathExt {
     fn push_ext(&self, ext: &str) -> Utf8PathBuf;
     fn ls_files(&self) -> Vec<Utf8PathBuf>;
     fn ls_files_matching<P: Fn(&Self) -> bool>(&self, predicate: P) -> Vec<Utf8PathBuf>;
+    fn ls_dirs_matching<P: Fn(&Utf8Path) -> bool>(&self, predicate: P) -> Vec<Utf8PathBuf>;
     fn relative_to(&self, base: &Utf8Path) -> Result<Utf8PathBuf, String>;
     fn create_dir_if_missing(&self) -> std::io::Result<()>;
+    /// Returns the modification time of the file or
+    /// None if the file does not exist.
+    fn mtime(&self) -> Option<SystemTime>;
 }
 
 impl Utf8PathExt for Utf8Path {
+    fn mtime(&self) -> Option<SystemTime> {
+        self.metadata().ok().map(|md| md.modified().unwrap())
+    }
+
     fn create_dir_if_missing(&self) -> std::io::Result<()> {
         if !self.exists() {
             fs::create_dir_all(self)
@@ -88,6 +96,10 @@ impl Utf8PathExt for Utf8Path {
         files_matching(self, &predicate)
     }
 
+    fn ls_dirs_matching<P: Fn(&Utf8Path) -> bool>(&self, predicate: P) -> Vec<Utf8PathBuf> {
+        dirs_matching(self, &predicate)
+    }
+
     fn relative_to(&self, base: &Utf8Path) -> Result<Utf8PathBuf, String> {
         let mut base = base.components();
         let mut self_components = self.components();
@@ -100,6 +112,22 @@ impl Utf8PathExt for Utf8Path {
             self_components.collect::<Utf8PathBuf>().to_string(),
         ))
     }
+}
+
+fn dirs_matching<P: Fn(&Utf8Path) -> bool>(path: &Utf8Path, predicate: &P) -> Vec<Utf8PathBuf> {
+    let mut entries: VecDeque<Utf8DirEntry> =
+        path.read_dir_utf8().unwrap().map(|e| e.unwrap()).collect();
+    let mut dirs = Vec::new();
+    while let Some(entry) = entries.pop_front() {
+        let filetype = entry.file_type().unwrap();
+        if filetype.is_dir() {
+            if predicate(&entry.path()) {
+                dirs.push(entry.path().to_path_buf());
+            }
+            entries.extend(entry.path().read_dir_utf8().unwrap().map(|e| e.unwrap()));
+        }
+    }
+    dirs
 }
 
 fn files_matching<P: Fn(&Utf8Path) -> bool>(path: &Utf8Path, predicate: &P) -> Vec<Utf8PathBuf> {

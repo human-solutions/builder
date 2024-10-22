@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::mime::mime_from_ext;
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Compression {
     Brotli,
@@ -33,7 +35,9 @@ pub struct FileNameParts<'s> {
     pub ext: &'s str,
     pub checksum: Option<&'s str>,
     pub compression: Compression,
+    pub mime: &'static str,
 }
+
 impl Display for FileNameParts<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(checksum) = self.checksum {
@@ -58,10 +62,12 @@ impl<'s> FileNameParts<'s> {
             panic!("Invalid file name: {}", filename);
         };
         let name_chars = name.chars().collect::<Vec<_>>();
+        let mime = mime_from_ext(ext);
         if name_chars.len() >= 12 && name_chars[11] == '=' {
             Self {
                 name: &name[12..],
                 ext,
+                mime,
                 checksum: Some(&name[..12]),
                 compression,
             }
@@ -69,6 +75,7 @@ impl<'s> FileNameParts<'s> {
             Self {
                 name,
                 ext,
+                mime,
                 checksum: None,
                 compression,
             }
@@ -78,67 +85,73 @@ impl<'s> FileNameParts<'s> {
 
 #[test]
 fn filenamecomponents() {
-    let components = FileNameParts::from("test.txt");
+    let components = FileNameParts::from("test.css");
     assert_eq!(
         components,
         FileNameParts {
             name: "test",
-            ext: "txt",
+            ext: "css",
+            mime: "text/css",
             checksum: None,
             compression: Compression::Uncompressed
         }
     );
 
-    let components = FileNameParts::from("test.txt.gzip");
+    let components = FileNameParts::from("test.css.gzip");
     assert_eq!(
         components,
         FileNameParts {
             name: "test",
-            ext: "txt",
+            ext: "css",
+            mime: "text/css",
             checksum: None,
             compression: Compression::Gzip
         }
     );
 
-    let components = FileNameParts::from("test.txt.br");
+    let components = FileNameParts::from("test.css.br");
     assert_eq!(
         components,
         FileNameParts {
             name: "test",
-            ext: "txt",
+            ext: "css",
+            mime: "text/css",
             checksum: None,
             compression: Compression::Brotli
         }
     );
 
-    let components = FileNameParts::from("1234567890a=test.txt");
+    let components = FileNameParts::from("1234567890a=test.css");
     assert_eq!(
         components,
         FileNameParts {
             name: "test",
-            ext: "txt",
+            ext: "css",
+            mime: "text/css",
             checksum: Some("1234567890a="),
             compression: Compression::Uncompressed
         }
     );
 
-    let components = FileNameParts::from("1234567890a=test.txt.gzip");
+    let components = FileNameParts::from("1234567890a=test.css.gzip");
     assert_eq!(
         components,
         FileNameParts {
             name: "test",
-            ext: "txt",
+            ext: "css",
+            mime: "text/css",
             checksum: Some("1234567890a="),
             compression: Compression::Gzip
         }
     );
 
-    let components = FileNameParts::from("1234567890a=test.txt.br");
+    let components = FileNameParts::from("1234567890a=test.css.br");
     assert_eq!(
         components,
         FileNameParts {
             name: "test",
-            ext: "txt",
+            ext: "css",
+            mime: "text/css",
             checksum: Some("1234567890a="),
             compression: Compression::Brotli
         }

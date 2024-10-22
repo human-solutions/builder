@@ -2,8 +2,8 @@ use base64::{engine::general_purpose::URL_SAFE, Engine};
 use builder_command::WasmCmd;
 use camino::Utf8PathBuf;
 use common::{is_release, out, Utf8PathExt};
-use fs_err as fs;
-use std::{hash::Hasher, process::Command};
+use fs_err::{self as fs};
+use std::{fs::File, hash::Hasher, process::Command};
 use wasm_opt::OptimizationOptions;
 
 // "cargo" "build" "--lib" "--target" "wasm32-unknown-unknown"
@@ -11,6 +11,8 @@ use wasm_opt::OptimizationOptions;
 pub fn run(cmd: &WasmCmd) {
     let release = is_release();
     let mut cargo = Command::new("cargo");
+
+    log::info!("Running builder-wasm");
 
     let package_name = cmd.package.replace("-", "_");
     cargo
@@ -35,20 +37,28 @@ pub fn run(cmd: &WasmCmd) {
 
     let wasm_path = Utf8PathBuf::from(format!(
         "target/wasm32-unknown-unknown/{}/{package_name}.wasm",
-        if release { "release" } else { "debug" },
+        if release { "release" } else { "debug" }
     ));
-    let wasm_bytes = fs::read(&wasm_path).unwrap();
-    let hash = format!("{:x}", seahash::hash(&wasm_bytes));
-    let wasm_sum_path = wasm_path.with_extension("wasm.sum");
+    let wasm_mtime = wasm_path.mtime().unwrap();
 
-    if wasm_sum_path.exists() {
-        let current_hash = fs::read_to_string(&wasm_sum_path).unwrap();
-        if hash == current_hash {
-            log::debug!("No change detected, skipping {wasm_path}");
+    let wasm_mtime_path = wasm_path.with_extension("wasm.mtime");
+
+    if wasm_mtime_path.exists() {
+        let prev_mtime = wasm_mtime_path.mtime().unwrap();
+        log::debug!("\nprev_mtime: {prev_mtime:?}, \nwasm_mtime: {wasm_mtime:?}");
+        if wasm_mtime == prev_mtime {
+            log::info!("No change detected, skipping wasmbindgen for {wasm_path}");
             return;
         }
+    } else {
+        fs::write(
+            &wasm_mtime_path,
+            "this file has the mtime of the last time the wasm was built",
+        )
+        .unwrap();
     }
-    fs::write(wasm_sum_path, hash.as_bytes()).unwrap();
+    let wasm_mtime_file = File::open(&wasm_mtime_path).unwrap();
+    wasm_mtime_file.set_modified(wasm_mtime).unwrap();
 
     wasm_bindgen_cli_support::Bindgen::new()
         .input_path(wasm_path)
@@ -72,6 +82,7 @@ pub fn run(cmd: &WasmCmd) {
             .unwrap();
         fs::rename(&tmp, &wasm_path).unwrap();
     }
+
     let mut hasher = seahash::SeaHasher::new();
     let file_and_content = files
         .into_iter()
@@ -86,6 +97,14 @@ pub fn run(cmd: &WasmCmd) {
     let hash = URL_SAFE.encode(hasher.finish().to_be_bytes());
 
     for opts in cmd.output.iter() {
+        opts.dir
+            .ls_dirs_matching(|dir| dir.ends_with("wasm"))
+            .iter()
+            .for_each(|dir| {
+                log::debug!("Removing old wasm dir {dir}");
+                fs::remove_dir_all(dir).unwrap();
+            });
+
         let hash_dir = if opts.checksum {
             Utf8PathBuf::from(format!("{hash}wasm"))
         } else {
