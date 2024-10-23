@@ -1,4 +1,5 @@
 mod assemble;
+mod copy;
 mod fontforge;
 mod localized;
 mod out;
@@ -10,6 +11,7 @@ use std::{env, path::Path, process::Command};
 
 pub use assemble::AssembleCmd;
 use camino::Utf8PathBuf;
+pub use copy::CopyCmd;
 pub use fontforge::FontForgeCmd;
 pub use localized::LocalizedCmd;
 pub use out::{Encoding, Output};
@@ -80,6 +82,12 @@ impl BuilderCmd {
         self
     }
 
+    /// Add a CopyCmd using it's builder
+    pub fn add_copy(mut self, cmd: CopyCmd) -> Self {
+        self.cmds.push(Cmd::Copy(cmd));
+        self
+    }
+
     pub fn verbose(mut self, val: bool) -> Self {
         self.verbose = val;
         self
@@ -139,4 +147,5 @@ pub enum Cmd {
     FontForge(FontForgeCmd),
     Assemble(AssembleCmd),
     Wasm(WasmCmd),
+    Copy(CopyCmd),
 }

@@ -15,21 +15,23 @@ pub fn run(cmd: &WasmCmd) {
     log::info!("Running builder-wasm");
 
     let package_name = cmd.package.replace("-", "_");
-    cargo
-        .arg("build")
-        .arg("--package")
-        .arg(&cmd.package)
-        .arg("--lib")
-        .arg("--target")
-        .arg("wasm32-unknown-unknown");
+    let mut args = vec![
+        "build",
+        "--package",
+        &cmd.package,
+        "--lib",
+        "--target",
+        "wasm32-unknown-unknown",
+    ];
 
     if release {
-        cargo.arg("--release");
+        args.push("--release");
     }
+    cargo.args(&args);
 
     let cargo_status = cargo.status().unwrap();
     if !cargo_status.success() {
-        panic!("cargo build failed");
+        panic!("FAILED: cargo {}", args.join(" "));
     }
 
     let tmp_dir = Utf8PathBuf::from("target/wasm_tmp");

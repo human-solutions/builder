@@ -16,7 +16,7 @@ impl RustNaming for str {
     fn to_rust_const(&self) -> String {
         let mut s = String::with_capacity(self.len());
         for (i, char) in self.chars().enumerate() {
-            if char == '.' {
+            if char == '.' || char == '-' {
                 s.push('_');
                 continue;
             } else if char == '_' {

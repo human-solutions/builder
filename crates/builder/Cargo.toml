@@ -10,6 +10,7 @@ version.workspace = true
 
 [dependencies]
 builder-assemble = { path = "../assemble" }
+builder-copy = { path = "../copy" }
 builder-fontforge = { path = "../fontforge" }
 builder-sass = { path = "../sass" }
 builder-localized = { path = "../localized" }

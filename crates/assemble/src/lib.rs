@@ -24,9 +24,9 @@ pub fn run(cmd: &AssembleCmd) {
         let asset = asset_for_file(file);
         assets.push(asset);
     }
-    if let Some(wasm_dir) = &cmd.wasm_dir {
-        log::info!("Processing wasm dir: {wasm_dir}");
-        let wasm_assets = assets_for_wasm_dir(wasm_dir);
+    for dir in &cmd.dirs {
+        log::info!("Processing dir: {dir}");
+        let wasm_assets = assets_for_dir(dir);
         assets.extend(wasm_assets);
     }
     for localized in &cmd.localized {
@@ -70,7 +70,7 @@ pub fn run(cmd: &AssembleCmd) {
 
 /// List the files in the wasm directory and generate assets for them
 /// by identifying each file's base and encoding.
-fn assets_for_wasm_dir(dir: &Utf8PathBuf) -> Vec<Asset> {
+fn assets_for_dir(dir: &Utf8PathBuf) -> Vec<Asset> {
     log::debug!("Listing files in {dir}");
     let paths = dir.ls_files();
     let filenames = paths.iter().map(|f| f.file_name().unwrap());
@@ -108,6 +108,7 @@ fn assets_for_wasm_dir(dir: &Utf8PathBuf) -> Vec<Asset> {
 }
 
 fn asset_for_file(file: &Utf8PathBuf) -> Asset {
+    log::debug!("finding assets for {file}");
     let filename = file.file_name().unwrap();
     let dir = file.parent().unwrap();
     let paths = dir.ls_files();

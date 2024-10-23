@@ -53,6 +53,7 @@ pub fn run(builder: BuilderCmd) {
             Cmd::FontForge(cmd) => builder_fontforge::run(&cmd),
             Cmd::Assemble(cmd) => builder_assemble::run(&cmd),
             Cmd::Wasm(cmd) => builder_wasm::run(&cmd),
+            Cmd::Copy(cmd) => builder_copy::run(&cmd),
         }
     }
 }

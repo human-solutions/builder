@@ -48,6 +48,7 @@ fn match_list(assets: &[Asset]) -> String {
             }}),"#,
         ));
     }
+    matches.sort();
     matches.join("\n")
 }
 
@@ -73,5 +74,6 @@ fn constants(assets: &[Asset], url_prefix: &str) -> String {
             ));
         }
     }
+    constants.sort();
     constants.join("\n")
 }

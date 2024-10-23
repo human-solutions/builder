@@ -75,6 +75,17 @@ impl Output {
         }
     }
 
+    pub fn new_compress<P: Into<Utf8PathBuf>>(dir: P) -> Self {
+        Self {
+            dir: dir.into(),
+            brotli: true,
+            gzip: true,
+            uncompressed: true,
+            all_encodings: true,
+            checksum: false,
+        }
+    }
+
     pub fn uncompressed(&self) -> bool {
         // if none are set, then default to uncompressed
         let default_uncompressed = !self.uncompressed && !self.brotli && !self.gzip;

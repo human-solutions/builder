@@ -14,7 +14,8 @@ pub struct AssembleCmd {
     /// automatically detected.
     pub files: Vec<Utf8PathBuf>,
 
-    pub wasm_dir: Option<Utf8PathBuf>,
+    /// All files in a dir will be included
+    pub dirs: Vec<Utf8PathBuf>,
 
     /// Where to write the generated code.
     pub code_file: Option<Utf8PathBuf>,
@@ -43,11 +44,6 @@ impl AssembleCmd {
         self
     }
 
-    pub fn wasm_dir<P: Into<Utf8PathBuf>>(mut self, wasm_dir: P) -> Self {
-        self.wasm_dir = Some(wasm_dir.into());
-        self
-    }
-
     pub fn add_localized<P: Into<Utf8PathBuf>>(mut self, localized: P) -> Self {
         self.localized.push(localized.into());
         self
@@ -55,6 +51,11 @@ impl AssembleCmd {
 
     pub fn add_file<P: Into<Utf8PathBuf>>(mut self, file: P) -> Self {
         self.files.push(file.into());
+        self
+    }
+
+    pub fn add_dir<P: Into<Utf8PathBuf>>(mut self, dir: P) -> Self {
+        self.dirs.push(dir.into());
         self
     }
 }
