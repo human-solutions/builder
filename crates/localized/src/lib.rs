@@ -4,7 +4,7 @@ mod tests;
 use builder_command::LocalizedCmd;
 use common::{dir::remove_content_of_dir, out::write_checksummed_variants};
 use fs_err as fs;
-use unic_langid::LanguageIdentifier;
+use icu_locid::LanguageIdentifier;
 
 pub fn run(cmd: &LocalizedCmd) {
     log::info!("Running builder-localized");

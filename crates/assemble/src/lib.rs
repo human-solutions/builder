@@ -1,6 +1,6 @@
 mod asset;
-#[allow(dead_code)]
-mod asset_incl;
+// #[allow(dead_code)]
+// mod asset_incl;
 mod file_name_parts;
 mod generator;
 mod mime;
@@ -12,7 +12,11 @@ use common::Utf8PathExt;
 use file_name_parts::FileNameParts;
 use fs_err as fs;
 use generator::generate_code;
-use std::{collections::HashMap, process::Command, vec};
+use std::{
+    collections::{HashMap, HashSet},
+    process::Command,
+    vec,
+};
 use tempfile::NamedTempFile;
 
 pub fn run(cmd: &AssembleCmd) {
@@ -58,13 +62,14 @@ pub fn run(cmd: &AssembleCmd) {
         fs::write(code_file, formatted).unwrap();
     }
     if let Some(url_env_file) = &cmd.url_env_file {
-        let envs = assets
+        let mut envs = assets
             .iter()
             .map(|a| a.url_const(&cmd.url_prefix))
-            .collect::<Vec<_>>()
-            .join("\n");
+            .collect::<Vec<_>>();
+        envs.sort();
+
         log::info!("Writing URL envs to {url_env_file}");
-        fs::write(url_env_file, envs).unwrap();
+        fs::write(url_env_file, envs.join("\n")).unwrap();
     }
 }
 
@@ -100,7 +105,7 @@ fn assets_for_dir(dir: &Utf8PathBuf) -> Vec<Asset> {
                 url: format!("{last_folder}/{file}"),
                 mime,
                 encodings,
-                localizations: vec![],
+                localizations: Default::default(),
             };
             asset
         })
@@ -157,7 +162,7 @@ fn asset_for_file(file: &Utf8PathBuf) -> Asset {
         name,
         encodings,
         mime: base.mime.to_string(),
-        localizations: vec![],
+        localizations: Default::default(),
     }
 }
 fn asset_for_localised(dir: &Utf8PathBuf) -> Asset {
@@ -171,7 +176,7 @@ fn asset_for_localised(dir: &Utf8PathBuf) -> Asset {
     let ext = files[0].ext.to_string();
 
     let mut encodings = vec![];
-    let mut localizations = vec![];
+    let mut localizations = HashSet::new();
 
     for file in &files {
         if file.checksum != checksum {
@@ -183,9 +188,8 @@ fn asset_for_localised(dir: &Utf8PathBuf) -> Asset {
         if !encodings.contains(&file.compression.to_string()) {
             encodings.push(file.compression.to_string());
         }
-        localizations.push(file.name.to_owned());
+        localizations.insert(file.name.to_owned());
     }
-    localizations.sort();
     encodings.sort();
     let name = dir.file_name().unwrap();
 

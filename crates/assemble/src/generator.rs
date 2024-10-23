@@ -2,12 +2,18 @@ use crate::asset::Asset;
 use common::RustNaming;
 
 pub fn generate_code(assets: &[Asset], url_prefix: &str) -> String {
-    let constants = constants(assets, url_prefix);
+    let statics = static_vars(assets);
+    let constants = url_constants(assets, url_prefix);
+
     let matching = match_list(assets);
     format!(
         r#"
 // This is a generated file. Do not edit.
+use icu_locid::{{langid, LanguageIdentifier}};
+
 {constants}
+
+{statics}
 
 {asset_rs}
 
@@ -52,24 +58,32 @@ fn match_list(assets: &[Asset]) -> String {
     matches.join("\n")
 }
 
-fn constants(assets: &[Asset], url_prefix: &str) -> String {
+fn url_constants(assets: &[Asset], url_prefix: &str) -> String {
+    let mut constants = assets
+        .iter()
+        .map(|asset| asset.url_const(url_prefix))
+        .collect::<Vec<_>>();
+    constants.sort();
+    constants.join("\n")
+}
+
+fn static_vars(assets: &[Asset]) -> String {
     let mut constants = vec![];
     for asset in assets {
         let name = asset.name.to_rust_const();
-        constants.push(asset.url_const(url_prefix));
 
         let (count, encodings) = asset.quoted_encoding_list();
         if count > 0 {
             constants.push(format!(
-                r#"pub const {name}_ENC: [&str; {count}] = [{encodings}];"#,
+                r#"pub static {name}_ENC: [&str; {count}] = [{encodings}];"#,
                 count = asset.encodings.len()
             ));
         }
 
-        let (count, langs) = asset.quoted_lang_list();
+        let (count, langs) = asset.langid_list();
         if count > 0 {
             constants.push(format!(
-                r#"pub const {name}_LANGS: [&str; {count}] = [{langs}];"#,
+                r#"pub static {name}_LANGS: [LanguageIdentifier; {count}] = [{langs}];"#,
                 count = asset.localizations.len()
             ));
         }

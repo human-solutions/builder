@@ -1,6 +1,6 @@
 #[derive(Debug)]
 pub struct Asset {
-    pub langs: Option<&'static [&'static str]>,
+    pub langs: Option<&'static [LanguageIdentifier]>,
     pub encodings: &'static [&'static str],
     pub mime: &'static str,
 }

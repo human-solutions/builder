@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use common::RustNaming;
 
 #[derive(Debug)]
@@ -8,7 +10,7 @@ pub struct Asset {
     pub name: String,
     pub encodings: Vec<String>,
     pub mime: String,
-    pub localizations: Vec<String>,
+    pub localizations: HashSet<String>,
 }
 
 impl Asset {
@@ -23,15 +25,15 @@ impl Asset {
         (count, encodings)
     }
 
-    pub fn quoted_lang_list(&self) -> (usize, String) {
+    pub fn langid_list(&self) -> (usize, String) {
         let count = self.localizations.len();
-        let langs = self
+        let mut langs = self
             .localizations
             .iter()
-            .map(|l| format!(r#""{l}""#))
-            .collect::<Vec<_>>()
-            .join(", ");
-        (count, langs)
+            .map(|l| format!(r#"langid!("{l}")"#))
+            .collect::<Vec<_>>();
+        langs.sort();
+        (count, langs.join(", "))
     }
 
     pub fn url_const(&self, url_prefix: &str) -> String {

@@ -15,4 +15,4 @@ builder-command = { path = "../command" }
 camino.workspace = true
 fs-err.workspace = true
 log = "0.4"
-unic-langid.workspace = true
+icu_locid.workspace = true
