@@ -1,6 +1,5 @@
 use builder_command::SassCmd;
-use camino::Utf8Path;
-use common::out;
+use common::site_fs::{write_file_to_site, SiteFile};
 use lightningcss::{
     printer::PrinterOptions,
     stylesheet::StyleSheet,
@@ -10,9 +9,8 @@ use std::process::Command;
 use which::which;
 
 pub fn run(sass_cmd: &SassCmd) {
-    log::info!("Running builder-sass");
+    log::info!("Running builder-sass on {}", sass_cmd.in_scss);
 
-    log::info!("Running sass on {}", sass_cmd.in_scss);
     let mut css = if let Ok(sass) = which("sass") {
         log::debug!("Compiling sass with {sass:?}");
 
@@ -39,7 +37,7 @@ pub fn run(sass_cmd: &SassCmd) {
         css = css.replace(from, to);
     }
 
-    let name = format!("{}.css", sass_cmd.in_scss.file_stem().unwrap());
+    let site_file = SiteFile::new(sass_cmd.in_scss.file_stem().unwrap(), "css");
 
     if sass_cmd.optimize {
         log::info!("Optimizing css");
@@ -61,12 +59,8 @@ pub fn run(sass_cmd: &SassCmd) {
                 ..Default::default()
             })
             .unwrap();
-        out::write(
-            &sass_cmd.output,
-            out_css.code.as_bytes(),
-            &Utf8Path::new(&name),
-        );
+        write_file_to_site(&site_file, out_css.code.as_bytes(), &sass_cmd.output);
     } else {
-        out::write(&sass_cmd.output, css.as_bytes(), &Utf8Path::new(&name));
+        write_file_to_site(&site_file, css.as_bytes(), &sass_cmd.output);
     }
 }

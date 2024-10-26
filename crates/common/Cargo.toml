@@ -10,9 +10,11 @@ version.workspace = true
 [dependencies]
 builder-command = { path = "../command" }
 
+anyhow.workspace = true
 base64.workspace = true
 camino.workspace = true
 fs-err.workspace = true
+icu_locid.workspace = true
 log.workspace = true
 brotli.workspace = true
 flate2.workspace = true

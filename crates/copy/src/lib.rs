@@ -1,7 +1,5 @@
 use builder_command::CopyCmd;
-use camino::Utf8Path;
-use common::{out, Utf8PathExt};
-use fs_err as fs;
+use common::site_fs::copy_files_to_site;
 
 pub fn run(cmd: &CopyCmd) {
     log::info!("Running builder-copy");
@@ -11,15 +9,12 @@ pub fn run(cmd: &CopyCmd) {
         return;
     }
 
-    let to_copy = cmd.src_dir.ls_files_matching(|f| {
-        f.extension()
-            .map_or(false, |ext| cmd.file_extensions.contains(&ext.to_string()))
-    });
-
-    for file in to_copy {
-        let content = fs::read(&file).unwrap();
-        let filename = Utf8Path::new(file.file_name().unwrap());
-
-        out::write(&cmd.output, &content, &filename);
-    }
+    copy_files_to_site(
+        &cmd.src_dir,
+        |file| {
+            file.extension()
+                .map_or(false, |ext| cmd.file_extensions.contains(&ext.to_string()))
+        },
+        &cmd.output,
+    );
 }

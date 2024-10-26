@@ -2,7 +2,7 @@ use std::process::Command;
 
 use builder_command::FontForgeCmd;
 use camino::Utf8Path;
-use common::out;
+use common::site_fs::{write_file_to_site, SiteFile};
 use fs_err as fs;
 
 pub fn run(cmd: &FontForgeCmd) {
@@ -45,14 +45,12 @@ pub fn run(cmd: &FontForgeCmd) {
         log::info!("No change detected, skipping {sfd_file}");
     }
 
-    let contents = fs::read(&sfd_dir.join(name).with_extension("woff2")).unwrap();
+    let woff2_filename = format!("{name}.woff2");
+    let bytes = fs::read(&sfd_dir.join(&woff2_filename)).unwrap();
 
     log::info!("Generating output for {name}");
-    out::write(
-        &cmd.output,
-        &contents,
-        &Utf8Path::new(name).with_extension("woff2"),
-    );
+    let site_file = SiteFile::new(name, "woff2");
+    write_file_to_site(&site_file, &bytes, &cmd.output);
 }
 
 fn generate_woff2_otf(sfd_dir: &Utf8Path, name: &str) {

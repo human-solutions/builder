@@ -14,9 +14,14 @@ pub fn remove_content_of_dir<P: AsRef<Path>>(dir: P) {
         let entry = entry.unwrap();
         let path = entry.path();
         if path.is_dir() {
-            fs::remove_dir_all(&path).unwrap();
+            if path.exists() {
+                log::info!("Removing {path:?}");
+                fs::remove_dir_all(&path).unwrap();
+            } else {
+                log::error!("Path does not exist: {path:?}");
+            }
         } else {
-            log::info!("Removing {:?}", path);
+            log::info!("Removing {path:?}");
             fs::remove_file(&path).unwrap();
         }
     }

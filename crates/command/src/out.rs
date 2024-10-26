@@ -17,7 +17,15 @@ impl Display for Encoding {
 }
 
 impl Encoding {
-    pub fn as_str(&self) -> &str {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Encoding::Brotli => "Brotli",
+            Encoding::Gzip => "Gzip",
+            Encoding::Identity => "Identity",
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
         match self {
             Encoding::Brotli => "br",
             Encoding::Gzip => "gzip",
@@ -26,11 +34,20 @@ impl Encoding {
     }
 
     pub fn add_encoding(&self, path: &Utf8Path) -> Utf8PathBuf {
-        if *self == Encoding::Identity {
-            path.to_path_buf()
-        } else {
+        if let Some(enc) = self.file_ending() {
             let ext = path.extension().unwrap_or_default();
-            path.with_extension(format!("{ext}.{self}"))
+            if !ext.ends_with(enc) {
+                return path.with_extension(format!("{ext}.{enc}"));
+            }
+        }
+        path.to_path_buf()
+    }
+
+    pub fn file_ending(&self) -> Option<&str> {
+        match self {
+            Encoding::Brotli => Some("br"),
+            Encoding::Gzip => Some("gzip"),
+            Encoding::Identity => None,
         }
     }
 }
@@ -39,6 +56,8 @@ impl Encoding {
 pub struct Output {
     /// Folder where the output files should be written
     pub dir: Utf8PathBuf,
+
+    pub site_dir: Option<Utf8PathBuf>,
 
     brotli: bool,
 
@@ -56,6 +75,7 @@ impl Output {
     pub fn new<P: Into<Utf8PathBuf>>(dir: P) -> Self {
         Self {
             dir: dir.into(),
+            site_dir: None,
             brotli: false,
             gzip: false,
             uncompressed: false,
@@ -67,6 +87,7 @@ impl Output {
     pub fn new_compress_and_sum<P: Into<Utf8PathBuf>>(dir: P) -> Self {
         Self {
             dir: dir.into(),
+            site_dir: None,
             brotli: true,
             gzip: true,
             uncompressed: true,
@@ -78,12 +99,18 @@ impl Output {
     pub fn new_compress<P: Into<Utf8PathBuf>>(dir: P) -> Self {
         Self {
             dir: dir.into(),
+            site_dir: None,
             brotli: true,
             gzip: true,
             uncompressed: true,
             all_encodings: true,
             checksum: false,
         }
+    }
+
+    pub fn site_dir<P: Into<Utf8PathBuf>>(mut self, dir: P) -> Self {
+        self.site_dir = Some(dir.into());
+        self
     }
 
     pub fn uncompressed(&self) -> bool {

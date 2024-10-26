@@ -2,7 +2,7 @@
 mod tests;
 
 use builder_command::LocalizedCmd;
-use common::{dir::remove_content_of_dir, out::write_checksummed_variants};
+use common::site_fs::write_translations;
 use fs_err as fs;
 use icu_locid::LanguageIdentifier;
 
@@ -10,19 +10,16 @@ pub fn run(cmd: &LocalizedCmd) {
     log::info!("Running builder-localized");
 
     let variants = get_variants(cmd);
-
-    for out in &cmd.output {
-        remove_content_of_dir(&out.dir);
-
-        if !out.dir.exists() {
-            fs::create_dir_all(&out.dir).unwrap();
-        }
-        write_checksummed_variants(out, &cmd.file_extension, &variants);
-    }
+    let name = format!(
+        "{name}.{ext}",
+        name = cmd.input_dir.file_name().unwrap(),
+        ext = cmd.file_extension
+    );
+    write_translations(&name, &variants, &cmd.output);
 }
 
-fn get_variants(cmd: &LocalizedCmd) -> Vec<(String, Vec<u8>)> {
-    let mut variants: Vec<(String, Vec<u8>)> = Vec::new();
+fn get_variants(cmd: &LocalizedCmd) -> Vec<(LanguageIdentifier, Vec<u8>)> {
+    let mut variants: Vec<(LanguageIdentifier, Vec<u8>)> = Vec::new();
 
     // list all file names in folder
     for file in cmd.input_dir.read_dir_utf8().unwrap() {
@@ -39,11 +36,11 @@ fn get_variants(cmd: &LocalizedCmd) -> Vec<(String, Vec<u8>)> {
             let loc = file.path().file_stem().unwrap();
             let langid: LanguageIdentifier = loc.parse().unwrap();
             let content = fs::read(file.path()).unwrap();
-            variants.push((langid.to_string(), content));
+            variants.push((langid, content));
         }
     }
 
-    variants.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+    variants.sort_by(|a, b| a.0.total_cmp(&b.0));
 
     variants
 }

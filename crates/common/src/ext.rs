@@ -1,3 +1,4 @@
+use crate::{debug, warn};
 use camino::{Utf8DirEntry, Utf8Path, Utf8PathBuf};
 use fs_err as fs;
 use std::{collections::VecDeque, time::SystemTime};
@@ -57,11 +58,52 @@ impl RustNaming for str {
     }
 }
 
+pub trait StringExt {
+    fn prefixed(&self, ch: char) -> String;
+    fn postfixed(&self, ch: char) -> String;
+}
+
+impl StringExt for str {
+    fn prefixed(&self, ch: char) -> String {
+        format!("{ch}{self}")
+    }
+    fn postfixed(&self, ch: char) -> String {
+        format!("{self}{ch}")
+    }
+}
+
+pub trait OptStringExt {
+    fn prefixed_or_default(&self, ch: char) -> String;
+    fn postfixed_or_default(&self, ch: char) -> String;
+}
+
+impl OptStringExt for Option<String> {
+    fn prefixed_or_default(&self, ch: char) -> String {
+        self.as_ref().map(|s| s.prefixed(ch)).unwrap_or_default()
+    }
+    fn postfixed_or_default(&self, ch: char) -> String {
+        self.as_ref().map(|s| s.postfixed(ch)).unwrap_or_default()
+    }
+}
+
+impl OptStringExt for Option<&str> {
+    fn prefixed_or_default(&self, ch: char) -> String {
+        self.map(|s| s.prefixed(ch)).unwrap_or_default()
+    }
+    fn postfixed_or_default(&self, ch: char) -> String {
+        self.map(|s| s.postfixed(ch)).unwrap_or_default()
+    }
+}
+
 pub trait Utf8PathExt {
     fn push_ext(&self, ext: &str) -> Utf8PathBuf;
-    fn ls_files(&self) -> Vec<Utf8PathBuf>;
-    fn ls_files_matching<P: Fn(&Self) -> bool>(&self, predicate: P) -> Vec<Utf8PathBuf>;
-    fn ls_dirs_matching<P: Fn(&Utf8Path) -> bool>(&self, predicate: P) -> Vec<Utf8PathBuf>;
+    fn ls(&self) -> impl Iterator<Item = Utf8PathBuf>;
+    fn ls_recursive(&self) -> impl Iterator<Item = Utf8PathBuf>;
+    fn remove_dir_content_matching<P: Fn(&Utf8Path) -> bool>(
+        &self,
+        predicate: P,
+    ) -> std::io::Result<()>;
+
     fn relative_to(&self, base: &Utf8Path) -> Result<Utf8PathBuf, String>;
     fn create_dir_if_missing(&self) -> std::io::Result<()>;
     /// Returns the modification time of the file or
@@ -70,6 +112,51 @@ pub trait Utf8PathExt {
 }
 
 impl Utf8PathExt for Utf8Path {
+    fn remove_dir_content_matching<P: Fn(&Utf8Path) -> bool>(
+        &self,
+        predicate: P,
+    ) -> std::io::Result<()> {
+        if !self.exists() {
+            warn!("remove_dir_content_matching: path does not exist: {self}");
+            return Ok(());
+        }
+        for entry in self.read_dir_utf8()? {
+            let entry = entry?;
+            let path = entry.path();
+            if predicate(&path) {
+                if path.is_dir() {
+                    debug!("removing dir: {path}");
+                    fs::remove_dir_all(path)?;
+                } else {
+                    debug!("removing file: {path}");
+                    fs::remove_file(path)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn ls_recursive(&self) -> impl Iterator<Item = Utf8PathBuf> {
+        let mut entries: VecDeque<Utf8DirEntry> =
+            self.read_dir_utf8().unwrap().map(|e| e.unwrap()).collect();
+        std::iter::from_fn(move || {
+            while let Some(entry) = entries.pop_front() {
+                let filetype = entry.file_type().unwrap();
+                if filetype.is_dir() {
+                    entries.extend(entry.path().read_dir_utf8().unwrap().map(|e| e.unwrap()));
+                }
+                return Some(entry.path().to_path_buf());
+            }
+            None
+        })
+    }
+
+    fn ls(&self) -> impl Iterator<Item = Utf8PathBuf> {
+        self.read_dir_utf8()
+            .unwrap()
+            .map(|e| e.unwrap().path().to_path_buf())
+    }
+
     fn mtime(&self) -> Option<SystemTime> {
         self.metadata().ok().map(|md| md.modified().unwrap())
     }
@@ -88,17 +175,6 @@ impl Utf8PathExt for Utf8Path {
         s.push_str(ext);
         Utf8PathBuf::from(s)
     }
-    fn ls_files(&self) -> Vec<Utf8PathBuf> {
-        files_matching(self, &|_| true)
-    }
-
-    fn ls_files_matching<P: Fn(&Self) -> bool>(&self, predicate: P) -> Vec<Utf8PathBuf> {
-        files_matching(self, &predicate)
-    }
-
-    fn ls_dirs_matching<P: Fn(&Utf8Path) -> bool>(&self, predicate: P) -> Vec<Utf8PathBuf> {
-        dirs_matching(self, &predicate)
-    }
 
     fn relative_to(&self, base: &Utf8Path) -> Result<Utf8PathBuf, String> {
         let mut base = base.components();
@@ -112,36 +188,4 @@ impl Utf8PathExt for Utf8Path {
             self_components.collect::<Utf8PathBuf>().to_string(),
         ))
     }
-}
-
-fn dirs_matching<P: Fn(&Utf8Path) -> bool>(path: &Utf8Path, predicate: &P) -> Vec<Utf8PathBuf> {
-    let mut entries: VecDeque<Utf8DirEntry> =
-        path.read_dir_utf8().unwrap().map(|e| e.unwrap()).collect();
-    let mut dirs = Vec::new();
-    while let Some(entry) = entries.pop_front() {
-        let filetype = entry.file_type().unwrap();
-        if filetype.is_dir() {
-            if predicate(&entry.path()) {
-                dirs.push(entry.path().to_path_buf());
-            }
-            entries.extend(entry.path().read_dir_utf8().unwrap().map(|e| e.unwrap()));
-        }
-    }
-    dirs
-}
-
-fn files_matching<P: Fn(&Utf8Path) -> bool>(path: &Utf8Path, predicate: &P) -> Vec<Utf8PathBuf> {
-    let mut entries: VecDeque<Utf8DirEntry> =
-        path.read_dir_utf8().unwrap().map(|e| e.unwrap()).collect();
-    let mut files = Vec::new();
-    while let Some(entry) = entries.pop_front() {
-        let filetype = entry.file_type().unwrap();
-        if filetype.is_file() && predicate(&entry.path()) {
-            files.push(entry.path().to_path_buf());
-        }
-        if filetype.is_dir() {
-            entries.extend(entry.path().read_dir_utf8().unwrap().map(|e| e.unwrap()));
-        }
-    }
-    files
 }

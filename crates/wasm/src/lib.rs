@@ -1,8 +1,12 @@
 use base64::{engine::general_purpose::URL_SAFE, Engine};
 use builder_command::WasmCmd;
 use camino::Utf8PathBuf;
-use common::{is_release, out, Utf8PathExt};
-use fs_err::{self as fs};
+use common::{
+    is_release,
+    site_fs::{write_file_to_site, SiteFile},
+    Utf8PathExt,
+};
+use fs_err as fs;
 use std::{fs::File, hash::Hasher, process::Command};
 use wasm_opt::OptimizationOptions;
 
@@ -73,8 +77,9 @@ pub fn run(cmd: &WasmCmd) {
         .generate(&tmp_dir)
         .unwrap();
 
-    let files =
-        tmp_dir.ls_files_matching(|p| p.extension() == Some("wasm") || p.extension() == Some("js"));
+    let files = tmp_dir
+        .ls()
+        .filter(|p| p.extension() == Some("wasm") || p.extension() == Some("js"));
 
     if release {
         let tmp = tmp_dir.with_extension("wasm-opt.wasm");
@@ -99,16 +104,17 @@ pub fn run(cmd: &WasmCmd) {
     let hash = URL_SAFE.encode(hasher.finish().to_be_bytes());
 
     for opts in cmd.output.iter() {
+        // TODO: use the hash as the dir name
         opts.dir
-            .ls_dirs_matching(|dir| dir.as_str().ends_with("wasm"))
-            .iter()
+            .ls()
+            .filter(|dir| dir.as_str().starts_with("wasm"))
             .for_each(|dir| {
                 log::debug!("Removing old wasm dir {dir}");
                 fs::remove_dir_all(dir).unwrap();
             });
 
         let hash_dir = if opts.checksum {
-            Utf8PathBuf::from(format!("{hash}wasm"))
+            Utf8PathBuf::from(format!("wasm.{hash}"))
         } else {
             Utf8PathBuf::from("wasm")
         };
@@ -119,10 +125,8 @@ pub fn run(cmd: &WasmCmd) {
         let opts = [opts];
 
         for (file, contents) in file_and_content.iter() {
-            log::debug!("Join file {file} with dir {hash_dir}");
-            let path = hash_dir.join(&file);
-
-            out::write(opts.iter(), &contents, &path);
+            let site_file = SiteFile::from_file(&file).with_dir(&hash_dir);
+            write_file_to_site(&site_file, &contents, &opts);
         }
     }
     log::debug!("Removing tmp dir {tmp_dir}");

@@ -1,9 +1,9 @@
-use crate::asset::Asset;
-use common::RustNaming;
+use crate::{asset_ext::AssetExt, mime::mime_from_ext};
+use common::{site_fs::Asset, RustNaming};
 
-pub fn generate_code(assets: &[Asset], url_prefix: &str) -> String {
+pub fn generate_code(assets: &[Asset]) -> String {
     let statics = static_vars(assets);
-    let constants = url_constants(assets, url_prefix);
+    let constants = url_constants(assets);
 
     let matching = match_list(assets);
     format!(
@@ -40,12 +40,12 @@ fn match_list(assets: &[Asset]) -> String {
         } else {
             format!("&{const_name}_ENC")
         };
-        let langs = if asset.localizations.is_empty() {
+        let langs = if asset.translations.is_empty() {
             "None".to_string()
         } else {
             format!("Some(&{const_name}_LANGS)")
         };
-        let mime = &asset.mime;
+        let mime = mime_from_ext(&asset.ext);
         matches.push(format!(
             r#"        {const_name}_URL => Some(Asset {{
                 mime: "{mime}",
@@ -58,10 +58,10 @@ fn match_list(assets: &[Asset]) -> String {
     matches.join("\n")
 }
 
-fn url_constants(assets: &[Asset], url_prefix: &str) -> String {
+fn url_constants(assets: &[Asset]) -> String {
     let mut constants = assets
         .iter()
-        .map(|asset| asset.url_const(url_prefix))
+        .map(|asset| asset.url_const())
         .collect::<Vec<_>>();
     constants.sort();
     constants.join("\n")
@@ -84,7 +84,7 @@ fn static_vars(assets: &[Asset]) -> String {
         if count > 0 {
             constants.push(format!(
                 r#"pub static {name}_LANGS: [LanguageIdentifier; {count}] = [{langs}];"#,
-                count = asset.localizations.len()
+                count = asset.translations.len()
             ));
         }
     }
