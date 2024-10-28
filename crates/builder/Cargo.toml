@@ -25,4 +25,4 @@ fs-err.workspace = true
 toml.workspace = true
 
 [dev-dependencies]
-insta = "1.40"
+insta = "1.41"
