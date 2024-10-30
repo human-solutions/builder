@@ -58,8 +58,6 @@ pub fn copy_files_to_site<F: Fn(&Utf8PathBuf) -> bool>(
 }
 
 pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output]) {
-    let mut checksum: Option<String> = None;
-
     for out in output {
         let mut subdir = Utf8PathBuf::new();
         if let Some(dir) = &out.site_dir {
@@ -69,13 +67,15 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
             subdir.push(dir);
         }
 
-        if out.checksum && checksum.is_none() {
-            checksum = Some(checksum_from(&bytes));
-        }
+        let checksum = if out.checksum {
+            Some(checksum_from(&bytes))
+        } else {
+            None
+        };
         let asset = AssetPath {
             subdir: subdir.into(),
             name_ext: site_file.clone(),
-            hash: checksum.clone(),
+            checksum,
         };
         let path = asset.absolute_path(&out.dir);
         debug!("Writing to {path}");
@@ -93,7 +93,6 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
 ) {
     let rel_path = rel_path.into();
     debug!("Writing translations for {rel_path}");
-    let mut checksum: Option<String> = None;
 
     for out in output {
         let mut site_dir = Utf8PathBuf::new();
@@ -118,13 +117,16 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
             })
             .unwrap();
 
-        if out.checksum && checksum.is_none() {
-            let new_sum = checksum_for_all(lang_and_bytes.iter().map(|(_, b)| b.as_slice()));
-            checksum = Some(new_sum);
-        }
+        let checksum = if out.checksum {
+            Some(checksum_for_all(
+                lang_and_bytes.iter().map(|(_, b)| b.as_slice()),
+            ))
+        } else {
+            None
+        };
         let mut asset = TranslatedAssetPath {
             site_file,
-            checksum: checksum.clone(),
+            checksum,
             lang: "".to_string(),
         };
         for (lang, bytes) in lang_and_bytes {

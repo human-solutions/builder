@@ -23,7 +23,7 @@ fn single_uncompressed() {
     let font_path = AssetPath {
         subdir: "".into(),
         name_ext: SiteFile::new("font", "woff2"),
-        hash: None,
+        checksum: None,
     }
     .absolute_path(&tmp_dir);
     println!("font_path: {font_path}");
@@ -55,7 +55,7 @@ fn single_hashed() {
     let font_path = AssetPath {
         subdir: "".into(),
         name_ext: SiteFile::new("font", "woff2"),
-        hash: Some(hash.clone()),
+        checksum: Some(hash.clone()),
     }
     .absolute_path(&tmp_dir);
     println!("font_path: {font_path}");
@@ -85,7 +85,7 @@ fn single_compressed() {
     let font_path = AssetPath {
         subdir: "".into(),
         name_ext: SiteFile::new("font", "woff2"),
-        hash: None,
+        checksum: None,
     }
     .absolute_path(&tmp_dir);
 
@@ -114,7 +114,7 @@ fn single_in_subfolder() {
     let font_path = AssetPath {
         subdir: "fonts".into(),
         name_ext: SiteFile::new("font", "woff2"),
-        hash: None,
+        checksum: None,
     }
     .absolute_path(&tmp_dir);
 
@@ -222,7 +222,7 @@ fn multiple() {
     let font_path = AssetPath {
         subdir: "fonts".into(),
         name_ext: SiteFile::new("font", "woff2"),
-        hash: None,
+        checksum: None,
     }
     .absolute_path(&tmp_dir);
 
@@ -230,7 +230,7 @@ fn multiple() {
     let image_path = AssetPath {
         subdir: "".into(),
         name_ext: SiteFile::new("image", "svg"),
-        hash: Some(img_hash.clone()),
+        checksum: Some(img_hash.clone()),
     }
     .absolute_path(&tmp_dir);
 

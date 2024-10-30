@@ -55,7 +55,7 @@ impl Display for SiteFile {
 pub struct AssetPath {
     pub subdir: Utf8PathBuf,
     pub name_ext: SiteFile,
-    pub hash: Option<String>,
+    pub checksum: Option<String>,
 }
 
 impl AssetPath {
@@ -63,7 +63,7 @@ impl AssetPath {
         let filename = format!(
             "{name}{hash}.{ext}",
             name = self.name_ext.name,
-            hash = self.hash.prefixed_or_default('.'),
+            hash = self.checksum.prefixed_or_default('.'),
             ext = self.name_ext.ext
         );
         site_root.join(&self.subdir).join(filename)
