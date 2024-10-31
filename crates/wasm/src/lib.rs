@@ -106,8 +106,8 @@ pub fn run(cmd: &WasmCmd) {
     for opts in cmd.output.iter() {
         // TODO: use the hash as the dir name
         opts.dir
-            .ls()
-            .filter(|dir| dir.as_str().starts_with("wasm"))
+            .ls_recursive()
+            .filter(|dir| dir.file_name().map_or(false, |n| n.starts_with("wasm")))
             .for_each(|dir| {
                 log::debug!("Removing old wasm dir {dir}");
                 fs::remove_dir_all(dir).unwrap();

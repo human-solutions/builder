@@ -15,6 +15,8 @@ pub fn mime_from_ext(ext: &str) -> &'static str {
         "application/manifest+json"
     } else if ext.ends_with("png") {
         "image/png"
+    } else if ext.ends_with("html") {
+        "text/html"
     } else {
         panic!("Missing mapping file ext '{ext}' -> mime type. Please add it to mime.rs")
     }
