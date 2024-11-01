@@ -7,9 +7,8 @@ use std::{
 use anyhow::Result;
 use brotli::{enc::BrotliEncoderParams, BrotliCompress};
 use builder_command::{Encoding, Output};
-use camino::Utf8Path;
+use camino_fs::*;
 use flate2::{Compression, GzBuilder};
-use fs_err as fs;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AssetEncodings {
@@ -83,9 +82,7 @@ impl AssetEncodings {
 
     pub fn write(&self, path: &Utf8Path, bytes: &[u8]) -> Result<()> {
         if let Some(dir) = path.parent() {
-            if !dir.exists() {
-                fs::create_dir_all(dir)?;
-            }
+            dir.mkdirs()?;
         }
         for enc in *self {
             enc.write(path, bytes, is_release())?;
@@ -149,12 +146,12 @@ impl EncodedWrite for Encoding {
             Encoding::Brotli => brotli(contents, relase),
             Encoding::Gzip => gzip(contents, relase),
             Encoding::Identity => {
-                fs::write(path, contents)?;
+                path.write(contents)?;
                 return Ok(());
             }
         };
 
-        fs::write(&path, encoded)?;
+        path.write(encoded)?;
         Ok(())
     }
 }

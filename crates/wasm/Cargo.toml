@@ -12,8 +12,7 @@ common = { path = "../common" }
 builder-command = { path = "../command" }
 
 base64.workspace = true
-camino.workspace = true
-fs-err.workspace = true
+camino-fs.workspace = true
 log.workspace = true
 seahash.workspace = true
 wasm-bindgen-cli-support.workspace = true

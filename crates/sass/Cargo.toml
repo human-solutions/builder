@@ -11,7 +11,6 @@ version.workspace = true
 common = { path = "../common" }
 builder-command = { path = "../command" }
 
-camino.workspace = true
 grass.workspace = true
 lightningcss.workspace = true
 log.workspace = true

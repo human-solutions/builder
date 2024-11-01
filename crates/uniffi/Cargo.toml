@@ -10,8 +10,7 @@ version.workspace = true
 [dependencies]
 builder-command = { path = "../command" }
 
-camino.workspace = true
-fs-err.workspace = true
+camino-fs.workspace = true
 log.workspace = true
 uniffi_bindgen.workspace = true
 serde_json.workspace = true

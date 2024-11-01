@@ -10,19 +10,19 @@ pub use asset::Asset;
 pub use asset_path::{AssetPath, SiteFile, TranslatedAssetPath};
 use base64::{engine::general_purpose::URL_SAFE, Engine};
 use builder_command::Output;
-use camino::{Utf8Path, Utf8PathBuf};
+use camino_fs::*;
 pub use encoding::AssetEncodings;
-use fs_err as fs;
 use icu_locid::LanguageIdentifier;
 use seahash::SeaHasher;
 use std::{collections::BTreeMap, hash::Hasher};
 
-use crate::Utf8PathExt;
-
 pub fn parse_site(root: &Utf8Path) -> Result<Vec<Asset>> {
     let mut assets: BTreeMap<String, Asset> = Default::default();
 
-    for path in root.ls_recursive() {
+    for path in root.ls().recurse() {
+        if path.file_name() == Some(".DS_Store") {
+            continue;
+        }
         let rel_path = path.relative_to(&root).unwrap();
         crate::debug!("Parsing asset from {rel_path}");
         if let Some(asset) = Asset::from_site_path(&rel_path) {
@@ -49,7 +49,7 @@ pub fn copy_files_to_site<F: Fn(&Utf8PathBuf) -> bool>(
             debug!("Skipping non-file {file}");
             continue;
         }
-        let bytes = fs::read(&file).unwrap();
+        let bytes = file.read_bytes().unwrap();
         let rel_path = file.relative_to(folder).unwrap();
         let site_file = SiteFile::from_file(&rel_path);
         debug!("Copying {file} to {site_file}");
@@ -110,7 +110,7 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
 
         out.dir
             .join(site_dir)
-            .remove_dir_content_matching(|p| {
+            .rm_matching(|p| {
                 p.file_name()
                     .map_or(false, |f| f.starts_with(&site_file.name))
                     && p.extension().map_or(false, |e| e == &site_file.ext)

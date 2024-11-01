@@ -12,7 +12,6 @@ version.workspace = true
 common = { path = "../common" }
 builder-command = { path = "../command" }
 
-camino.workspace = true
-fs-err.workspace = true
+camino-fs.workspace = true
 log = "0.4"
 icu_locid.workspace = true

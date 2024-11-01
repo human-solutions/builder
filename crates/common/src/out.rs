@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    fs::File,
     hash::Hasher,
     io::{Cursor, Write},
 };
@@ -7,12 +8,11 @@ use std::{
 use base64::{engine::general_purpose::URL_SAFE, Engine};
 use brotli::{enc::BrotliEncoderParams, BrotliCompress};
 use builder_command::{Encoding, Output};
-use camino::Utf8Path;
+use camino_fs::*;
 use flate2::{Compression, GzBuilder};
-use fs_err as fs;
 use seahash::SeaHasher;
 
-use crate::{dir, ext::Utf8PathExt, is_release};
+use crate::is_release;
 
 pub fn write_checksummed_variants(
     opts: &Output,
@@ -51,9 +51,11 @@ where
             out.dir.clone()
         };
         if !out_dir.exists() {
-            fs::create_dir_all(&out_dir).unwrap();
+            out_dir.mkdirs().unwrap();
         } else {
-            dir::remove_files_containing(&out_dir, filename);
+            out_dir
+                .rm_matching(|path| path.file_name() == Some(filename))
+                .unwrap();
         }
         let filename = if out.checksum {
             let mut checksummer = SeaHasher::new();
@@ -78,13 +80,13 @@ fn compress_and_write(opts: &Output, contents: &[u8], path: &Utf8Path) {
 
     if opts.uncompressed() {
         log::debug!("Writing uncompressed file '{:?}'", path);
-        fs::write(path, contents).unwrap();
+        path.write(contents).unwrap();
     }
     if opts.brotli() {
-        let path = path.push_ext("br");
+        let path = path.join_ext("br");
         log::debug!("Writing brotli file '{:?}'", path);
 
-        let mut file = fs::File::create(path).unwrap();
+        let mut file = File::create(path).unwrap();
         let mut cursor = Cursor::new(&contents);
 
         let params = BrotliEncoderParams {
@@ -95,10 +97,10 @@ fn compress_and_write(opts: &Output, contents: &[u8], path: &Utf8Path) {
     }
 
     if opts.gzip() {
-        let path = path.push_ext("gzip");
+        let path = path.join_ext("gzip");
         log::debug!("Writing gzip file '{:?}'", path);
 
-        let f = fs::File::create(path).unwrap();
+        let f = File::create(path).unwrap();
         let mut gz = GzBuilder::new().write(f, Compression::default());
         gz.write_all(contents).unwrap();
         gz.finish().unwrap();
@@ -122,7 +124,8 @@ impl EncodingOutput for Encoding {
     fn write(&self, path: &Utf8Path, contents: &[u8]) {
         let path = self.add_encoding(path);
         log::debug!("Writing file '{:?}'", path);
-        fs::write(&path, contents).unwrap();
+
+        path.write(contents).unwrap();
     }
 }
 

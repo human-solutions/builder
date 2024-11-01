@@ -1,12 +1,10 @@
 use base64::{engine::general_purpose::URL_SAFE, Engine};
 use builder_command::WasmCmd;
-use camino::Utf8PathBuf;
+use camino_fs::*;
 use common::{
     is_release,
     site_fs::{write_file_to_site, SiteFile},
-    Utf8PathExt,
 };
-use fs_err as fs;
 use std::{fs::File, hash::Hasher, process::Command};
 use wasm_opt::OptimizationOptions;
 
@@ -39,7 +37,7 @@ pub fn run(cmd: &WasmCmd) {
     }
 
     let tmp_dir = Utf8PathBuf::from("target/wasm_tmp");
-    tmp_dir.create_dir_if_missing().unwrap();
+    tmp_dir.mkdir().unwrap();
 
     let wasm_path = Utf8PathBuf::from(format!(
         "target/wasm32-unknown-unknown/{}/{package_name}.wasm",
@@ -57,11 +55,9 @@ pub fn run(cmd: &WasmCmd) {
             return;
         }
     } else {
-        fs::write(
-            &wasm_mtime_path,
-            "this file has the mtime of the last time the wasm was built",
-        )
-        .unwrap();
+        wasm_mtime_path
+            .write("this file has the mtime of the last time the wasm was built")
+            .unwrap();
     }
     let wasm_mtime_file = File::open(&wasm_mtime_path).unwrap();
     wasm_mtime_file.set_modified(wasm_mtime).unwrap();
@@ -87,15 +83,15 @@ pub fn run(cmd: &WasmCmd) {
         OptimizationOptions::new_optimize_for_size_aggressively()
             .run(&wasm_path, &tmp)
             .unwrap();
-        fs::rename(&tmp, &wasm_path).unwrap();
+        tmp.mv(wasm_path).unwrap();
     }
 
     let mut hasher = seahash::SeaHasher::new();
     let file_and_content = files
         .into_iter()
         .map(|p| {
-            let p = p.relative_to(&tmp_dir).unwrap();
-            let content = fs::read(tmp_dir.join(&p)).unwrap();
+            let p = p.relative_to(&tmp_dir).unwrap().to_path_buf();
+            let content = tmp_dir.join(&p).read_bytes().unwrap();
             hasher.write(&content);
             (p, content)
         })
@@ -106,11 +102,12 @@ pub fn run(cmd: &WasmCmd) {
     for opts in cmd.output.iter() {
         // TODO: use the hash as the dir name
         opts.dir
-            .ls_recursive()
+            .ls()
+            .recurse()
             .filter(|dir| dir.file_name().map_or(false, |n| n.starts_with("wasm")))
             .for_each(|dir| {
                 log::debug!("Removing old wasm dir {dir}");
-                fs::remove_dir_all(dir).unwrap();
+                dir.rm().unwrap();
             });
 
         let hash_dir = if opts.checksum {
@@ -130,5 +127,5 @@ pub fn run(cmd: &WasmCmd) {
         }
     }
     log::debug!("Removing tmp dir {tmp_dir}");
-    fs::remove_dir_all(&tmp_dir).unwrap();
+    tmp_dir.rm().unwrap();
 }

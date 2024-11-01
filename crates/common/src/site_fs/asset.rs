@@ -2,7 +2,7 @@ use std::{fmt::Display, str::Split};
 
 use super::AssetEncodings;
 use crate::debug;
-use camino::{Utf8Path, Utf8PathBuf};
+use camino_fs::{Utf8Path, Utf8PathBuf};
 use icu_locid::LanguageIdentifier;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

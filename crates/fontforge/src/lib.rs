@@ -1,9 +1,8 @@
 use std::process::Command;
 
 use builder_command::FontForgeCmd;
-use camino::Utf8Path;
+use camino_fs::*;
 use common::site_fs::{write_file_to_site, SiteFile};
-use fs_err as fs;
 
 pub fn run(cmd: &FontForgeCmd) {
     log::info!("Running builder-fontforge");
@@ -14,14 +13,14 @@ pub fn run(cmd: &FontForgeCmd) {
     if !sfd_file.exists() {
         panic!("File not found: {:?}", sfd_file);
     }
-    let sfd_bytes = fs::read(sfd_file).unwrap();
+    let sfd_bytes = sfd_file.read_bytes().unwrap();
     let hash = format!("{:x}", seahash::hash(&sfd_bytes));
 
     let sfd_dir = sfd_file.parent().unwrap();
 
     let generate_woff2 = if sum_file.exists() {
         log::debug!("Reading hash from {sum_file}");
-        let current_hash = fs::read_to_string(&sum_file).unwrap();
+        let current_hash = sum_file.read_string().unwrap();
         hash != current_hash
     } else {
         true
@@ -31,7 +30,7 @@ pub fn run(cmd: &FontForgeCmd) {
         generate_woff2_otf(sfd_dir, name);
 
         log::debug!("Writing hash to {sum_file}");
-        fs::write(sum_file, hash.as_bytes()).unwrap();
+        sum_file.write(hash).unwrap();
 
         let otf_file = sfd_dir.join(name).with_extension("otf");
 
@@ -39,14 +38,14 @@ pub fn run(cmd: &FontForgeCmd) {
         if cfg!(target_os = "macos") {
             macos_install_font(&otf_file, name);
         }
-        fs::remove_file(&otf_file).unwrap();
+        otf_file.rm().unwrap();
         log::info!("Removed {otf_file}");
     } else {
         log::info!("No change detected, skipping {sfd_file}");
     }
 
     let woff2_filename = format!("{name}.woff2");
-    let bytes = fs::read(&sfd_dir.join(&woff2_filename)).unwrap();
+    let bytes = sfd_dir.join(&woff2_filename).read_bytes().unwrap();
 
     log::info!("Generating output for {name}");
     let site_file = SiteFile::new(name, "woff2");
@@ -75,5 +74,5 @@ fn macos_install_font(otf_file: &Utf8Path, name: &str) {
         .join("Library/Fonts")
         .join(name)
         .with_extension("otf");
-    fs::copy(&otf_file, dest).unwrap();
+    otf_file.cp(dest).unwrap();
 }

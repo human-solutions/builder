@@ -1,15 +1,12 @@
 use builder_command::Output;
-use camino::Utf8PathBuf;
-use fs_err as fs;
+use camino_fs::*;
 
 use crate::{run, LocalizedCmd};
 
 fn clean_out_dir(dir: &str) -> Utf8PathBuf {
     let output_dir = Utf8PathBuf::from(dir);
-    if output_dir.exists() {
-        fs::remove_dir_all(&output_dir).unwrap();
-    }
-    fs::create_dir_all(&output_dir).unwrap();
+    output_dir.rm().unwrap();
+    output_dir.mkdirs().unwrap();
     output_dir
 }
 

@@ -2,8 +2,8 @@
 mod tests;
 
 use builder_command::LocalizedCmd;
+use camino_fs::*;
 use common::site_fs::write_translations;
-use fs_err as fs;
 use icu_locid::LanguageIdentifier;
 
 pub fn run(cmd: &LocalizedCmd) {
@@ -22,20 +22,16 @@ fn get_variants(cmd: &LocalizedCmd) -> Vec<(LanguageIdentifier, Vec<u8>)> {
     let mut variants: Vec<(LanguageIdentifier, Vec<u8>)> = Vec::new();
 
     // list all file names in folder
-    for file in cmd.input_dir.read_dir_utf8().unwrap() {
-        let file = file.unwrap();
-        let file_type = file.file_type().unwrap();
-
+    for file in cmd.input_dir.ls() {
         let file_extension_match = file
-            .path()
             .extension()
             .map(|ext| ext == cmd.file_extension)
             .unwrap_or_default();
 
-        if file_type.is_file() && file_extension_match {
-            let loc = file.path().file_stem().unwrap();
+        if file.is_file() && file_extension_match {
+            let loc = file.file_stem().unwrap();
             let langid: LanguageIdentifier = loc.parse().unwrap();
-            let content = fs::read(file.path()).unwrap();
+            let content = file.read_bytes().unwrap();
             variants.push((langid, content));
         }
     }

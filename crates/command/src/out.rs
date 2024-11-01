@@ -1,6 +1,6 @@
+use camino_fs::*;
 use std::fmt::Display;
 
-use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

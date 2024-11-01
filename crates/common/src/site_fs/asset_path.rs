@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use camino::{Utf8Path, Utf8PathBuf};
+use camino_fs::{Utf8Path, Utf8PathBuf};
 
 use crate::ext::OptStringExt;
 

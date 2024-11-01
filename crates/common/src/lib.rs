@@ -1,4 +1,3 @@
-pub mod dir;
 mod envargs;
 mod ext;
 pub mod out;
@@ -12,7 +11,7 @@ use std::env;
 use std::sync::OnceLock;
 
 pub use envargs::CargoEnv;
-pub use ext::{RustNaming, Utf8PathExt};
+pub use ext::RustNaming;
 
 pub static RELEASE: OnceLock<bool> = OnceLock::new();
 

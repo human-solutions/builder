@@ -19,9 +19,8 @@ builder-command = { path = "../command" }
 builder-wasm = { path = "../wasm" }
 common = { path = "../common" }
 
-camino.workspace = true
+camino-fs.workspace = true
 cargo_metadata.workspace = true
-fs-err.workspace = true
 toml.workspace = true
 
 [dev-dependencies]

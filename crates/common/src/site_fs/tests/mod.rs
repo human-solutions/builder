@@ -1,6 +1,5 @@
 use builder_command::Encoding;
-use camino::Utf8PathBuf;
-use fs_err as fs;
+use camino_fs::{Utf8PathBuf, Utf8PathExt};
 use icu_locid::langid;
 
 use crate::site_fs::{
@@ -10,9 +9,9 @@ use crate::site_fs::{
 fn create_tmp_dir(path: &str) -> Utf8PathBuf {
     let path = Utf8PathBuf::from(path);
     if path.exists() {
-        fs::remove_dir_all(&path).unwrap();
+        path.rm().unwrap();
     }
-    fs::create_dir_all(&path).unwrap();
+    path.mkdirs().unwrap();
     path
 }
 
@@ -118,7 +117,7 @@ fn single_in_subfolder() {
     }
     .absolute_path(&tmp_dir);
 
-    fs::create_dir(tmp_dir.join("fonts")).unwrap();
+    tmp_dir.join("fonts").mkdir().unwrap();
 
     AssetEncodings::uncompressed()
         .write(&font_path, "font content".as_bytes())
@@ -149,7 +148,7 @@ fn single_translated() {
     };
     let en_path = path.absolute_path(&tmp_dir);
     println!("en_path: {en_path}");
-    fs::create_dir(en_path.parent().unwrap()).unwrap();
+    en_path.parent().unwrap().mkdir().unwrap();
 
     path.lang = "de".into();
     let de_path = path.absolute_path(&tmp_dir);
@@ -188,7 +187,7 @@ fn single_hashed_translated() {
     };
     let en_path = path.absolute_path(&tmp_dir);
     println!("en_path: {en_path}");
-    fs::create_dir(en_path.parent().unwrap()).unwrap();
+    en_path.parent().unwrap().mkdir().unwrap();
 
     path.lang = "de".into();
     let de_path = path.absolute_path(&tmp_dir);

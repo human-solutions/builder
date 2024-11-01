@@ -2,9 +2,8 @@ use core::panic;
 use std::env;
 
 use builder_command::{BuilderCmd, Cmd};
-use camino::Utf8Path;
+use camino_fs::*;
 use common::{setup_logging, RELEASE};
-use fs_err as fs;
 
 fn main() {
     let args = std::env::args().collect::<Vec<_>>();
@@ -18,7 +17,7 @@ fn main() {
     if !file.is_file() {
         panic!("File not found: {:?}", file);
     }
-    let bytes = fs::read_to_string(file).unwrap();
+    let bytes = file.read_string().unwrap();
     let builder: BuilderCmd = toml::from_str(&bytes).unwrap();
 
     RELEASE.set(builder.release).unwrap();

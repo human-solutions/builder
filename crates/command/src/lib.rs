@@ -10,7 +10,7 @@ mod wasm;
 use std::{env, path::Path, process::Command};
 
 pub use assemble::AssembleCmd;
-use camino::Utf8PathBuf;
+use camino_fs::Utf8PathBuf;
 pub use copy::CopyCmd;
 pub use fontforge::FontForgeCmd;
 pub use localized::LocalizedCmd;

@@ -11,6 +11,4 @@ authors.workspace = true
 common = { path = "../common" }
 builder-command = { path = "../command" }
 
-fs-err.workspace = true
-camino.workspace = true
 log.workspace = true
