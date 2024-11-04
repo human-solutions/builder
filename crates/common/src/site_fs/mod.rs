@@ -19,12 +19,13 @@ use std::{collections::BTreeMap, hash::Hasher};
 pub fn parse_site(root: &Utf8Path) -> Result<Vec<Asset>> {
     let mut assets: BTreeMap<String, Asset> = Default::default();
 
+    debug!("Parsing site {root}");
     for path in root.ls().recurse() {
         if path.file_name() == Some(".DS_Store") {
             continue;
         }
         let rel_path = path.relative_to(&root).unwrap();
-        crate::debug!("Parsing asset from {rel_path}");
+        debug!("Parsing asset from {rel_path}");
         if let Some(asset) = Asset::from_site_path(&rel_path) {
             let url = asset.to_url();
             if let Some(current) = assets.get_mut(&url) {

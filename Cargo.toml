@@ -5,7 +5,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.10"
+version = "0.1.11"
 repository = "https://github.com/human-solutions/builder"
 license = "MIT"
 edition = "2021"
@@ -40,7 +40,7 @@ install-updater = false
 anyhow = "1.0"
 base64 = "0.22"
 brotli = "7.0"
-camino-fs = { git = "https://github.com/human-solutions/camino-fs", tag = "v0.1.0", features = [
+camino-fs = { git = "https://github.com/human-solutions/camino-fs", tag = "v0.1.2", features = [
     "serde",
 ] }
 cargo_metadata = "0.18"
