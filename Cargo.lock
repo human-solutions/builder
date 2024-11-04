@@ -412,8 +412,8 @@ dependencies = [
 
 [[package]]
 name = "camino-fs"
-version = "0.1.1"
-source = "git+https://github.com/human-solutions/camino-fs?tag=v0.1.1#14096217f5c13dcf9561d5634308ef0ca3b86d8f"
+version = "0.1.2"
+source = "git+https://github.com/human-solutions/camino-fs?tag=v0.1.2#b6cc2ec576e844e5ed6b1179fbb9d829df858b6f"
 dependencies = [
  "camino",
 ]
