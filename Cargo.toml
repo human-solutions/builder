@@ -5,7 +5,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.11"
+version = "0.1.12"
 repository = "https://github.com/human-solutions/builder"
 license = "MIT"
 edition = "2021"
@@ -46,7 +46,7 @@ camino-fs = { git = "https://github.com/human-solutions/camino-fs", tag = "v0.1.
 cargo_metadata = "0.18"
 flate2 = "1.0"
 grass = "0.13"
-lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }
+lightningcss = { version = "1.0.0-alpha.60", features = ["browserslist"] }
 log = "0.4"
 seahash = "4.1"
 serde = { version = "1.0", features = ["derive"] }
@@ -59,4 +59,4 @@ tempfile = "3.13"
 time = "0.3"
 wasm-bindgen-cli-support = "0.2"
 wasm-opt = "0.116"
-which = "6.0"
+which = "7.0"

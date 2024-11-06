@@ -73,11 +73,27 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
         } else {
             None
         };
+
         let asset = AssetPath {
             subdir: subdir.into(),
             name_ext: site_file.clone(),
             checksum,
         };
+
+        // remove any files that have the same name and extension
+        out.dir
+            .join(&asset.subdir)
+            .ls()
+            .files()
+            .filter(|path| {
+                path.file_name()
+                    .map(|name| {
+                        name.starts_with(&asset.name_ext.name) && name.contains(&asset.name_ext.ext)
+                    })
+                    .unwrap_or(false)
+            })
+            .for_each(|f| f.rm().unwrap());
+
         let path = asset.absolute_path(&out.dir);
         debug!("Writing to {path}");
         let encodings = AssetEncodings::from_output(out);
