@@ -11,6 +11,7 @@ pub fn run(cmd: &CopyCmd) {
 
     copy_files_to_site(
         &cmd.src_dir,
+        cmd.recursive,
         |file| {
             file.extension()
                 .map_or(false, |ext| cmd.file_extensions.contains(&ext.to_string()))

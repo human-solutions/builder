@@ -42,17 +42,18 @@ pub fn parse_site(root: &Utf8Path) -> Result<Vec<Asset>> {
 /// folder structure.
 pub fn copy_files_to_site<F: Fn(&Utf8PathBuf) -> bool>(
     folder: &Utf8Path,
+    recursive: bool,
     predicate: F,
     output: &[Output],
 ) {
-    for file in folder.ls().filter(predicate) {
+    for file in folder.ls().recurse_if(move |_| recursive).filter(predicate) {
         if !file.is_file() {
             debug!("Skipping non-file {file}");
             continue;
         }
         let bytes = file.read_bytes().unwrap();
         let rel_path = file.relative_to(folder).unwrap();
-        let site_file = SiteFile::from_file(&rel_path);
+        let site_file = SiteFile::from_relative_path(&rel_path);
         debug!("Copying {file} to {site_file}");
         write_file_to_site(&site_file, &bytes, output);
     }
