@@ -46,7 +46,7 @@ camino-fs = { git = "https://github.com/human-solutions/camino-fs", tag = "v0.1.
 cargo_metadata = "0.18"
 flate2 = "1.0"
 grass = "0.13"
-lightningcss = { version = "1.0.0-alpha.60", features = ["browserslist"] }
+lightningcss = { version = "1.0.0-alpha.61", features = ["browserslist"] }
 log = "0.4"
 seahash = "4.1"
 serde = { version = "1.0", features = ["derive"] }
