@@ -4,6 +4,7 @@ mod fontforge;
 mod localized;
 mod out;
 mod sass;
+mod swift_package;
 mod uniffi;
 mod wasm;
 
@@ -18,6 +19,7 @@ pub use out::{Encoding, Output};
 pub use sass::SassCmd;
 use serde::{Deserialize, Serialize};
 use std::fs;
+pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
 pub use wasm::WasmCmd;
 
@@ -88,6 +90,12 @@ impl BuilderCmd {
         self
     }
 
+    /// Add a SwiftPackageCmd using it's builder
+    pub fn add_swift_package(mut self, cmd: SwiftPackageCmd) -> Self {
+        self.cmds.push(Cmd::SwiftPackage(cmd));
+        self
+    }
+
     pub fn verbose(mut self, val: bool) -> Self {
         self.verbose = val;
         self
@@ -148,4 +156,5 @@ pub enum Cmd {
     Assemble(AssembleCmd),
     Wasm(WasmCmd),
     Copy(CopyCmd),
+    SwiftPackage(SwiftPackageCmd),
 }
