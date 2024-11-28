@@ -17,6 +17,7 @@ builder-localized = { path = "../localized" }
 builder-uniffi = { path = "../uniffi" }
 builder-command = { path = "../command" }
 builder-wasm = { path = "../wasm" }
+builder-swift-package = { path = "../swift_package" }
 common = { path = "../common" }
 
 camino-fs.workspace = true

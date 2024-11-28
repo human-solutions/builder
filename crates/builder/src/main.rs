@@ -3,7 +3,7 @@ use std::env;
 
 use builder_command::{BuilderCmd, Cmd};
 use camino_fs::*;
-use common::{setup_logging, RELEASE};
+use common::{setup_logging, RELEASE, VERBOSE};
 
 fn main() {
     let args = std::env::args().collect::<Vec<_>>();
@@ -24,6 +24,7 @@ fn main() {
 
     let is_ci = env::var("CI").is_ok();
     setup_logging(builder.verbose || is_ci);
+    VERBOSE.set(builder.verbose).unwrap();
 
     let bin_version = env!("CARGO_PKG_VERSION");
     let metadata = cargo_metadata::MetadataCommand::new().exec().unwrap();
@@ -53,6 +54,7 @@ pub fn run(builder: BuilderCmd) {
             Cmd::Assemble(cmd) => builder_assemble::run(&cmd),
             Cmd::Wasm(cmd) => builder_wasm::run(&cmd),
             Cmd::Copy(cmd) => builder_copy::run(&cmd),
+            Cmd::SwiftPackage(cmd) => builder_swift_package::run(&cmd),
         }
     }
 }
