@@ -65,8 +65,31 @@ pub fn run(cmd: &UniffiCmd) {
             Some(&cmd.out_dir),
             Some(cmd.built_lib_file.clone()),
             Some(&cmd.library_name),
-            true,
+            false,
         )
         .unwrap();
+        fix_modulemap_file(&cmd.out_dir);
     }
+}
+
+/// the generated module file starts with "module " but it should be "framework module "
+fn fix_modulemap_file(out_dir: &Utf8Path) {
+    let modulemap_file = out_dir
+        .ls()
+        .files()
+        .filter(|f| f.extension() == Some("modulemap"))
+        .next()
+        .unwrap();
+
+    let modulemap = modulemap_file.read_string().unwrap();
+
+    if !modulemap.starts_with("module ") {
+        panic!("modulemap file does not start with 'module '")
+    }
+
+    let mut new_modulemap = String::with_capacity(modulemap.len() + 10);
+    new_modulemap.push_str("framework ");
+    new_modulemap.push_str(&modulemap);
+
+    modulemap_file.write(new_modulemap.as_bytes()).unwrap();
 }
