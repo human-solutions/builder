@@ -47,14 +47,14 @@ fn main() {
 pub fn run(builder: BuilderCmd) {
     for cmd in &builder.cmds {
         match cmd {
-            Cmd::Uniffi(cmd) => builder_uniffi::run(&cmd),
-            Cmd::Sass(cmd) => builder_sass::run(&cmd),
-            Cmd::Localized(cmd) => builder_localized::run(&cmd),
-            Cmd::FontForge(cmd) => builder_fontforge::run(&cmd),
-            Cmd::Assemble(cmd) => builder_assemble::run(&cmd),
-            Cmd::Wasm(cmd) => builder_wasm::run(&cmd),
-            Cmd::Copy(cmd) => builder_copy::run(&cmd),
-            Cmd::SwiftPackage(cmd) => builder_swift_package::run(&cmd),
+            Cmd::Uniffi(cmd) => builder_uniffi::run(cmd),
+            Cmd::Sass(cmd) => builder_sass::run(cmd),
+            Cmd::Localized(cmd) => builder_localized::run(cmd),
+            Cmd::FontForge(cmd) => builder_fontforge::run(cmd),
+            Cmd::Assemble(cmd) => builder_assemble::run(cmd),
+            Cmd::Wasm(cmd) => builder_wasm::run(cmd),
+            Cmd::Copy(cmd) => builder_copy::run(cmd),
+            Cmd::SwiftPackage(cmd) => builder_swift_package::run(cmd),
         }
     }
 }

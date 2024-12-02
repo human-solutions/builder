@@ -122,8 +122,8 @@ pub fn run(cmd: &WasmCmd) {
         let opts = [opts];
 
         for (file, contents) in file_and_content.iter() {
-            let site_file = SiteFile::from_file(&file).with_dir(&hash_dir);
-            write_file_to_site(&site_file, &contents, &opts);
+            let site_file = SiteFile::from_file(file).with_dir(&hash_dir);
+            write_file_to_site(&site_file, contents, &opts);
         }
     }
     log::debug!("Removing tmp dir {tmp_dir}");

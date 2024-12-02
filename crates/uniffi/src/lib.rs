@@ -77,8 +77,7 @@ fn fix_modulemap_file(out_dir: &Utf8Path) {
     let modulemap_file = out_dir
         .ls()
         .files()
-        .filter(|f| f.extension() == Some("modulemap"))
-        .next()
+        .find(|f| f.extension() == Some("modulemap"))
         .unwrap();
 
     let modulemap = modulemap_file.read_string().unwrap();
