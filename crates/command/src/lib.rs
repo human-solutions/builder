@@ -34,6 +34,12 @@ pub struct BuilderCmd {
     in_cargo: bool,
 }
 
+impl Default for BuilderCmd {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BuilderCmd {
     pub fn new() -> Self {
         Self {

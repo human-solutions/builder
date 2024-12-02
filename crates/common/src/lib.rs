@@ -17,10 +17,10 @@ pub static RELEASE: OnceLock<bool> = OnceLock::new();
 pub static VERBOSE: OnceLock<bool> = OnceLock::new();
 
 pub fn is_release() -> bool {
-    RELEASE.get().map(|b| *b).unwrap_or(false)
+    RELEASE.get().copied().unwrap_or(false)
 }
 pub fn is_verbose() -> bool {
-    VERBOSE.get().map(|b| *b).unwrap_or(false)
+    VERBOSE.get().copied().unwrap_or(false)
 }
 
 #[allow(unused_imports)]

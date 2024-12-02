@@ -28,12 +28,8 @@ impl FromStr for AssetEncodings {
         Ok(encodings)
     }
 }
-
-impl AssetEncodings {
-    pub fn from_iter<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = Encoding>,
-    {
+impl FromIterator<Encoding> for AssetEncodings {
+    fn from_iter<T: IntoIterator<Item = Encoding>>(iter: T) -> Self {
         let mut encodings = Self::default();
         for enc in iter {
             match enc {
@@ -44,6 +40,9 @@ impl AssetEncodings {
         }
         encodings
     }
+}
+
+impl AssetEncodings {
     pub fn from_output(output: &Output) -> Self {
         Self {
             brotli: output.brotli(),

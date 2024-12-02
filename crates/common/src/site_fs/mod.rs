@@ -24,9 +24,9 @@ pub fn parse_site(root: &Utf8Path) -> Result<Vec<Asset>> {
         if path.file_name() == Some(".DS_Store") {
             continue;
         }
-        let rel_path = path.relative_to(&root).unwrap();
+        let rel_path = path.relative_to(root).unwrap();
         debug!("Parsing asset from {rel_path}");
-        if let Some(asset) = Asset::from_site_path(&rel_path) {
+        if let Some(asset) = Asset::from_site_path(rel_path) {
             let url = asset.to_url();
             if let Some(current) = assets.get_mut(&url) {
                 current.join(asset);
@@ -35,7 +35,7 @@ pub fn parse_site(root: &Utf8Path) -> Result<Vec<Asset>> {
             }
         }
     }
-    Ok(assets.into_iter().map(|(_, v)| v).collect())
+    Ok(assets.into_values().collect())
 }
 
 /// Copies all files recursively maintaining the relative
@@ -53,7 +53,7 @@ pub fn copy_files_to_site<F: Fn(&Utf8PathBuf) -> bool>(
         }
         let bytes = file.read_bytes().unwrap();
         let rel_path = file.relative_to(folder).unwrap();
-        let site_file = SiteFile::from_relative_path(&rel_path);
+        let site_file = SiteFile::from_relative_path(rel_path);
         debug!("Copying {file} to {site_file}");
         write_file_to_site(&site_file, &bytes, output);
     }
@@ -70,13 +70,13 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
         }
 
         let checksum = if out.checksum {
-            Some(checksum_from(&bytes))
+            Some(checksum_from(bytes))
         } else {
             None
         };
 
         let asset = AssetPath {
-            subdir: subdir.into(),
+            subdir,
             name_ext: site_file.clone(),
             checksum,
         };
@@ -98,7 +98,7 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
         let path = asset.absolute_path(&out.dir);
         debug!("Writing to {path}");
         let encodings = AssetEncodings::from_output(out);
-        encodings.write(&path, &bytes).unwrap()
+        encodings.write(&path, bytes).unwrap()
     }
 }
 
@@ -131,7 +131,7 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
             .rm_matching(|p| {
                 p.file_name()
                     .map_or(false, |f| f.starts_with(&site_file.name))
-                    && p.extension().map_or(false, |e| e == &site_file.ext)
+                    && p.extension().map_or(false, |e| e == site_file.ext)
             })
             .unwrap();
 
@@ -152,7 +152,7 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
             let path = asset.absolute_path(&out.dir);
             debug!("Writing to {path}");
             let encodings = AssetEncodings::from_output(out);
-            encodings.write(&path, &bytes).unwrap()
+            encodings.write(&path, bytes).unwrap()
         }
     }
 }

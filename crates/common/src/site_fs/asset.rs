@@ -27,7 +27,7 @@ impl Asset {
     pub fn to_url(&self) -> String {
         let mut url = "/".to_string();
         if let Some(sub_dir) = &self.sub_dir {
-            url.push_str(&sub_dir.to_string());
+            url.push_str(sub_dir.as_ref());
             url.push('/');
         }
         url.push_str(&self.filename());
@@ -184,7 +184,7 @@ fn non_empty_parent_path(path: &Utf8Path) -> Option<Utf8PathBuf> {
 #[test]
 fn asset_path() {
     let path = Utf8Path::new("assets/font.woff2");
-    let asset = parse_asset(&path).unwrap();
+    let asset = parse_asset(path).unwrap();
     assert_eq!(
         asset,
         Asset {
