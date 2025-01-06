@@ -181,7 +181,6 @@ impl FromStr for BuilderCmd {
             if cmd.is_empty() {
                 continue;
             }
-            println!("rest: {cmd}");
             builder.cmds.push(cmd.parse().unwrap());
         }
         Ok(builder)
@@ -220,7 +219,6 @@ impl FromStr for Cmd {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut lines = s.lines();
-        println!("Lines: {s}");
 
         let cmd = lines.next().unwrap();
         let rest = lines.collect::<Vec<_>>().join("\n");
