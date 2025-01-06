@@ -1,7 +1,8 @@
-use camino_fs::Utf8PathBuf;
-use serde::{Deserialize, Serialize};
+use std::{convert::Infallible, fmt::Display, str::FromStr};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+use camino_fs::Utf8PathBuf;
+
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct UniffiCmd {
     pub udl_file: Utf8PathBuf,
 
@@ -50,5 +51,38 @@ impl UniffiCmd {
     pub fn swift(mut self, swift: bool) -> Self {
         self.swift = swift;
         self
+    }
+}
+
+impl Display for UniffiCmd {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "udl_file={}", self.udl_file)?;
+        writeln!(f, "out_dir={}", self.out_dir)?;
+        writeln!(f, "built_lib_file={}", self.built_lib_file)?;
+        writeln!(f, "library_name={}", self.library_name)?;
+        writeln!(f, "swift={}", self.swift)?;
+        writeln!(f, "kotlin={}", self.kotlin)?;
+        Ok(())
+    }
+}
+
+impl FromStr for UniffiCmd {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut cmd = Self::default();
+        for line in s.lines() {
+            let (key, value) = line.split_once('=').unwrap();
+            match key {
+                "udl_file" => cmd.udl_file = value.into(),
+                "out_dir" => cmd.out_dir = value.into(),
+                "built_lib_file" => cmd.built_lib_file = value.into(),
+                "library_name" => cmd.library_name = value.into(),
+                "swift" => cmd.swift = value.parse().unwrap(),
+                "kotlin" => cmd.kotlin = value.parse().unwrap(),
+                _ => panic!("unknown key: {}", key),
+            }
+        }
+        Ok(cmd)
     }
 }

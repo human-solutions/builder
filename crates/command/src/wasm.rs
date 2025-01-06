@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
+use std::{convert::Infallible, fmt::Display, str::FromStr};
 
 use crate::Output;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct WasmCmd {
     /// The package name
     pub package: String,
@@ -26,5 +26,32 @@ impl WasmCmd {
     pub fn add_output(mut self, output: Output) -> Self {
         self.output.push(output);
         self
+    }
+}
+
+impl Display for WasmCmd {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "package={}", self.package)?;
+        for out in &self.output {
+            writeln!(f, "output={}", out)?;
+        }
+        Ok(())
+    }
+}
+
+impl FromStr for WasmCmd {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut me = Self::default();
+        for line in s.lines() {
+            let (key, value) = line.split_once('=').unwrap();
+            match key {
+                "package" => me.package = value.to_string(),
+                "output" => me.output.push(value.parse().unwrap()),
+                _ => panic!("unknown key: {}", key),
+            }
+        }
+        Ok(me)
     }
 }

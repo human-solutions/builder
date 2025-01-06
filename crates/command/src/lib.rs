@@ -8,7 +8,7 @@ mod swift_package;
 mod uniffi;
 mod wasm;
 
-use std::{env, path::Path, process::Command};
+use std::{convert::Infallible, env, fmt::Display, path::Path, process::Command, str::FromStr};
 
 pub use assemble::AssembleCmd;
 use camino_fs::Utf8PathBuf;
@@ -17,21 +17,20 @@ pub use fontforge::FontForgeCmd;
 pub use localized::LocalizedCmd;
 pub use out::{Encoding, Output};
 pub use sass::SassCmd;
-use serde::{Deserialize, Serialize};
 use std::fs;
 pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
 pub use wasm::WasmCmd;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq)]
 pub struct BuilderCmd {
-    pub cmds: Vec<Cmd>,
     pub verbose: bool,
     pub release: bool,
     /// The directory where the builder.toml file is located
     /// Defaults to env OUT_DIR
     pub builder_toml: Utf8PathBuf,
     in_cargo: bool,
+    pub cmds: Vec<Cmd>,
 }
 
 impl Default for BuilderCmd {
@@ -118,8 +117,6 @@ impl BuilderCmd {
     }
 
     pub fn run(self) {
-        let yaml = toml::to_string(&self).unwrap();
-
         let path = &self.builder_toml;
 
         if let Some(parent) = path.parent() {
@@ -129,7 +126,7 @@ impl BuilderCmd {
         }
 
         self.log(&format!("Writing builder.yaml to {path}"));
-        fs::write(path, yaml.as_bytes()).unwrap();
+        fs::write(path, self.to_string().as_bytes()).unwrap();
 
         let cmd = Command::new("builder")
             .arg(self.builder_toml.as_str())
@@ -153,7 +150,45 @@ impl BuilderCmd {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl Display for BuilderCmd {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "verbose={}", self.verbose)?;
+        writeln!(f, "release={}", self.release)?;
+        writeln!(f, "builder_toml={}", self.builder_toml)?;
+        for cmd in &self.cmds {
+            writeln!(f, "{}", cmd)?;
+        }
+        Ok(())
+    }
+}
+impl FromStr for BuilderCmd {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut lines = s.lines();
+        let mut builder = BuilderCmd::new();
+        for line in lines.by_ref().take(3) {
+            let (key, value) = line.split_once('=').unwrap();
+            match key {
+                "verbose" => builder.verbose = value.parse().unwrap(),
+                "release" => builder.release = value.parse().unwrap(),
+                "builder_toml" => builder.builder_toml = value.parse().unwrap(),
+                _ => panic!("Unknown key: {}", key),
+            }
+        }
+        let rest = lines.collect::<Vec<_>>().join("\n");
+        for cmd in rest.split('>') {
+            if cmd.is_empty() {
+                continue;
+            }
+            println!("rest: {cmd}");
+            builder.cmds.push(cmd.parse().unwrap());
+        }
+        Ok(builder)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub enum Cmd {
     Uniffi(UniffiCmd),
     Sass(SassCmd),
@@ -163,4 +198,62 @@ pub enum Cmd {
     Wasm(WasmCmd),
     Copy(CopyCmd),
     SwiftPackage(SwiftPackageCmd),
+}
+
+impl Display for Cmd {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Cmd::Uniffi(cmd) => write!(f, ">Uniffi\n{}", cmd),
+            Cmd::Sass(cmd) => write!(f, ">Sass\n{}", cmd),
+            Cmd::Localized(cmd) => write!(f, ">Localized\n{}", cmd),
+            Cmd::FontForge(cmd) => write!(f, ">FontForge\n{}", cmd),
+            Cmd::Assemble(cmd) => write!(f, ">Assemble\n{}", cmd),
+            Cmd::Wasm(cmd) => write!(f, ">Wasm\n{}", cmd),
+            Cmd::Copy(cmd) => write!(f, ">Copy\n{}", cmd),
+            Cmd::SwiftPackage(cmd) => write!(f, ">SwiftPackage\n{}", cmd),
+        }
+    }
+}
+
+impl FromStr for Cmd {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut lines = s.lines();
+        println!("Lines: {s}");
+
+        let cmd = lines.next().unwrap();
+        let rest = lines.collect::<Vec<_>>().join("\n");
+        match cmd {
+            "Uniffi" => Ok(Cmd::Uniffi(rest.parse().unwrap())),
+            "Sass" => Ok(Cmd::Sass(rest.parse().unwrap())),
+            "Localized" => Ok(Cmd::Localized(rest.parse().unwrap())),
+            "FontForge" => Ok(Cmd::FontForge(rest.parse().unwrap())),
+            "Assemble" => Ok(Cmd::Assemble(rest.parse().unwrap())),
+            "Wasm" => Ok(Cmd::Wasm(rest.parse().unwrap())),
+            "Copy" => Ok(Cmd::Copy(rest.parse().unwrap())),
+            "SwiftPackage" => Ok(Cmd::SwiftPackage(rest.parse().unwrap())),
+            _ => panic!("Unknown command: {}", cmd),
+        }
+    }
+}
+
+#[test]
+fn roundtrip() {
+    let cmd = BuilderCmd::new()
+        .add_unffi(UniffiCmd::default())
+        .add_sass(SassCmd::default())
+        .add_localized(LocalizedCmd::default())
+        .add_fontforge(FontForgeCmd::default())
+        .add_assemble(AssembleCmd::default())
+        .add_wasm(WasmCmd::default())
+        .add_copy(CopyCmd::default())
+        .add_swift_package(SwiftPackageCmd::default())
+        .verbose(true)
+        .release(true)
+        .builder_toml("builder.toml");
+
+    let s = cmd.to_string();
+    let cmd2 = s.parse::<BuilderCmd>().unwrap();
+    assert_eq!(cmd, cmd2);
 }

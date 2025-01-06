@@ -16,8 +16,7 @@ pub fn run(cmd: &UniffiCmd) {
         let udl_src_bytes = cmd.udl_file.read_bytes().unwrap();
         let is_udl_same = udl_ref_bytes == udl_src_bytes;
 
-        let prev_cli: UniffiCmd =
-            serde_json::from_slice(cli_copy.read_bytes().unwrap().as_slice()).unwrap();
+        let prev_cli: UniffiCmd = cli_copy.read_string().unwrap().parse().unwrap();
         let is_cli_same = prev_cli == *cmd;
 
         match (is_udl_same, is_cli_same) {
@@ -38,9 +37,7 @@ pub fn run(cmd: &UniffiCmd) {
     }
     cmd.out_dir.mkdirs().unwrap();
     cmd.udl_file.cp(&udl_copy).unwrap();
-    cli_copy
-        .write(serde_json::to_vec_pretty(&cmd).unwrap())
-        .unwrap();
+    cli_copy.write(&cmd.to_string()).unwrap();
 
     if cmd.kotlin {
         log::info!("Generating Kotlin bindings for {}", cmd.library_name);

@@ -17,8 +17,8 @@ fn main() {
     if !file.is_file() {
         panic!("File not found: {:?}", file);
     }
-    let bytes = file.read_string().unwrap();
-    let builder: BuilderCmd = toml::from_str(&bytes).unwrap();
+    let content = file.read_string().unwrap();
+    let builder: BuilderCmd = content.parse().unwrap();
 
     RELEASE.set(builder.release).unwrap();
 

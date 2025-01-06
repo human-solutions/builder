@@ -1,7 +1,5 @@
 use camino_fs::*;
-use std::fmt::Display;
-
-use serde::{Deserialize, Serialize};
+use std::{fmt::Display, str::FromStr};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Encoding {
@@ -52,7 +50,7 @@ impl Encoding {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub struct Output {
     /// Folder where the output files should be written
     pub dir: Utf8PathBuf,
@@ -139,5 +137,43 @@ impl Output {
             encodings.push(Encoding::Identity);
         }
         encodings
+    }
+}
+
+impl Display for Output {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "dir={}\t", self.dir)?;
+        if let Some(site_dir) = &self.site_dir {
+            write!(f, "site_dir={}\t", site_dir)?;
+        }
+        write!(f, "brotli={}\t", self.brotli)?;
+        write!(f, "gzip={}\t", self.gzip)?;
+        write!(f, "uncompressed={}\t", self.uncompressed)?;
+        write!(f, "all_encodings={}\t", self.all_encodings)?;
+        write!(f, "checksum={}", self.checksum)?;
+        Ok(())
+    }
+}
+
+impl FromStr for Output {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut cmd = Output::default();
+        for item in s.split('\t') {
+            let (key, value) = item.split_once('=').unwrap();
+
+            match key {
+                "dir" => cmd.dir = value.into(),
+                "site_dir" => cmd.site_dir = Some(value.into()),
+                "brotli" => cmd.brotli = value.parse().unwrap(),
+                "gzip" => cmd.gzip = value.parse().unwrap(),
+                "uncompressed" => cmd.uncompressed = value.parse().unwrap(),
+                "all_encodings" => cmd.all_encodings = value.parse().unwrap(),
+                "checksum" => cmd.checksum = value.parse().unwrap(),
+                _ => panic!("unknown key: {}", key),
+            }
+        }
+        Ok(cmd)
     }
 }
