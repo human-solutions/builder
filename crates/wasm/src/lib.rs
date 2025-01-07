@@ -14,8 +14,6 @@ pub fn run(cmd: &WasmCmd) {
     let release = is_release();
     let mut cargo = Command::new("cargo");
 
-    log::info!("Running builder-wasm");
-
     let package_name = cmd.package.replace("-", "_");
     let mut args = vec![
         "build",
@@ -29,6 +27,8 @@ pub fn run(cmd: &WasmCmd) {
     if release {
         args.push("--release");
     }
+    log::info!("cargo {}", args.join(" "));
+
     cargo.args(&args);
 
     let cargo_status = cargo.status().unwrap();

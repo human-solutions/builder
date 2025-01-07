@@ -37,6 +37,8 @@ pub fn run(cmd: &AssembleCmd) {
                 log::info!("No change detected, skipping {}", code_file);
                 return;
             }
+        } else if let Some(parent) = code_file.parent() {
+            parent.mkdirs().unwrap();
         }
         code_file.write(formatted).unwrap();
     }
