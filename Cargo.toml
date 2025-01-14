@@ -5,7 +5,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.18"
+version = "0.1.19"
 repository = "https://github.com/human-solutions/builder"
 license = "MIT"
 edition = "2021"
@@ -20,17 +20,13 @@ lto = "thin"
 # Config for 'dist'
 [workspace.metadata.dist]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.25.1"
+cargo-dist-version = "0.28.0"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
 installers = ["shell"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = [
-    "aarch64-apple-darwin",
-    "x86_64-apple-darwin",
-    "x86_64-unknown-linux-gnu",
-]
+targets = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu"]
 # Which actions to run on pull requests
 pr-run-mode = "plan"
 # Whether to install an updater program
@@ -47,7 +43,7 @@ cargo_metadata = "0.19"
 flate2 = "1.0"
 grass = "0.13"
 icu_locid = "1.5"
-lightningcss = { version = "1.0.0-alpha.61", features = ["browserslist"] }
+lightningcss = { version = "1.0.0-alpha.63", features = ["browserslist"] }
 log = "0.4"
 seahash = "4.1"
 simplelog = "0.12"
