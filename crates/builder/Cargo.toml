@@ -24,4 +24,4 @@ camino-fs.workspace = true
 cargo_metadata.workspace = true
 
 [dev-dependencies]
-insta = "1.40"
+insta = "1.42"
