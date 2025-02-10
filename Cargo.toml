@@ -5,7 +5,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.19"
+version = "0.1.20"
 repository = "https://github.com/human-solutions/builder"
 license = "MIT"
 edition = "2021"
@@ -48,7 +48,7 @@ log = "0.4"
 seahash = "4.1"
 simplelog = "0.12"
 swift-package = "0.1"
-uniffi_bindgen = "0.28"
+uniffi_bindgen = "0.29"
 tempfile = "3.16"
 time = "0.3"
 wasm-bindgen-cli-support = "0.2"

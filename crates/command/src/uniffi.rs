@@ -6,6 +6,8 @@ use camino_fs::Utf8PathBuf;
 pub struct UniffiCmd {
     pub udl_file: Utf8PathBuf,
 
+    pub config_file: Option<Utf8PathBuf>,
+
     /// Where to generate the bindings
     pub out_dir: Utf8PathBuf,
 
@@ -36,11 +38,17 @@ impl UniffiCmd {
         Self {
             udl_file: udl_file.into(),
             out_dir: out_dir.into(),
+            config_file: None,
             built_lib_file: built_lib_file.into(),
             library_name: library_name.into(),
             swift: false,
             kotlin: false,
         }
+    }
+
+    pub fn with_config_file<P: Into<Utf8PathBuf>>(mut self, config_file: P) -> Self {
+        self.config_file = Some(config_file.into());
+        self
     }
 
     pub fn kotlin(mut self, kotlin: bool) -> Self {
@@ -57,6 +65,9 @@ impl UniffiCmd {
 impl Display for UniffiCmd {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "udl_file={}", self.udl_file)?;
+        if let Some(config_file) = &self.config_file {
+            writeln!(f, "config_file={}", config_file)?;
+        }
         writeln!(f, "out_dir={}", self.out_dir)?;
         writeln!(f, "built_lib_file={}", self.built_lib_file)?;
         writeln!(f, "library_name={}", self.library_name)?;
@@ -76,6 +87,7 @@ impl FromStr for UniffiCmd {
             match key {
                 "udl_file" => cmd.udl_file = value.into(),
                 "out_dir" => cmd.out_dir = value.into(),
+                "config_file" => cmd.config_file = Some(value.into()),
                 "built_lib_file" => cmd.built_lib_file = value.into(),
                 "library_name" => cmd.library_name = value.into(),
                 "swift" => cmd.swift = value.parse().unwrap(),
