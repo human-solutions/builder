@@ -1,7 +1,7 @@
 use builder_command::Output;
 use camino_fs::*;
 
-use crate::{run, LocalizedCmd};
+use crate::{LocalizedCmd, run};
 
 fn clean_out_dir(dir: &str) -> Utf8PathBuf {
     let output_dir = Utf8PathBuf::from(dir);

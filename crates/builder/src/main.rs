@@ -3,7 +3,7 @@ use std::env;
 
 use builder_command::{BuilderCmd, Cmd};
 use camino_fs::*;
-use common::{setup_logging, RELEASE, VERBOSE};
+use common::{RELEASE, VERBOSE, setup_logging};
 
 fn main() {
     let args = std::env::args().collect::<Vec<_>>();

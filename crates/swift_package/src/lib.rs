@@ -1,6 +1,6 @@
 use builder_command::SwiftPackageCmd;
 use common::{is_release, is_verbose};
-use swift_package::{build_cli, CliArgs};
+use swift_package::{CliArgs, build_cli};
 
 pub fn run(cmd: &SwiftPackageCmd) {
     let cli = CliArgs {

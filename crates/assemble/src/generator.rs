@@ -1,5 +1,5 @@
 use crate::{asset_ext::AssetExt, mime::mime_from_ext};
-use common::{site_fs::Asset, RustNaming};
+use common::{RustNaming, site_fs::Asset};
 
 pub fn generate_code(assets: &[Asset]) -> String {
     let statics = static_vars(assets);

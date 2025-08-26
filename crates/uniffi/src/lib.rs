@@ -52,7 +52,7 @@ pub fn run(cmd: &UniffiCmd) {
     if let Some(config_file) = &cmd.config_file {
         config_file.cp(&conf_copy).unwrap();
     }
-    cli_copy.write(&cmd.to_string()).unwrap();
+    cli_copy.write(cmd.to_string()).unwrap();
 
     if cmd.kotlin {
         log::info!("Generating Kotlin bindings for {}", cmd.library_name);

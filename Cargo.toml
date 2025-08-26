@@ -5,10 +5,10 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.21"
+version = "0.1.22"
 repository = "https://github.com/human-solutions/builder"
 license = "MIT"
-edition = "2021"
+edition = "2024"
 description = "Command line tool for building web assets, wasm and mobile libs"
 authors = ["henrik akesson"]
 

@@ -1,4 +1,4 @@
-use common::{site_fs::Asset, RustNaming};
+use common::{RustNaming, site_fs::Asset};
 
 pub trait AssetExt {
     fn quoted_encoding_list(&self) -> (usize, String);

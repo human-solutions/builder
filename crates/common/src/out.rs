@@ -5,8 +5,8 @@ use std::{
     io::{Cursor, Write},
 };
 
-use base64::{engine::general_purpose::URL_SAFE, Engine};
-use brotli::{enc::BrotliEncoderParams, BrotliCompress};
+use base64::{Engine, engine::general_purpose::URL_SAFE};
+use brotli::{BrotliCompress, enc::BrotliEncoderParams};
 use builder_command::{Encoding, Output};
 use camino_fs::*;
 use flate2::{Compression, GzBuilder};

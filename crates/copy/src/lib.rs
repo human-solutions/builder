@@ -14,7 +14,7 @@ pub fn run(cmd: &CopyCmd) {
         cmd.recursive,
         |file| {
             file.extension()
-                .map_or(false, |ext| cmd.file_extensions.contains(&ext.to_string()))
+                .is_some_and(|ext| cmd.file_extensions.contains(&ext.to_string()))
         },
         &cmd.output,
     );
