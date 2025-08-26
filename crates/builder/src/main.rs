@@ -32,7 +32,7 @@ fn main() {
     let lib_version = metadata
         .packages
         .iter()
-        .find(|pack| pack.name == "builder-command")
+        .find(|pack| pack.name.as_str() == "builder-command")
         .unwrap()
         .version
         .to_string();

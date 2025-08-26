@@ -5,7 +5,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.20"
+version = "0.1.21"
 repository = "https://github.com/human-solutions/builder"
 license = "MIT"
 edition = "2021"
@@ -20,7 +20,7 @@ lto = "thin"
 # Config for 'dist'
 [workspace.metadata.dist]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.28.0"
+cargo-dist-version = "0.29.0"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
@@ -37,20 +37,20 @@ install-path = "CARGO_HOME"
 [workspace.dependencies]
 anyhow = "1.0"
 base64 = "0.22"
-brotli = "7.0"
-camino-fs = "0.1.3"
-cargo_metadata = "0.19"
+brotli = "8.0"
+camino-fs = "0.1"
+cargo_metadata = "0.22"
 flate2 = "1.1"
 grass = "0.13"
 icu_locid = "1.5"
-lightningcss = { version = "1.0.0-alpha.65", features = ["browserslist"] }
+lightningcss = { version = "1.0.0-alpha.67", features = ["browserslist"] }
 log = "0.4"
 seahash = "4.1"
 simplelog = "0.12"
 swift-package = "0.1"
 uniffi_bindgen = "0.29"
-tempfile = "3.19"
+tempfile = "3.21"
 time = "0.3"
 wasm-bindgen-cli-support = "0.2"
 wasm-opt = "0.116"
-which = "7.0"
+which = "8.0"
