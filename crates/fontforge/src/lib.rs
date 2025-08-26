@@ -2,7 +2,7 @@ use std::process::Command;
 
 use builder_command::FontForgeCmd;
 use camino_fs::*;
-use common::site_fs::{write_file_to_site, SiteFile};
+use common::site_fs::{SiteFile, write_file_to_site};
 
 pub fn run(cmd: &FontForgeCmd) {
     log::info!("Running builder-fontforge");

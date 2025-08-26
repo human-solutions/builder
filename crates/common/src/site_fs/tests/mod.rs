@@ -3,7 +3,7 @@ use camino_fs::{Utf8PathBuf, Utf8PathExt};
 use icu_locid::langid;
 
 use crate::site_fs::{
-    checksum_from, parse_site, Asset, AssetEncodings, AssetPath, SiteFile, TranslatedAssetPath,
+    Asset, AssetEncodings, AssetPath, SiteFile, TranslatedAssetPath, checksum_from, parse_site,
 };
 
 fn create_tmp_dir(path: &str) -> Utf8PathBuf {

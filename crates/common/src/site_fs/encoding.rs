@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::Result;
-use brotli::{enc::BrotliEncoderParams, BrotliCompress};
+use brotli::{BrotliCompress, enc::BrotliEncoderParams};
 use builder_command::{Encoding, Output};
 use camino_fs::*;
 use flate2::{Compression, GzBuilder};

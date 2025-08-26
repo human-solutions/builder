@@ -1,5 +1,5 @@
 use builder_command::SassCmd;
-use common::site_fs::{write_file_to_site, SiteFile};
+use common::site_fs::{SiteFile, write_file_to_site};
 use lightningcss::{
     printer::PrinterOptions,
     stylesheet::StyleSheet,

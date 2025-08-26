@@ -53,7 +53,7 @@ pub fn run(cmd: &AssembleCmd) {
 
 #[test]
 fn test_encode() {
-    use base64::{engine::general_purpose::URL_SAFE, Engine as _};
+    use base64::{Engine as _, engine::general_purpose::URL_SAFE};
 
     let val = URL_SAFE.encode(0_u64.to_be_bytes());
     assert_eq!(val, "AAAAAAAAAAA=");

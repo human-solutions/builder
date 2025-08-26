@@ -8,7 +8,7 @@ use crate::debug;
 pub use anyhow::Result;
 pub use asset::Asset;
 pub use asset_path::{AssetPath, SiteFile, TranslatedAssetPath};
-use base64::{engine::general_purpose::URL_SAFE, Engine};
+use base64::{Engine, engine::general_purpose::URL_SAFE};
 use builder_command::Output;
 use camino_fs::*;
 pub use encoding::AssetEncodings;
@@ -130,8 +130,8 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
             .join(site_dir)
             .rm_matching(|p| {
                 p.file_name()
-                    .map_or(false, |f| f.starts_with(&site_file.name))
-                    && p.extension().map_or(false, |e| e == site_file.ext)
+                    .is_some_and(|f| f.starts_with(&site_file.name))
+                    && p.extension().is_some_and(|e| e == site_file.ext)
             })
             .unwrap();
 

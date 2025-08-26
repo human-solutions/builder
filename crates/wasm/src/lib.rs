@@ -1,9 +1,9 @@
-use base64::{engine::general_purpose::URL_SAFE, Engine};
+use base64::{Engine, engine::general_purpose::URL_SAFE};
 use builder_command::WasmCmd;
 use camino_fs::*;
 use common::{
     is_release,
-    site_fs::{write_file_to_site, SiteFile},
+    site_fs::{SiteFile, write_file_to_site},
 };
 use std::{fs::File, hash::Hasher, process::Command};
 use wasm_opt::OptimizationOptions;
@@ -104,7 +104,7 @@ pub fn run(cmd: &WasmCmd) {
         opts.dir
             .ls()
             .recurse()
-            .filter(|dir| dir.file_name().map_or(false, |n| n.starts_with("wasm")))
+            .filter(|dir| dir.file_name().is_some_and(|n| n.starts_with("wasm")))
             .for_each(|dir| {
                 log::debug!("Removing old wasm dir {dir}");
                 dir.rm().unwrap();

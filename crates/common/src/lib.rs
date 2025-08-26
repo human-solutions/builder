@@ -5,7 +5,7 @@ pub mod site_fs;
 
 use log::LevelFilter;
 use simplelog::{
-    format_description, ColorChoice, Config as LogConfig, ConfigBuilder, TermLogger, TerminalMode,
+    ColorChoice, Config as LogConfig, ConfigBuilder, TermLogger, TerminalMode, format_description,
 };
 use std::env;
 use std::sync::OnceLock;
