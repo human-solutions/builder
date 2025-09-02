@@ -22,8 +22,7 @@ fn main() {
 
     RELEASE.set(builder.release).unwrap();
 
-    let is_ci = env::var("CI").is_ok();
-    setup_logging(builder.verbose || is_ci);
+    setup_logging(builder.verbose);
     VERBOSE.set(builder.verbose).unwrap();
 
     let bin_version = env!("CARGO_PKG_VERSION");
