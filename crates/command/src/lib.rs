@@ -20,7 +20,7 @@ pub use sass::SassCmd;
 use std::fs;
 pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
-pub use wasm::WasmCmd;
+pub use wasm::WasmProcessingCmd;
 
 #[derive(Debug, PartialEq)]
 pub struct BuilderCmd {
@@ -84,7 +84,7 @@ impl BuilderCmd {
     }
 
     /// Add a WasmCmd using it's builder
-    pub fn add_wasm(mut self, cmd: WasmCmd) -> Self {
+    pub fn add_wasm(mut self, cmd: WasmProcessingCmd) -> Self {
         self.cmds.push(Cmd::Wasm(cmd));
         self
     }
@@ -194,7 +194,7 @@ pub enum Cmd {
     Localized(LocalizedCmd),
     FontForge(FontForgeCmd),
     Assemble(AssembleCmd),
-    Wasm(WasmCmd),
+    Wasm(WasmProcessingCmd),
     Copy(CopyCmd),
     SwiftPackage(SwiftPackageCmd),
 }
@@ -244,7 +244,7 @@ fn roundtrip() {
         .add_localized(LocalizedCmd::default())
         .add_fontforge(FontForgeCmd::default())
         .add_assemble(AssembleCmd::default())
-        .add_wasm(WasmCmd::default())
+        .add_wasm(WasmProcessingCmd::default())
         .add_copy(CopyCmd::default())
         .add_swift_package(SwiftPackageCmd::default())
         .verbose(true)

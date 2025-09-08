@@ -3,14 +3,14 @@ use std::{convert::Infallible, fmt::Display, str::FromStr};
 use crate::Output;
 
 #[derive(Debug, Default, PartialEq, Eq)]
-pub struct WasmCmd {
+pub struct WasmProcessingCmd {
     /// The package name
     pub package: String,
 
     pub output: Vec<Output>,
 }
 
-impl WasmCmd {
+impl WasmProcessingCmd {
     pub fn new(package: &str) -> Self {
         Self {
             package: package.to_string(),
@@ -29,7 +29,7 @@ impl WasmCmd {
     }
 }
 
-impl Display for WasmCmd {
+impl Display for WasmProcessingCmd {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "package={}", self.package)?;
         for out in &self.output {
@@ -39,7 +39,7 @@ impl Display for WasmCmd {
     }
 }
 
-impl FromStr for WasmCmd {
+impl FromStr for WasmProcessingCmd {
     type Err = Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {

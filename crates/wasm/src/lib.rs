@@ -1,5 +1,5 @@
 use base64::{Engine, engine::general_purpose::URL_SAFE};
-use builder_command::WasmCmd;
+use builder_command::WasmProcessingCmd;
 use camino_fs::*;
 use common::{
     is_release,
@@ -8,7 +8,7 @@ use common::{
 use std::{fs::File, hash::Hasher};
 use wasm_opt::OptimizationOptions;
 
-pub fn run(cmd: &WasmCmd) {
+pub fn run(cmd: &WasmProcessingCmd) {
     let release = is_release();
     let package_name = cmd.package.replace("-", "_");
 

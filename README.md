@@ -66,7 +66,7 @@ use builder_command::BuilderCmd;
 fn main() {
     BuilderCmd::new()
         .add_sass(SassCmd::new("styles/main.scss", "dist/main.css"))
-        .add_wasm(WasmCmd::new("src/lib.rs", "pkg"))
+        .add_wasm(WasmProcessingCmd::new("src/lib.rs", "pkg"))
         .verbose(true)
         .run();
 }
