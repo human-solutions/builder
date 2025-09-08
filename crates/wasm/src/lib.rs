@@ -5,36 +5,12 @@ use common::{
     is_release,
     site_fs::{SiteFile, write_file_to_site},
 };
-use std::{fs::File, hash::Hasher, process::Command};
+use std::{fs::File, hash::Hasher};
 use wasm_opt::OptimizationOptions;
 
-// "cargo" "build" "--lib" "--target" "wasm32-unknown-unknown"
-// wasm-bindgen target/wasm32-unknown-unknown/debug/app_web.wasm --out-dir target/wasm/tmp --no-typescript --target web --out-name app --debug
 pub fn run(cmd: &WasmCmd) {
     let release = is_release();
-    let mut cargo = Command::new("cargo");
-
     let package_name = cmd.package.replace("-", "_");
-    let mut args = vec![
-        "build",
-        "--package",
-        &cmd.package,
-        "--lib",
-        "--target",
-        "wasm32-unknown-unknown",
-    ];
-
-    if release {
-        args.push("--release");
-    }
-    log::info!("cargo {}", args.join(" "));
-
-    cargo.args(&args);
-
-    let cargo_status = cargo.status().unwrap();
-    if !cargo_status.success() {
-        panic!("FAILED: cargo {}", args.join(" "));
-    }
 
     let tmp_dir = Utf8PathBuf::from("target/wasm_tmp");
     tmp_dir.mkdir().unwrap();
