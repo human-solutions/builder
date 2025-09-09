@@ -20,7 +20,7 @@ pub use sass::SassCmd;
 use std::fs;
 pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
-pub use wasm::WasmProcessingCmd;
+pub use wasm::{Profile, WasmProcessingCmd};
 
 #[derive(Debug, PartialEq)]
 pub struct BuilderCmd {
