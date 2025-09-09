@@ -61,12 +61,19 @@ builder-command = "0.1"
 ```
 
 ```rust
-use builder_command::BuilderCmd;
+use builder_command::{BuilderCmd, DebugSymbolsMode, Profile, WasmProcessingCmd};
 
 fn main() {
     BuilderCmd::new()
         .add_sass(SassCmd::new("styles/main.scss", "dist/main.css"))
-        .add_wasm(WasmCmd::new("src/lib.rs", "pkg"))
+        .add_wasm(
+            WasmProcessingCmd::new("my-wasm-package", Profile::Release)
+                // Four debug symbol options:
+                .debug_symbols(DebugSymbolsMode::Strip)        // Strip debug symbols (default)
+                // .debug_symbols(DebugSymbolsMode::Keep)       // Keep debug symbols in main WASM
+                // .debug_symbols(DebugSymbolsMode::WriteAdjacent) // Write .debug.wasm next to main file
+                // .debug_symbols(DebugSymbolsMode::write_to("debug/symbols.debug.wasm")) // Custom path
+        )
         .verbose(true)
         .run();
 }
@@ -81,6 +88,30 @@ builder path/to/builder.toml
 ```
 
 The configuration file defines which build commands to execute and their parameters. Each command type has its own configuration options and will be executed in the order specified.
+
+### WASM Debug Symbols
+
+Builder provides four options for handling debug symbols in WASM builds:
+
+1. **Strip** (default) - Removes debug symbols for smallest file size
+2. **Keep** - Preserves debug symbols in the main WASM file
+3. **WriteAdjacent** - Splits debug symbols into a separate `.debug.wasm` file next to the main file
+4. **WriteTo(path)** - Splits debug symbols into a separate file at a custom path
+
+Configuration examples:
+```toml
+# Strip debug symbols (default)
+debug_symbols=strip
+
+# Keep debug symbols in main file
+debug_symbols=keep
+
+# Adjacent debug file
+debug_symbols=adjacent
+
+# Custom debug path
+debug_symbols=write_to:debug/my-app.debug.wasm
+```
 
 ## Development
 

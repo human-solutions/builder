@@ -38,12 +38,22 @@ pub fn setup_logging(verbose: bool) {
         LevelFilter::Info
     };
 
+    let mut log_config_builder = ConfigBuilder::new();
+
+    // Filter out walrus debug logs when in verbose mode
+    if verbose {
+        log_config_builder.add_filter_ignore_str("walrus");
+        log_config_builder.add_filter_ignore_str("wasm_bindgen_cli_support");
+    }
+
     let log_config = if env::var("CARGO").is_ok() && verbose {
-        ConfigBuilder::new()
+        log_config_builder
             .set_time_format_custom(format_description!(
                 "cargo::warning=[hour]:[minute]:[second]"
             ))
             .build()
+    } else if verbose {
+        log_config_builder.build()
     } else {
         LogConfig::default()
     };

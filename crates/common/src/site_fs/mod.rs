@@ -88,15 +88,15 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
             .files()
             .filter(|path| {
                 path.file_name()
-                    .map(|name| {
-                        name.starts_with(&asset.name_ext.name) && name.contains(&asset.name_ext.ext)
-                    })
+                    .map(|name| asset.name_ext.match_base_name(name))
                     .unwrap_or(false)
             })
-            .for_each(|f| f.rm().unwrap());
+            .for_each(|f| {
+                log::debug!("Removing file: {f}");
+                f.rm().unwrap();
+            });
 
         let path = asset.absolute_path(&out.dir);
-        debug!("Writing to {path}");
         let encodings = AssetEncodings::from_output(out);
         encodings.write(&path, bytes).unwrap()
     }

@@ -1,49 +1,30 @@
+mod dwarf;
+
+use anyhow::Context;
 use base64::{Engine, engine::general_purpose::URL_SAFE};
-use builder_command::WasmCmd;
+use builder_command::{DebugSymbolsMode, WasmProcessingCmd};
 use camino_fs::*;
-use common::{
-    is_release,
-    site_fs::{SiteFile, write_file_to_site},
-};
-use std::{fs::File, hash::Hasher, process::Command};
+use common::site_fs::{SiteFile, write_file_to_site};
+use std::{fs::File, hash::Hasher};
 use wasm_opt::OptimizationOptions;
 
-// "cargo" "build" "--lib" "--target" "wasm32-unknown-unknown"
-// wasm-bindgen target/wasm32-unknown-unknown/debug/app_web.wasm --out-dir target/wasm/tmp --no-typescript --target web --out-name app --debug
-pub fn run(cmd: &WasmCmd) {
-    let release = is_release();
-    let mut cargo = Command::new("cargo");
+use crate::dwarf::split_debug_symbols;
 
+pub fn run(cmd: &WasmProcessingCmd) {
+    let release = matches!(cmd.profile, builder_command::Profile::Release);
     let package_name = cmd.package.replace("-", "_");
-    let mut args = vec![
-        "build",
-        "--package",
-        &cmd.package,
-        "--lib",
-        "--target",
-        "wasm32-unknown-unknown",
-    ];
-
-    if release {
-        args.push("--release");
-    }
-    log::info!("cargo {}", args.join(" "));
-
-    cargo.args(&args);
-
-    let cargo_status = cargo.status().unwrap();
-    if !cargo_status.success() {
-        panic!("FAILED: cargo {}", args.join(" "));
-    }
 
     let tmp_dir = Utf8PathBuf::from("target/wasm_tmp");
     tmp_dir.mkdir().unwrap();
 
     let wasm_path = Utf8PathBuf::from(format!(
         "target/wasm32-unknown-unknown/{}/{package_name}.wasm",
-        if release { "release" } else { "debug" }
+        cmd.profile.as_target_folder()
     ));
-    let wasm_mtime = wasm_path.mtime().unwrap();
+    let wasm_mtime = wasm_path
+        .mtime()
+        .with_context(|| format!("Failed to get mtime for {}", wasm_path))
+        .unwrap();
 
     let wasm_mtime_path = wasm_path.with_extension("wasm.mtime");
 
@@ -62,14 +43,19 @@ pub fn run(cmd: &WasmCmd) {
     let wasm_mtime_file = File::open(&wasm_mtime_path).unwrap();
     wasm_mtime_file.set_modified(wasm_mtime).unwrap();
 
+    let keep_debug = !matches!(cmd.debug_symbols, DebugSymbolsMode::Strip);
+
     wasm_bindgen_cli_support::Bindgen::new()
-        .input_path(wasm_path)
+        .input_path(&wasm_path)
         .typescript(false)
         .omit_default_module_path(false)
         .web(true)
         .unwrap()
         .out_name(&package_name)
-        .debug(true)
+        // Include otherwise-extraneous debug checks in output
+        .debug(!release)
+        // Keep debug sections in Wasm files
+        .keep_debug(keep_debug)
         .generate(&tmp_dir)
         .unwrap();
 
@@ -77,13 +63,34 @@ pub fn run(cmd: &WasmCmd) {
         .ls()
         .filter(|p| p.extension() == Some("wasm") || p.extension() == Some("js"));
 
+    let wasm_file_path = tmp_dir.join(format!("{package_name}_bg.wasm"));
+
     if release {
         let tmp = tmp_dir.with_extension("wasm-opt.wasm");
-        let wasm_path = tmp_dir.join(format!("{package_name}_bg.wasm"));
         OptimizationOptions::new_optimize_for_size_aggressively()
-            .run(&wasm_path, &tmp)
+            .debug_info(keep_debug)
+            .run(&wasm_file_path, &tmp)
             .unwrap();
-        tmp.mv(wasm_path).unwrap();
+        tmp.mv(&wasm_file_path).unwrap();
+    }
+
+    // Handle debug symbols based on mode
+    match &cmd.debug_symbols {
+        DebugSymbolsMode::Strip => {
+            // Debug symbols are already stripped by wasm-bindgen (keep_debug=false)
+            // and wasm-opt (debug_info=false)
+        }
+        DebugSymbolsMode::Keep => {
+            // Debug symbols remain in the main WASM file - no additional processing needed
+        }
+        DebugSymbolsMode::WriteTo(debug_path) => {
+            split_debug_symbols(&wasm_file_path, debug_path).unwrap();
+        }
+        DebugSymbolsMode::WriteAdjacent => {
+            let name = wasm_file_path.file_stem().unwrap();
+            let debug_path = wasm_file_path.with_file_name(format!("{name}_debug.wasm"));
+            split_debug_symbols(&wasm_file_path, &debug_path).unwrap();
+        }
     }
 
     let mut hasher = seahash::SeaHasher::new();
