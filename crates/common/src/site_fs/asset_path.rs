@@ -38,6 +38,17 @@ impl SiteFile {
             site_dir,
         }
     }
+
+    pub fn match_base_name(&self, name: &str) -> bool {
+        // without hashes and compression extensions
+        let cleaned: String = name
+            .split('.')
+            .filter(|&part| part.ends_with('=') || part == "br" || part == "gzip")
+            .collect::<Vec<_>>()
+            .join(".");
+
+        cleaned == format!("{}.{}", self.name, self.ext)
+    }
 }
 
 impl Display for SiteFile {

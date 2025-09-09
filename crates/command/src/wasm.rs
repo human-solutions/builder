@@ -1,8 +1,63 @@
-use std::{convert::Infallible, fmt::Display, str::FromStr};
+use std::{
+    convert::Infallible,
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 
 use camino_fs::Utf8PathBuf;
 
 use crate::Output;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DebugSymbolsMode {
+    /// Strip debug symbols without preserving them
+    Strip,
+    /// Keep debug symbols in the main WASM file
+    Keep,
+    /// Write debug symbols to a custom path and strip from main file
+    WriteTo(Utf8PathBuf),
+    /// Write debug symbols next to the main WASM file with .debug.wasm extension and strip from main file
+    WriteAdjacent,
+}
+
+impl Default for DebugSymbolsMode {
+    fn default() -> Self {
+        Self::Strip
+    }
+}
+
+impl Display for DebugSymbolsMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DebugSymbolsMode::Strip => write!(f, "strip"),
+            DebugSymbolsMode::Keep => write!(f, "keep"),
+            DebugSymbolsMode::WriteTo(path) => write!(f, "write_to:{}", path),
+            DebugSymbolsMode::WriteAdjacent => write!(f, "adjacent"),
+        }
+    }
+}
+
+impl FromStr for DebugSymbolsMode {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "strip" => Ok(DebugSymbolsMode::Strip),
+            "keep" => Ok(DebugSymbolsMode::Keep),
+            "adjacent" => Ok(DebugSymbolsMode::WriteAdjacent),
+            _ if s.starts_with("write_to:") => {
+                let path = &s[9..]; // Skip "write_to:" prefix
+                Ok(DebugSymbolsMode::WriteTo(path.parse().unwrap()))
+            }
+            _ => panic!("Invalid debug symbols mode: {}", s),
+        }
+    }
+}
+impl DebugSymbolsMode {
+    pub fn write_to(path: impl Into<Utf8PathBuf>) -> Self {
+        Self::WriteTo(path.into())
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum Profile {
@@ -45,9 +100,8 @@ pub struct WasmProcessingCmd {
 
     pub output: Vec<Output>,
 
-    /// Wether to extract debug symbols and write them to the given path
-    /// Also removes them from the original wasm file
-    pub write_debug_symbols_to: Option<Utf8PathBuf>,
+    /// Debug symbol handling strategy
+    pub debug_symbols: DebugSymbolsMode,
 }
 
 impl WasmProcessingCmd {
@@ -56,7 +110,7 @@ impl WasmProcessingCmd {
             package: package.to_string(),
             profile,
             output: Vec::new(),
-            write_debug_symbols_to: None,
+            debug_symbols: DebugSymbolsMode::default(),
         }
     }
 
@@ -70,8 +124,9 @@ impl WasmProcessingCmd {
         self
     }
 
-    pub fn write_debug_symbols<P: Into<Utf8PathBuf>>(mut self, path: P) -> Self {
-        self.write_debug_symbols_to = Some(path.into());
+    /// Strip debug symbols (default behavior)
+    pub fn debug_symbols(mut self, mode: DebugSymbolsMode) -> Self {
+        self.debug_symbols = mode;
         self
     }
 }
@@ -89,9 +144,7 @@ impl Display for WasmProcessingCmd {
         for out in &self.output {
             writeln!(f, "output={}", out)?;
         }
-        if let Some(path) = &self.write_debug_symbols_to {
-            writeln!(f, "write_debug_symbols_to={}", path)?;
-        }
+        writeln!(f, "debug_symbols={}", self.debug_symbols)?;
         Ok(())
     }
 }
@@ -110,9 +163,7 @@ impl FromStr for WasmProcessingCmd {
                 "package" => me.package = value.to_string(),
                 "profile" => me.profile = Profile::from_target_folder(value),
                 "output" => me.output.push(value.parse().unwrap()),
-                "write_debug_symbols_to" => {
-                    me.write_debug_symbols_to = Some(value.parse().unwrap())
-                }
+                "debug_symbols" => me.debug_symbols = value.parse().unwrap(),
                 _ => panic!("unknown key: {}", key),
             }
         }

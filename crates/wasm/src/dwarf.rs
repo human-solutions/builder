@@ -57,7 +57,7 @@ pub fn split_debug_symbols(
         .push(CustomSection::BuildId(build_id.clone()).into());
 
     // Write the complete module (including debug info) to the debug file
-    log::debug!("Write .debug.wasm file {}", wasm_debug_path);
+    log::debug!("Write _debug.wasm file {}", wasm_debug_path);
     module
         .encode_into(BufWriter::new(File::create(&wasm_debug_path)?))
         .map_err(|e| anyhow::anyhow!("Failed to encode debug WASM file: {}", e))?;
@@ -67,6 +67,18 @@ pub fn split_debug_symbols(
     module
         .sections
         .retain(|section| !is_strippable_section(section, true));
+
+    let is_adjacent = match (wasm_debug_path.parent(), wasm_path.parent()) {
+        (Some(p1), Some(p2)) if p1 == p2 => true,
+        _ => false,
+    };
+    // Add external debug info reference if we have a debug file
+    if is_adjacent {
+        let file_name = wasm_debug_path.file_name().unwrap().to_string();
+        module
+            .sections
+            .push(CustomSection::ExternalDebugInfo(file_name.into()).into());
+    }
 
     // Write the main module
     log::debug!("Write stripped .wasm file {}", wasm_path);

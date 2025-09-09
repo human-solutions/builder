@@ -20,7 +20,7 @@ pub use sass::SassCmd;
 use std::fs;
 pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
-pub use wasm::{Profile, WasmProcessingCmd};
+pub use wasm::{DebugSymbolsMode, Profile, WasmProcessingCmd};
 
 #[derive(Debug, PartialEq)]
 pub struct BuilderCmd {
@@ -244,7 +244,7 @@ fn roundtrip() {
         .add_localized(LocalizedCmd::default())
         .add_fontforge(FontForgeCmd::default())
         .add_assemble(AssembleCmd::default())
-        .add_wasm(WasmProcessingCmd::default())
+        .add_wasm(WasmProcessingCmd::default().debug_symbols(DebugSymbolsMode::Keep))
         .add_copy(CopyCmd::default())
         .add_swift_package(SwiftPackageCmd::default())
         .verbose(true)

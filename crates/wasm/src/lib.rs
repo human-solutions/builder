@@ -2,7 +2,7 @@ mod dwarf;
 
 use anyhow::Context;
 use base64::{Engine, engine::general_purpose::URL_SAFE};
-use builder_command::WasmProcessingCmd;
+use builder_command::{DebugSymbolsMode, WasmProcessingCmd};
 use camino_fs::*;
 use common::site_fs::{SiteFile, write_file_to_site};
 use std::{fs::File, hash::Hasher};
@@ -43,7 +43,7 @@ pub fn run(cmd: &WasmProcessingCmd) {
     let wasm_mtime_file = File::open(&wasm_mtime_path).unwrap();
     wasm_mtime_file.set_modified(wasm_mtime).unwrap();
 
-    let keep_debug = cmd.write_debug_symbols_to.is_some();
+    let keep_debug = !matches!(cmd.debug_symbols, DebugSymbolsMode::Strip);
 
     wasm_bindgen_cli_support::Bindgen::new()
         .input_path(&wasm_path)
@@ -74,8 +74,23 @@ pub fn run(cmd: &WasmProcessingCmd) {
         tmp.mv(&wasm_file_path).unwrap();
     }
 
-    if let Some(wasm_debug_path) = &cmd.write_debug_symbols_to {
-        split_debug_symbols(&wasm_file_path, wasm_debug_path).unwrap();
+    // Handle debug symbols based on mode
+    match &cmd.debug_symbols {
+        DebugSymbolsMode::Strip => {
+            // Debug symbols are already stripped by wasm-bindgen (keep_debug=false)
+            // and wasm-opt (debug_info=false)
+        }
+        DebugSymbolsMode::Keep => {
+            // Debug symbols remain in the main WASM file - no additional processing needed
+        }
+        DebugSymbolsMode::WriteTo(debug_path) => {
+            split_debug_symbols(&wasm_file_path, debug_path).unwrap();
+        }
+        DebugSymbolsMode::WriteAdjacent => {
+            let name = wasm_file_path.file_stem().unwrap();
+            let debug_path = wasm_file_path.with_file_name(format!("{name}_debug.wasm"));
+            split_debug_symbols(&wasm_file_path, &debug_path).unwrap();
+        }
     }
 
     let mut hasher = seahash::SeaHasher::new();
