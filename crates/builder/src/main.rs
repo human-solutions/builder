@@ -3,7 +3,7 @@ use std::env;
 
 use builder_command::{BuilderCmd, Cmd};
 use camino_fs::*;
-use common::{RELEASE, VERBOSE, setup_logging};
+use common::{LOG_LEVEL, RELEASE, setup_logging};
 
 fn main() {
     let args = std::env::args().collect::<Vec<_>>();
@@ -22,8 +22,8 @@ fn main() {
 
     RELEASE.set(builder.release).unwrap();
 
-    setup_logging(builder.verbose);
-    VERBOSE.set(builder.verbose).unwrap();
+    setup_logging(builder.log_level, builder.log_destination.clone());
+    LOG_LEVEL.set(builder.log_level).unwrap();
 
     let bin_version = env!("CARGO_PKG_VERSION");
     let metadata = cargo_metadata::MetadataCommand::new().exec().unwrap();

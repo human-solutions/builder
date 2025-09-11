@@ -4,7 +4,7 @@ mod encoding;
 #[cfg(test)]
 mod tests;
 
-use crate::debug;
+use crate::{debug, is_trace, log_trace};
 pub use anyhow::Result;
 pub use asset::Asset;
 pub use asset_path::{AssetPath, SiteFile, TranslatedAssetPath};
@@ -18,23 +18,36 @@ use std::{collections::BTreeMap, hash::Hasher};
 
 pub fn parse_site(root: &Utf8Path) -> Result<Vec<Asset>> {
     let mut assets: BTreeMap<String, Asset> = Default::default();
+    let mut file_count = 0;
 
     debug!("Parsing site {root}");
     for path in root.ls().recurse() {
         if path.file_name() == Some(".DS_Store") {
+            if is_trace() {
+                log_trace!("SITE_FS", "Skipping .DS_Store file: {}", path);
+            }
             continue;
         }
+        file_count += 1;
         let rel_path = path.relative_to(root).unwrap();
-        debug!("Parsing asset from {rel_path}");
+        log_trace!("SITE_FS", "Parsing asset from: {}", rel_path);
         if let Some(asset) = Asset::from_site_path(rel_path) {
             let url = asset.to_url();
             if let Some(current) = assets.get_mut(&url) {
+                log_trace!("SITE_FS", "Merging asset with existing URL: {}", url);
                 current.join(asset);
             } else {
+                log_trace!("SITE_FS", "New asset URL: {}", url);
                 assets.insert(url, asset);
             }
         }
     }
+
+    debug!(
+        "Parsed {} files into {} unique assets from site root",
+        file_count,
+        assets.len()
+    );
     Ok(assets.into_values().collect())
 }
 
@@ -46,16 +59,34 @@ pub fn copy_files_to_site<F: Fn(&Utf8PathBuf) -> bool>(
     predicate: F,
     output: &[Output],
 ) {
+    let mut copied_count = 0;
+    let mut total_size = 0u64;
+
     for file in folder.ls().recurse_if(move |_| recursive).filter(predicate) {
         if !file.is_file() {
-            debug!("Skipping non-file {file}");
+            log_trace!("SITE_FS", "Skipping non-file: {}", file);
             continue;
         }
         let bytes = file.read_bytes().unwrap();
+        total_size += bytes.len() as u64;
         let rel_path = file.relative_to(folder).unwrap();
         let site_file = SiteFile::from_relative_path(rel_path);
-        debug!("Copying {file} to {site_file}");
+        log_trace!(
+            "SITE_FS",
+            "Copying {} ({} bytes) to {}",
+            file,
+            bytes.len(),
+            site_file
+        );
         write_file_to_site(&site_file, &bytes, output);
+        copied_count += 1;
+    }
+
+    if copied_count > 0 {
+        debug!(
+            "Copied {} files ({} bytes total) from {}",
+            copied_count, total_size, folder
+        );
     }
 }
 
@@ -92,12 +123,19 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
                     .unwrap_or(false)
             })
             .for_each(|f| {
-                log::debug!("Removing file: {f}");
+                log_trace!("SITE_FS", "Removing existing file: {}", f);
                 f.rm().unwrap();
             });
 
         let path = asset.absolute_path(&out.dir);
         let encodings = AssetEncodings::from_output(out);
+        log_trace!(
+            "SITE_FS",
+            "Writing file: {} ({} bytes, encodings: {:?})",
+            path,
+            bytes.len(),
+            encodings
+        );
         encodings.write(&path, bytes).unwrap()
     }
 }

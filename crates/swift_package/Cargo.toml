@@ -11,4 +11,5 @@ authors.workspace = true
 builder-command = { path = "../command" }
 common = { path = "../common" }
 
+log.workspace = true
 swift-package.workspace = true

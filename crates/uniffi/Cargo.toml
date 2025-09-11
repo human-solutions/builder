@@ -9,6 +9,7 @@ version.workspace = true
 
 [dependencies]
 builder-command = { path = "../command" }
+common = { path = "../common" }
 
 camino-fs.workspace = true
 log.workspace = true
