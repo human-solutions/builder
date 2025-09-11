@@ -1,4 +1,4 @@
-use crate::{debug, is_release, warn};
+use crate::{debug, is_release};
 use std::{
     io::{Cursor, Write},
     str::FromStr,
@@ -75,7 +75,7 @@ impl AssetEncodings {
         match enc {
             "br" => self.brotli = true,
             "gzip" => self.gzip = true,
-            _ => warn!("invalid encoding: {enc}"),
+            _ => crate::warn_cargo!("invalid encoding: {enc}"),
         }
     }
 

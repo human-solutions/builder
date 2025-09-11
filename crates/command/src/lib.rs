@@ -15,6 +15,7 @@ use camino_fs::Utf8PathBuf;
 pub use copy::CopyCmd;
 pub use fontforge::FontForgeCmd;
 pub use localized::LocalizedCmd;
+use log::LevelFilter;
 pub use out::{Encoding, Output};
 pub use sass::SassCmd;
 use std::fs;
@@ -22,9 +23,26 @@ pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
 pub use wasm::{DebugSymbolsMode, Profile, WasmProcessingCmd};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LogLevel {
+    Normal,  // Info level + enhanced summaries
+    Verbose, // Debug + detailed operations
+    Trace,   // Everything including file-level operations
+}
+
+impl LogLevel {
+    pub fn to_level_filter(self) -> LevelFilter {
+        match self {
+            LogLevel::Normal => LevelFilter::Info,
+            LogLevel::Verbose => LevelFilter::Debug,
+            LogLevel::Trace => LevelFilter::Trace,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct BuilderCmd {
-    pub verbose: bool,
+    pub log_level: LogLevel,
     pub release: bool,
     /// The directory where the builder.toml file is located
     /// Defaults to env OUT_DIR
@@ -43,7 +61,7 @@ impl BuilderCmd {
     pub fn new() -> Self {
         Self {
             cmds: Vec::new(),
-            verbose: false,
+            log_level: LogLevel::Normal,
             release: env::var("PROFILE").unwrap_or_default() == "release",
             in_cargo: env::var("CARGO").is_ok(),
             builder_toml: Utf8PathBuf::from(
@@ -101,8 +119,8 @@ impl BuilderCmd {
         self
     }
 
-    pub fn verbose(mut self, val: bool) -> Self {
-        self.verbose = val;
+    pub fn log_level(mut self, level: LogLevel) -> Self {
+        self.log_level = level;
         self
     }
 
@@ -142,9 +160,8 @@ impl BuilderCmd {
     }
 
     fn log(&self, msg: &str) {
-        if self.verbose && self.in_cargo {
-            println!("cargo::warning={msg}");
-        } else if self.verbose {
+        let is_verbose = matches!(self.log_level, LogLevel::Verbose | LogLevel::Trace);
+        if is_verbose {
             println!("{msg}");
         }
     }
@@ -152,7 +169,12 @@ impl BuilderCmd {
 
 impl Display for BuilderCmd {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "verbose={}", self.verbose)?;
+        let log_level_str = match self.log_level {
+            LogLevel::Normal => "normal",
+            LogLevel::Verbose => "verbose",
+            LogLevel::Trace => "trace",
+        };
+        writeln!(f, "log_level={}", log_level_str)?;
         writeln!(f, "release={}", self.release)?;
         writeln!(f, "builder_toml={}", self.builder_toml)?;
         for cmd in &self.cmds {
@@ -170,7 +192,23 @@ impl FromStr for BuilderCmd {
         for line in lines.by_ref().take(3) {
             let (key, value) = line.split_once('=').unwrap();
             match key {
-                "verbose" => builder.verbose = value.parse().unwrap(),
+                "log_level" => {
+                    builder.log_level = match value {
+                        "normal" => LogLevel::Normal,
+                        "verbose" => LogLevel::Verbose,
+                        "trace" => LogLevel::Trace,
+                        _ => LogLevel::Normal,
+                    };
+                }
+                "verbose" => {
+                    // Keep backward compatibility
+                    let verbose: bool = value.parse().unwrap();
+                    builder.log_level = if verbose {
+                        LogLevel::Verbose
+                    } else {
+                        LogLevel::Normal
+                    };
+                }
                 "release" => builder.release = value.parse().unwrap(),
                 "builder_toml" => builder.builder_toml = value.parse().unwrap(),
                 _ => panic!("Unknown key: {}", key),
@@ -247,7 +285,7 @@ fn roundtrip() {
         .add_wasm(WasmProcessingCmd::default().debug_symbols(DebugSymbolsMode::Keep))
         .add_copy(CopyCmd::default())
         .add_swift_package(SwiftPackageCmd::default())
-        .verbose(true)
+        .log_level(LogLevel::Verbose)
         .release(true)
         .builder_toml("builder.toml");
 

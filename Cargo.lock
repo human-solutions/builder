@@ -292,6 +292,7 @@ name = "builder-command"
 version = "0.1.25"
 dependencies = [
  "camino-fs",
+ "log",
 ]
 
 [[package]]
@@ -343,6 +344,7 @@ version = "0.1.25"
 dependencies = [
  "builder-command",
  "common",
+ "log",
  "swift-package",
 ]
 
@@ -352,6 +354,7 @@ version = "0.1.25"
 dependencies = [
  "builder-command",
  "camino-fs",
+ "common",
  "log",
  "uniffi_bindgen",
 ]

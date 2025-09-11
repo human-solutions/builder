@@ -48,19 +48,19 @@ impl Asset {
 
     pub fn join(&mut self, other: Self) {
         if self.sub_dir != other.sub_dir {
-            crate::warn!("Can't join assets with different subdirs {self} {other}");
+            crate::warn_cargo!("Can't join assets with different subdirs {self} {other}");
             return;
         }
         if self.name != other.name {
-            crate::warn!("Can't join assets with different names {self} {other}");
+            crate::warn_cargo!("Can't join assets with different names {self} {other}");
             return;
         }
         if self.ext != other.ext {
-            crate::warn!("Can't join assets with different extensions {self} {other}");
+            crate::warn_cargo!("Can't join assets with different extensions {self} {other}");
             return;
         }
         if self.hash != other.hash {
-            crate::warn!("Can't join assets with different hashes {self} {other}");
+            crate::warn_cargo!("Can't join assets with different hashes {self} {other}");
             return;
         }
         self.encodings.join(&other.encodings);
@@ -117,7 +117,7 @@ fn parse_translated_asset(path: &Utf8Path) -> Option<Asset> {
     let mut file_parts = path.file_name()?.split('.');
     let lang = parse_language(&mut file_parts)?;
     if file_parts.next() != Some(ext) {
-        crate::warn!("Translated asset dir extension doesn't match file extension {path}");
+        crate::warn_cargo!("Translated asset dir extension doesn't match file extension {path}");
         return None;
     }
     let encodings = parse_encoding(&mut file_parts)?;
@@ -139,7 +139,7 @@ fn parse_name_hash_ext<'a>(
     let hash_or_ext = parts.next()?;
     Some(if hash_or_ext.ends_with('=') {
         let Some(ext) = parts.next() else {
-            crate::warn!("No extension found after {hash_or_ext}");
+            crate::warn_cargo!("No extension found after {hash_or_ext}");
             return None;
         };
         (name, Some(hash_or_ext), ext)
@@ -152,8 +152,8 @@ fn parse_language(parts: &mut Split<char>) -> Option<LanguageIdentifier> {
     let lang_str = parts.next()?;
     match lang_str.parse() {
         Ok(lang) => Some(lang),
-        Err(e) => {
-            crate::warn!("Failed to parse language identifier '{lang_str}': {e}");
+        Err(_e) => {
+            crate::warn_cargo!("Failed to parse language identifier '{lang_str}': {_e}");
             None
         }
     }
@@ -165,8 +165,8 @@ fn parse_encoding(parts: &mut Split<char>) -> Option<AssetEncodings> {
     };
     match enc_str.parse() {
         Ok(enc) => Some(enc),
-        Err(e) => {
-            crate::warn!("Failed to parse encoding '{enc_str}': {e}");
+        Err(_e) => {
+            crate::warn_cargo!("Failed to parse encoding '{enc_str}': {_e}");
             None
         }
     }

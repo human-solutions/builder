@@ -1,16 +1,23 @@
 use builder_command::UniffiCmd;
 use camino_fs::*;
+use common::{Timer, log_command, log_operation, log_trace};
 use uniffi_bindgen::{
     bindings::{KotlinBindingGenerator, SwiftBindingGenerator},
     generate_external_bindings,
 };
 
 pub fn run(cmd: &UniffiCmd) {
-    log::info!("Running builder-uniffi");
-
+    let _timer = Timer::new("UNIFFI processing");
+    log_command!("UNIFFI", "Processing library: {}", cmd.library_name);
+    log_operation!("UNIFFI", "UDL file: {}", cmd.udl_file);
+    log_operation!("UNIFFI", "Output directory: {}", cmd.out_dir);
+    log_operation!("UNIFFI", "Kotlin: {}, Swift: {}", cmd.kotlin, cmd.swift);
+    
     let udl_copy = cmd.out_dir.join(cmd.udl_file.file_name().unwrap());
     let cli_copy = cmd.out_dir.join("self.json");
     let conf_copy = cmd.out_dir.join("uniffi.toml");
+    
+    log_trace!("UNIFFI", "Checking cache files: udl={}, cli={}, config={}", udl_copy, cli_copy, conf_copy);
 
     if udl_copy.exists() && cli_copy.exists() {
         let udl_ref_bytes = udl_copy.read_bytes().unwrap();
@@ -31,45 +38,48 @@ pub fn run(cmd: &UniffiCmd) {
 
         match (is_udl_same, is_cli_same, is_config_same) {
             (true, true, true) => {
-                log::info!(
-                    "No changes to UDL file, cli params, or config file, skipping generation"
-                );
+                log_command!("UNIFFI", "No changes detected, skipping generation");
                 return;
             }
             (false, _, _) => {
-                log::info!("UDL file changed, regenerating bindings");
+                log_operation!("UNIFFI", "UDL file changed, regenerating bindings");
             }
             (_, false, _) => {
-                log::info!("CLI params changed, regenerating bindings");
+                log_operation!("UNIFFI", "CLI parameters changed, regenerating bindings");
             }
             (_, _, false) => {
-                log::info!("Config file changed, regenerating bindings");
+                log_operation!("UNIFFI", "Configuration file changed, regenerating bindings");
             }
         }
+    } else {
+        log_operation!("UNIFFI", "First time processing, setting up cache files");
     }
+    
+    log_operation!("UNIFFI", "Setting up output directory and cache files");
     cmd.out_dir.mkdirs().unwrap();
     cmd.udl_file.cp(&udl_copy).unwrap();
     if let Some(config_file) = &cmd.config_file {
+        log_trace!("UNIFFI", "Copying config file: {}", config_file);
         config_file.cp(&conf_copy).unwrap();
     }
     cli_copy.write(cmd.to_string()).unwrap();
 
     if cmd.kotlin {
-        log::info!("Generating Kotlin bindings for {}", cmd.library_name);
+        log_operation!("UNIFFI", "Generating Kotlin bindings for library: {}", cmd.library_name);
         generate_external_bindings(
             &KotlinBindingGenerator,
             &cmd.udl_file,
             cmd.config_file.as_ref(),
             Some(&cmd.out_dir),
-            // None::<&Utf8PathBuf>,
             Some(cmd.built_lib_file.clone()),
             Some(&cmd.library_name),
             true,
         )
         .unwrap();
+        log_operation!("UNIFFI", "Kotlin bindings generation completed");
     }
     if cmd.swift {
-        log::info!("Generating Swift bindings for {}", cmd.library_name);
+        log_operation!("UNIFFI", "Generating Swift bindings for library: {}", cmd.library_name);
         generate_external_bindings(
             &SwiftBindingGenerator,
             &cmd.udl_file,
@@ -80,7 +90,9 @@ pub fn run(cmd: &UniffiCmd) {
             false,
         )
         .unwrap();
+        log_operation!("UNIFFI", "Fixing Swift modulemap file");
         fix_modulemap_file(&cmd.out_dir);
+        log_operation!("UNIFFI", "Swift bindings generation completed");
     }
 }
 
@@ -91,6 +103,8 @@ fn fix_modulemap_file(out_dir: &Utf8Path) {
         .files()
         .find(|f| f.extension() == Some("modulemap"))
         .unwrap();
+
+    log_trace!("UNIFFI", "Found modulemap file: {}", modulemap_file);
 
     let modulemap = modulemap_file.read_string().unwrap();
 
@@ -103,4 +117,5 @@ fn fix_modulemap_file(out_dir: &Utf8Path) {
     new_modulemap.push_str(&modulemap);
 
     modulemap_file.write(new_modulemap.as_bytes()).unwrap();
+    log_trace!("UNIFFI", "Fixed modulemap file: added 'framework' prefix");
 }
