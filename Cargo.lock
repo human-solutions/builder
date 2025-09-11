@@ -258,7 +258,7 @@ dependencies = [
 
 [[package]]
 name = "builder"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "builder-assemble",
  "builder-command",
@@ -277,7 +277,7 @@ dependencies = [
 
 [[package]]
 name = "builder-assemble"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "base64",
  "builder-command",
@@ -289,7 +289,7 @@ dependencies = [
 
 [[package]]
 name = "builder-command"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "camino-fs",
  "log",
@@ -297,7 +297,7 @@ dependencies = [
 
 [[package]]
 name = "builder-copy"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "builder-command",
  "common",
@@ -306,7 +306,7 @@ dependencies = [
 
 [[package]]
 name = "builder-fontforge"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "builder-command",
  "camino-fs",
@@ -317,7 +317,7 @@ dependencies = [
 
 [[package]]
 name = "builder-localized"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "builder-command",
  "camino-fs",
@@ -328,7 +328,7 @@ dependencies = [
 
 [[package]]
 name = "builder-sass"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "builder-command",
  "common",
@@ -340,7 +340,7 @@ dependencies = [
 
 [[package]]
 name = "builder-swift-package"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "builder-command",
  "common",
@@ -350,7 +350,7 @@ dependencies = [
 
 [[package]]
 name = "builder-uniffi"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "builder-command",
  "camino-fs",
@@ -361,7 +361,7 @@ dependencies = [
 
 [[package]]
 name = "builder-wasm"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "anyhow",
  "base64",
@@ -575,7 +575,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "common"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "anyhow",
  "base64",
