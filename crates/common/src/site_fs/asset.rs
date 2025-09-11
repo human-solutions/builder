@@ -94,8 +94,18 @@ impl Display for Asset {
 }
 
 fn parse_asset(path: &Utf8Path) -> Option<Asset> {
-    let mut parts = path.file_name()?.split('.');
-    let (name, hash, ext) = parse_name_hash_ext(&mut parts)?;
+    let file_name = path.file_name()?;
+
+    // Skip hashed directories (e.g., "wasm.abc123=") - they don't have extensions
+    if path.is_dir() {
+        let parts: Vec<&str> = file_name.split('.').collect();
+        if parts.len() == 2 && parts[1].ends_with('=') {
+            return None;
+        }
+    }
+
+    let mut parts = file_name.split('.');
+    let (name, hash, ext) = parse_name_hash_ext(&mut parts, path)?;
     let encodings = parse_encoding(&mut parts)?;
 
     Some(Asset {
@@ -110,9 +120,18 @@ fn parse_asset(path: &Utf8Path) -> Option<Asset> {
 
 fn parse_translated_asset(path: &Utf8Path) -> Option<Asset> {
     let dir = path.parent()?;
-    let mut dir_parts = dir.file_name()?.split('.');
+    let dir_name = dir.file_name()?;
+    let mut dir_parts = dir_name.split('.');
 
-    let (name, hash, ext) = parse_name_hash_ext(&mut dir_parts)?;
+    // For WASM and other hashed directories without extensions, handle separately
+    let dir_parts_vec: Vec<&str> = dir_name.split('.').collect();
+    if dir_parts_vec.len() == 2 && dir_parts_vec[1].ends_with('=') {
+        // This is a hashed directory without extension (e.g., "wasm.abc123=")
+        // Not a translated asset pattern, so return None to let parse_asset handle it
+        return None;
+    }
+
+    let (name, hash, ext) = parse_name_hash_ext(&mut dir_parts, path)?;
 
     let mut file_parts = path.file_name()?.split('.');
     let lang = parse_language(&mut file_parts)?;
@@ -134,12 +153,15 @@ fn parse_translated_asset(path: &Utf8Path) -> Option<Asset> {
 
 fn parse_name_hash_ext<'a>(
     parts: &mut Split<'a, char>,
+    path: &Utf8Path,
 ) -> Option<(&'a str, Option<&'a str>, &'a str)> {
     let name = parts.next()?;
     let hash_or_ext = parts.next()?;
     Some(if hash_or_ext.ends_with('=') {
         let Some(ext) = parts.next() else {
-            crate::warn_cargo!("No extension found after {hash_or_ext}");
+            if !path.is_dir() {
+                crate::warn_cargo!("No extension found after '{}' for {}", hash_or_ext, path);
+            }
             return None;
         };
         (name, Some(hash_or_ext), ext)
