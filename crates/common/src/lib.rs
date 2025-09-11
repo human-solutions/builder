@@ -3,8 +3,12 @@ mod ext;
 pub mod out;
 pub mod site_fs;
 
-use builder_command::LogLevel;
-use simplelog::{ColorChoice, ConfigBuilder, TermLogger, TerminalMode, format_description};
+use builder_command::{LogDestination, LogLevel};
+use log::{Log, Metadata, Record};
+use simplelog::{
+    ColorChoice, ConfigBuilder, TermLogger, TerminalMode, WriteLogger, format_description,
+};
+use std::fs::OpenOptions;
 use std::sync::OnceLock;
 use time::OffsetDateTime;
 
@@ -126,7 +130,43 @@ macro_rules! warn_cargo {
     };
 }
 
-pub fn setup_logging(level: LogLevel) {
+/// Custom logger that routes log messages through cargo's warning system
+struct CargoLogger {
+    level: log::LevelFilter,
+}
+
+impl CargoLogger {
+    fn new(level: log::LevelFilter) -> Self {
+        Self { level }
+    }
+}
+
+impl Log for CargoLogger {
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= self.level
+    }
+
+    fn log(&self, record: &Record) {
+        if self.enabled(record.metadata()) {
+            let level_str = match record.level() {
+                log::Level::Error => "ERROR",
+                log::Level::Warn => "WARN",
+                log::Level::Info => "INFO",
+                log::Level::Debug => "DEBUG",
+                log::Level::Trace => "TRACE",
+            };
+
+            // Route through cargo warning system
+            println!("cargo:warning=[{}] {}", level_str, record.args());
+        }
+    }
+
+    fn flush(&self) {
+        // cargo warnings are flushed automatically
+    }
+}
+
+pub fn setup_logging(level: LogLevel, destination: LogDestination) {
     let log_level = level.to_level_filter();
 
     let mut log_config_builder = ConfigBuilder::new();
@@ -141,10 +181,36 @@ pub fn setup_logging(level: LogLevel) {
         .set_time_format_custom(format_description!("[hour]:[minute]:[second]"))
         .build();
 
-    let _ = TermLogger::init(
-        log_level,
-        log_config,
-        TerminalMode::Mixed,
-        ColorChoice::Never,
-    );
+    match destination {
+        LogDestination::Cargo => {
+            // Use custom CargoLogger that routes messages through cargo warnings
+            let logger = Box::new(CargoLogger::new(log_level));
+            let _ = log::set_boxed_logger(logger).map(|()| log::set_max_level(log_level));
+        }
+        LogDestination::File(path) => {
+            let file = OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+                .expect("Could not create log file");
+
+            let _ = WriteLogger::init(log_level, log_config, file);
+        }
+        LogDestination::Terminal => {
+            let _ = TermLogger::init(
+                log_level,
+                log_config,
+                TerminalMode::Mixed,
+                ColorChoice::Never,
+            );
+        }
+        LogDestination::TerminalPlain => {
+            let _ = TermLogger::init(
+                log_level,
+                log_config,
+                TerminalMode::Stdout,
+                ColorChoice::Never,
+            );
+        }
+    }
 }

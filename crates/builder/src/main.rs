@@ -22,7 +22,7 @@ fn main() {
 
     RELEASE.set(builder.release).unwrap();
 
-    setup_logging(builder.log_level);
+    setup_logging(builder.log_level, builder.log_destination.clone());
     LOG_LEVEL.set(builder.log_level).unwrap();
 
     let bin_version = env!("CARGO_PKG_VERSION");
