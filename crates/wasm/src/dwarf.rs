@@ -1,7 +1,5 @@
-use std::{
-    fs::File,
-    io::{BufReader, BufWriter},
-};
+use std::io::{BufReader, BufWriter};
+use fs_err::File;
 
 use anyhow::bail;
 use camino_fs::*;

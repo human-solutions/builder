@@ -10,4 +10,5 @@ version.workspace = true
 
 [dependencies]
 camino-fs.workspace = true
+fs-err.workspace = true
 log.workspace = true

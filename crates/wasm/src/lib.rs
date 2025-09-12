@@ -6,7 +6,7 @@ use builder_command::{DebugSymbolsMode, WasmProcessingCmd};
 use camino_fs::*;
 use common::site_fs::{SiteFile, write_file_to_site};
 use common::{Timer, log_command, log_operation, log_trace};
-use std::{fs::File, hash::Hasher};
+use std::hash::Hasher;
 use wasm_opt::OptimizationOptions;
 
 use crate::dwarf::split_debug_symbols;
@@ -63,7 +63,8 @@ pub fn run(cmd: &WasmProcessingCmd) {
             .write("this file has the mtime of the last time the wasm was built")
             .unwrap();
     }
-    let wasm_mtime_file = File::open(&wasm_mtime_path).unwrap();
+    // we use the std::fs as fs_err doesn't support setting mtime
+    let wasm_mtime_file = std::fs::File::open(&wasm_mtime_path).unwrap();
     wasm_mtime_file.set_modified(wasm_mtime).unwrap();
 
     let keep_debug = !matches!(cmd.debug_symbols, DebugSymbolsMode::Strip);

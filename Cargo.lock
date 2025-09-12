@@ -292,6 +292,7 @@ name = "builder-command"
 version = "0.1.26"
 dependencies = [
  "camino-fs",
+ "fs-err 3.1.1",
  "log",
 ]
 
@@ -368,6 +369,7 @@ dependencies = [
  "builder-command",
  "camino-fs",
  "common",
+ "fs-err 3.1.1",
  "log",
  "seahash",
  "tempfile",
@@ -583,6 +585,7 @@ dependencies = [
  "builder-command",
  "camino-fs",
  "flate2",
+ "fs-err 3.1.1",
  "icu_locid",
  "log",
  "seahash",

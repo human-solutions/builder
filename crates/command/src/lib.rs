@@ -18,7 +18,7 @@ pub use localized::LocalizedCmd;
 use log::LevelFilter;
 pub use out::{Encoding, Output};
 pub use sass::SassCmd;
-use std::fs;
+use fs_err as fs;
 pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
 pub use wasm::{DebugSymbolsMode, Profile, WasmProcessingCmd};

@@ -1,9 +1,9 @@
 use std::{
     collections::HashMap,
-    fs::File,
     hash::Hasher,
     io::{Cursor, Write},
 };
+use fs_err::File;
 
 use base64::{Engine, engine::general_purpose::URL_SAFE};
 use brotli::{BrotliCompress, enc::BrotliEncoderParams};

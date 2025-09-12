@@ -8,7 +8,7 @@ use log::{Log, Metadata, Record};
 use simplelog::{
     ColorChoice, ConfigBuilder, TermLogger, TerminalMode, WriteLogger, format_description,
 };
-use std::fs::OpenOptions;
+use fs_err::OpenOptions;
 use std::sync::OnceLock;
 use time::OffsetDateTime;
 
