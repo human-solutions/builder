@@ -1,14 +1,16 @@
 mod envargs;
 mod ext;
+pub mod hash_output;
+mod hash_output_integration_test;
 pub mod out;
 pub mod site_fs;
 
 use builder_command::{LogDestination, LogLevel};
+use fs_err::OpenOptions;
 use log::{Log, Metadata, Record};
 use simplelog::{
     ColorChoice, ConfigBuilder, TermLogger, TerminalMode, WriteLogger, format_description,
 };
-use std::fs::OpenOptions;
 use std::sync::OnceLock;
 use time::OffsetDateTime;
 
@@ -156,8 +158,20 @@ impl Log for CargoLogger {
                 log::Level::Trace => "TRACE",
             };
 
+            let msg = record.args().to_string();
+
+            // Filter out excessive wasm_bindgen logs at DEBUG level unless in Trace mode
+            if record.level() == log::Level::Debug
+                && !is_trace()
+                && let Some(module_path) = record.module_path()
+                && (module_path.starts_with("wasm_bindgen_cli_support")
+                    || module_path.starts_with("walrus"))
+            {
+                return;
+            }
+
             // Route through cargo warning system
-            println!("cargo:warning=[{}] {}", level_str, record.args());
+            println!("cargo:warning=[{}] {}", level_str, msg);
         }
     }
 
@@ -171,10 +185,13 @@ pub fn setup_logging(level: LogLevel, destination: LogDestination) {
 
     let mut log_config_builder = ConfigBuilder::new();
 
-    // Filter out walrus debug logs when in verbose mode
-    if matches!(level, LogLevel::Verbose | LogLevel::Trace) {
+    // Filter out walrus and wasm_bindgen debug logs when in verbose mode (only show in trace)
+    if matches!(level, LogLevel::Verbose) {
         log_config_builder.add_filter_ignore_str("walrus");
         log_config_builder.add_filter_ignore_str("wasm_bindgen_cli_support");
+        log_config_builder.add_filter_ignore_str("wasm_bindgen");
+    } else if matches!(level, LogLevel::Trace) {
+        // Show everything in trace mode, including wasm_bindgen internals
     }
 
     let log_config = log_config_builder

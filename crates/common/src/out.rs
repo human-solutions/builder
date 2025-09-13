@@ -1,6 +1,6 @@
+use fs_err::File;
 use std::{
     collections::HashMap,
-    fs::File,
     hash::Hasher,
     io::{Cursor, Write},
 };

@@ -4,6 +4,7 @@ mod encoding;
 #[cfg(test)]
 mod tests;
 
+use crate::hash_output::HashCollector;
 use crate::{debug, is_trace, log_trace};
 pub use anyhow::Result;
 pub use asset::Asset;
@@ -14,7 +15,25 @@ use camino_fs::*;
 pub use encoding::AssetEncodings;
 use icu_locid::LanguageIdentifier;
 use seahash::SeaHasher;
-use std::{collections::BTreeMap, hash::Hasher};
+use std::sync::OnceLock;
+use std::{collections::BTreeMap, hash::Hasher, sync::Mutex};
+
+// Global hash collector for tracking file hashes across all output operations
+static HASH_COLLECTORS: OnceLock<Mutex<BTreeMap<Utf8PathBuf, HashCollector>>> = OnceLock::new();
+
+fn get_hash_collectors() -> &'static Mutex<BTreeMap<Utf8PathBuf, HashCollector>> {
+    HASH_COLLECTORS.get_or_init(|| Mutex::new(BTreeMap::new()))
+}
+
+/// Finalizes hash collection and writes all accumulated hashes to their respective output files
+pub fn finalize_hash_outputs() -> Result<()> {
+    let collectors = get_hash_collectors().lock().unwrap();
+    for (output_path, collector) in collectors.iter() {
+        collector.write_to_rust_file(output_path)?;
+        log_trace!("SITE_FS", "Wrote hash file to: {}", output_path);
+    }
+    Ok(())
+}
 
 pub fn parse_site(root: &Utf8Path) -> Result<Vec<Asset>> {
     let mut assets: BTreeMap<String, Asset> = Default::default();
@@ -109,8 +128,34 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
         let asset = AssetPath {
             subdir,
             name_ext: site_file.clone(),
-            checksum,
+            checksum: checksum.clone(),
         };
+
+        // Collect hash information if hash_output_path is configured
+        if let Some(hash_output_path) = &out.hash_output_path
+            && let Some(hash) = &checksum
+        {
+            let mut collectors = get_hash_collectors().lock().unwrap();
+            let collector = collectors.entry(hash_output_path.clone()).or_default();
+
+            // Create the file path for the hash entry (relative to site root)
+            let file_path = if asset.subdir.as_str().is_empty() {
+                format!("{}.{}", asset.name_ext.name, asset.name_ext.ext)
+            } else {
+                format!(
+                    "{}/{}.{}",
+                    asset.subdir, asset.name_ext.name, asset.name_ext.ext
+                )
+            };
+
+            collector.add_entry(file_path, hash);
+            log_trace!(
+                "SITE_FS",
+                "Added hash entry for: {} -> {}",
+                asset.name_ext,
+                hash
+            );
+        }
 
         // remove any files that have the same name and extension
         out.dir
@@ -180,6 +225,41 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
         } else {
             None
         };
+
+        // Collect hash information for translations if hash_output_path is configured
+        if let Some(hash_output_path) = &out.hash_output_path
+            && let Some(hash) = &checksum
+        {
+            let mut collectors = get_hash_collectors().lock().unwrap();
+            let collector = collectors.entry(hash_output_path.clone()).or_default();
+
+            for (lang, _) in lang_and_bytes {
+                let file_path = if site_file.site_dir.is_some() {
+                    format!(
+                        "{}/{}.{}/{}.{}",
+                        site_file.site_dir.as_ref().unwrap(),
+                        site_file.name,
+                        site_file.ext,
+                        lang,
+                        site_file.ext
+                    )
+                } else {
+                    format!(
+                        "{}.{}/{}.{}",
+                        site_file.name, site_file.ext, lang, site_file.ext
+                    )
+                };
+                collector.add_entry(file_path, hash);
+                log_trace!(
+                    "SITE_FS",
+                    "Added translation hash entry for: {} ({}) -> {}",
+                    site_file,
+                    lang,
+                    hash
+                );
+            }
+        }
+
         let mut asset = TranslatedAssetPath {
             site_file,
             checksum,

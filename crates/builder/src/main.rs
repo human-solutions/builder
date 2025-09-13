@@ -3,6 +3,7 @@ use std::env;
 
 use builder_command::{BuilderCmd, Cmd};
 use camino_fs::*;
+use common::site_fs;
 use common::{LOG_LEVEL, RELEASE, setup_logging};
 
 fn main() {
@@ -55,5 +56,10 @@ pub fn run(builder: BuilderCmd) {
             Cmd::Copy(cmd) => builder_copy::run(cmd),
             Cmd::SwiftPackage(cmd) => builder_swift_package::run(cmd),
         }
+    }
+
+    // Finalize hash output files after all commands have completed
+    if let Err(e) = site_fs::finalize_hash_outputs() {
+        eprintln!("Failed to write hash output files: {}", e);
     }
 }

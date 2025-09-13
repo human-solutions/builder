@@ -14,11 +14,11 @@ pub use assemble::AssembleCmd;
 use camino_fs::Utf8PathBuf;
 pub use copy::CopyCmd;
 pub use fontforge::FontForgeCmd;
+use fs_err as fs;
 pub use localized::LocalizedCmd;
 use log::LevelFilter;
 pub use out::{Encoding, Output};
 pub use sass::SassCmd;
-use std::fs;
 pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
 pub use wasm::{DebugSymbolsMode, Profile, WasmProcessingCmd};
@@ -32,10 +32,10 @@ pub enum LogLevel {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LogDestination {
-    Cargo,                    // via cargo::warning
-    File(Utf8PathBuf),       // given a path
-    Terminal,                // standard output
-    TerminalPlain,          // standard output, designed for when run in a Command that adds it's own prefixes to the logs
+    Cargo,             // via cargo::warning
+    File(Utf8PathBuf), // given a path
+    Terminal,          // standard output
+    TerminalPlain, // standard output, designed for when run in a Command that adds it's own prefixes to the logs
 }
 
 impl LogLevel {
@@ -196,7 +196,7 @@ impl Display for BuilderCmd {
             LogLevel::Trace => "trace",
         };
         writeln!(f, "log_level={}", log_level_str)?;
-        
+
         let log_destination_str = match &self.log_destination {
             LogDestination::Cargo => "cargo".to_string(),
             LogDestination::File(path) => format!("file:{}", path),
@@ -204,7 +204,7 @@ impl Display for BuilderCmd {
             LogDestination::TerminalPlain => "terminal_plain".to_string(),
         };
         writeln!(f, "log_destination={}", log_destination_str)?;
-        
+
         writeln!(f, "release={}", self.release)?;
         writeln!(f, "builder_toml={}", self.builder_toml)?;
         for cmd in &self.cmds {
@@ -328,7 +328,9 @@ fn roundtrip() {
         .add_copy(CopyCmd::default())
         .add_swift_package(SwiftPackageCmd::default())
         .log_level(LogLevel::Verbose)
-        .log_destination(LogDestination::File(camino_fs::Utf8PathBuf::from("/tmp/builder.log")))
+        .log_destination(LogDestination::File(camino_fs::Utf8PathBuf::from(
+            "/tmp/builder.log",
+        )))
         .release(true)
         .builder_toml("builder.toml");
 
