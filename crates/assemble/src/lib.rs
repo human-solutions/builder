@@ -2,7 +2,6 @@ mod asset_ext;
 // #[allow(dead_code)]
 // mod asset_incl;
 mod generator;
-mod mime;
 
 use asset_ext::AssetExt;
 use builder_command::AssembleCmd;

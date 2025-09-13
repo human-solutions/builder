@@ -2,7 +2,7 @@ use builder_command::CopyCmd;
 use common::site_fs::copy_files_to_site;
 use common::{Timer, log_command, log_operation};
 
-pub fn run(cmd: &CopyCmd) {
+pub fn run(cmd: &mut CopyCmd) {
     let _timer = Timer::new("COPY processing");
     log_command!("COPY", "Copying files from: {}", cmd.src_dir);
     log_operation!(
@@ -25,6 +25,6 @@ pub fn run(cmd: &CopyCmd) {
             file.extension()
                 .is_some_and(|ext| cmd.file_extensions.contains(&ext.to_string()))
         },
-        &cmd.output,
+        &mut cmd.output,
     );
 }

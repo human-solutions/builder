@@ -11,7 +11,7 @@ use wasm_opt::OptimizationOptions;
 
 use crate::dwarf::split_debug_symbols;
 
-pub fn run(cmd: &WasmProcessingCmd) {
+pub fn run(cmd: &mut WasmProcessingCmd) {
     let _timer = Timer::new("WASM processing");
     let release = matches!(cmd.profile, builder_command::Profile::Release);
     let package_name = cmd.package.replace("-", "_");
@@ -198,7 +198,7 @@ pub fn run(cmd: &WasmProcessingCmd) {
         let mut opts = opts.clone();
         // The checksum is in the path of the dir
         opts.checksum = false;
-        let opts = [opts];
+        let mut opts = [opts];
 
         log_operation!(
             "WASM",
@@ -209,7 +209,7 @@ pub fn run(cmd: &WasmProcessingCmd) {
         for (file, contents) in file_and_content.iter() {
             let site_file = SiteFile::from_file(file).with_dir(&hash_dir);
             log_trace!("WASM", "Writing file: {} -> {}", file, site_file);
-            write_file_to_site(&site_file, contents, &opts);
+            write_file_to_site(&site_file, contents, &mut opts);
         }
     }
     log_trace!("WASM", "Removing tmp dir: {}", tmp_dir);

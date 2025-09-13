@@ -7,7 +7,7 @@ use common::site_fs::write_translations;
 use common::{Timer, log_command, log_operation, log_trace};
 use icu_locid::LanguageIdentifier;
 
-pub fn run(cmd: &LocalizedCmd) {
+pub fn run(cmd: &mut LocalizedCmd) {
     let _timer = Timer::new("LOCALIZED processing");
     log_command!(
         "LOCALIZED",
@@ -40,7 +40,7 @@ pub fn run(cmd: &LocalizedCmd) {
     );
 
     log_operation!("LOCALIZED", "Writing translations as: {}", name);
-    write_translations(&name, &variants, &cmd.output);
+    write_translations(&name, &variants, &mut cmd.output);
 }
 
 fn get_variants(cmd: &LocalizedCmd) -> Vec<(LanguageIdentifier, Vec<u8>)> {

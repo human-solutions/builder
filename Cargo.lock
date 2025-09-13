@@ -299,9 +299,13 @@ dependencies = [
 name = "builder-command"
 version = "0.1.27"
 dependencies = [
+ "builder-assets",
  "camino-fs",
  "fs-err 3.1.1",
+ "icu_locid",
+ "insta",
  "log",
+ "tempfile",
 ]
 
 [[package]]
@@ -598,6 +602,7 @@ dependencies = [
  "log",
  "seahash",
  "simplelog",
+ "tempfile",
  "time",
 ]
 

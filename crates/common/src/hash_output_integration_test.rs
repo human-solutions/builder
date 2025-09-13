@@ -25,16 +25,16 @@ mod tests {
 
         // Create output configuration with checksum and hash output enabled
         let output = Output::new_compress_and_sum(&temp_dir).hash_output_path(&hash_file);
-        let output_config = [output];
+        let mut output_config = [output];
 
         // Write test files
         let css_content = b"body { color: blue; }";
         let css_file = SiteFile::new("style", "css");
-        write_file_to_site(&css_file, css_content, &output_config);
+        write_file_to_site(&css_file, css_content, &mut output_config);
 
         let js_content = b"console.log('Hello, world!');";
         let js_file = SiteFile::new("script", "js");
-        write_file_to_site(&js_file, js_content, &output_config);
+        write_file_to_site(&js_file, js_content, &mut output_config);
 
         // Finalize hash outputs
         finalize_hash_outputs().unwrap();

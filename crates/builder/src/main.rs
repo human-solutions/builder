@@ -44,8 +44,8 @@ fn main() {
     run(builder);
 }
 
-pub fn run(builder: BuilderCmd) {
-    for cmd in &builder.cmds {
+pub fn run(mut builder: BuilderCmd) {
+    for cmd in &mut builder.cmds {
         match cmd {
             Cmd::Uniffi(cmd) => builder_uniffi::run(cmd),
             Cmd::Sass(cmd) => builder_sass::run(cmd),

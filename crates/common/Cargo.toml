@@ -20,4 +20,5 @@ icu_locid.workspace = true
 log.workspace = true
 seahash.workspace = true
 simplelog.workspace = true
+tempfile.workspace = true
 time.workspace = true

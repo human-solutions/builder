@@ -1,0 +1,39 @@
+---
+source: crates/command/src/out_snapshot_test.rs
+expression: normalized_code
+---
+// Generated asset code using builder-assets crate
+// This file is auto-generated. Do not edit manually.
+
+use builder_assets::*;
+use icu_locid::langid;
+
+/// Provider function for loading asset data from filesystem
+fn load_asset(path: &str) -> Option<Vec<u8>> {
+    let full_path = format!("/tmp/test/{path}");
+    std::fs::read(full_path).ok()
+}
+
+pub static ROBOTO_BOLD_2X: AssetSet = AssetSet {
+    url_path: "/assets/roboto-bold@2x.woff2",
+    file_path_parts: FilePathParts {
+        folder: Some("assets"),
+        name: "roboto-bold@2x",
+        hash: Some("special_hash="),
+        ext: "woff2",
+    },
+    available_encodings: &[Encoding::Identity],
+    available_languages: None,
+    mime: "font/woff2",
+    provider: &load_asset,
+};
+
+/// All available assets as a static array
+pub static ASSETS: [&AssetSet; 1] = [
+        &ROBOTO_BOLD_2X
+];
+
+/// Asset catalog for efficient URL-based lookups
+pub fn get_asset_catalog() -> AssetCatalog {
+    AssetCatalog::from_assets(&ASSETS)
+}

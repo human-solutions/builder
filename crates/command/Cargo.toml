@@ -9,6 +9,13 @@ version.workspace = true
 
 
 [dependencies]
+builder-assets = { path = "../assets" }
+
 camino-fs.workspace = true
 fs-err.workspace = true
+icu_locid.workspace = true
 log.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+tempfile.workspace = true
