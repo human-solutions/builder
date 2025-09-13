@@ -258,7 +258,7 @@ dependencies = [
 
 [[package]]
 name = "builder"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "builder-assemble",
  "builder-command",
@@ -277,7 +277,7 @@ dependencies = [
 
 [[package]]
 name = "builder-assemble"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "base64",
  "builder-command",
@@ -289,7 +289,7 @@ dependencies = [
 
 [[package]]
 name = "builder-command"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "camino-fs",
  "fs-err 3.1.1",
@@ -298,7 +298,7 @@ dependencies = [
 
 [[package]]
 name = "builder-copy"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "builder-command",
  "common",
@@ -307,7 +307,7 @@ dependencies = [
 
 [[package]]
 name = "builder-fontforge"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "builder-command",
  "camino-fs",
@@ -318,7 +318,7 @@ dependencies = [
 
 [[package]]
 name = "builder-localized"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "builder-command",
  "camino-fs",
@@ -329,7 +329,7 @@ dependencies = [
 
 [[package]]
 name = "builder-sass"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "builder-command",
  "common",
@@ -341,7 +341,7 @@ dependencies = [
 
 [[package]]
 name = "builder-swift-package"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "builder-command",
  "common",
@@ -351,7 +351,7 @@ dependencies = [
 
 [[package]]
 name = "builder-uniffi"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "builder-command",
  "camino-fs",
@@ -362,7 +362,7 @@ dependencies = [
 
 [[package]]
 name = "builder-wasm"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "anyhow",
  "base64",
@@ -498,9 +498,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.36"
+version = "1.2.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5252b3d2648e5eedbc1a6f501e3c795e07025c1e93bbf8bbdd6eef7f447a6d54"
+checksum = "65193589c6404eb80b450d618eaf9a2cafaaafd57ecce47370519ef674a7bd44"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -577,7 +577,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "common"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "anyhow",
  "base64",
@@ -730,9 +730,9 @@ dependencies = [
 
 [[package]]
 name = "cxx"
-version = "1.0.183"
+version = "1.0.184"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7acb669333e336b4c8c1605425fbf2b010fe720cecf934b946484f04cd777d7"
+checksum = "be4a0beb369d20d0de6aa7084ee523e4c9a31d7d8c61ba357b119bb574d7f368"
 dependencies = [
  "cc",
  "cxx-build",
@@ -745,9 +745,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-build"
-version = "1.0.183"
+version = "1.0.184"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfb81a0b7d006a8761dd14f39470c532fede5df0976a296d20b06eff36690772"
+checksum = "27d955b93e56a8e45cbc34df0ae920d8b5ad01541a4571222c78527c00e1a40a"
 dependencies = [
  "cc",
  "codespan-reporting",
@@ -760,9 +760,9 @@ dependencies = [
 
 [[package]]
 name = "cxxbridge-cmd"
-version = "1.0.183"
+version = "1.0.184"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac6109afc47d1ee77717a1a99800d6b646070420b842a933f6f6bf11d72ffd73"
+checksum = "052f6c468d9dabdc2b8b228bcb2d7843b2bea0f3fb9c4e2c6ba5852574ec0150"
 dependencies = [
  "clap",
  "codespan-reporting",
@@ -774,15 +774,15 @@ dependencies = [
 
 [[package]]
 name = "cxxbridge-flags"
-version = "1.0.183"
+version = "1.0.184"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4e12760f91e84bbc0594b99c9e1b486b2ee6b3da22c2c2e67924b38ab4b858f"
+checksum = "0fd145fa180986cb8002c63217d03b2c782fdcd5fa323adcd1f62d2d6ece6144"
 
 [[package]]
 name = "cxxbridge-macro"
-version = "1.0.183"
+version = "1.0.184"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d44085eb859ca1f523f50a48138a786698a260da0be5e930bb6a5080a02e2be"
+checksum = "02ac4a3bc4484a2daa0a8421c9588bd26522be9682a2fe02c7087bc4e8bc3c60"
 dependencies = [
  "indexmap 2.11.1",
  "proc-macro2",
@@ -1172,9 +1172,9 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "iana-time-zone"
-version = "0.1.63"
+version = "0.1.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0c919e5debc312ad217002b8048a17b7d83f80703865bbfcfebb0458b0b27d8"
+checksum = "33e57f83510bb73707521ebaffa789ec8caf86f9657cad665b092b581d40e9fb"
 dependencies = [
  "android_system_properties",
  "core-foundation-sys",
@@ -2792,13 +2792,13 @@ dependencies = [
 
 [[package]]
 name = "windows-core"
-version = "0.61.2"
+version = "0.62.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0fdd3ddb90610c7638aa2b3a3ab2904fb9e5cdbecc643ddb3647212781c4ae3"
+checksum = "57fe7168f7de578d2d8a05b07fd61870d2e73b4020e9f49aa00da8471723497c"
 dependencies = [
  "windows-implement",
  "windows-interface",
- "windows-link 0.1.3",
+ "windows-link 0.2.0",
  "windows-result",
  "windows-strings",
 ]
@@ -2839,20 +2839,20 @@ checksum = "45e46c0661abb7180e7b9c281db115305d49ca1709ab8242adf09666d2173c65"
 
 [[package]]
 name = "windows-result"
-version = "0.3.4"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56f42bd332cc6c8eac5af113fc0c1fd6a8fd2aa08a0119358686e5160d0586c6"
+checksum = "7084dcc306f89883455a206237404d3eaf961e5bd7e0f312f7c91f57eb44167f"
 dependencies = [
- "windows-link 0.1.3",
+ "windows-link 0.2.0",
 ]
 
 [[package]]
 name = "windows-strings"
-version = "0.4.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56e6c93f3a0c3b36176cb1327a4958a0353d5d166c2a35cb268ace15e91d3b57"
+checksum = "7218c655a553b0bed4426cf54b20d7ba363ef543b52d515b3e48d7fd55318dda"
 dependencies = [
- "windows-link 0.1.3",
+ "windows-link 0.2.0",
 ]
 
 [[package]]
