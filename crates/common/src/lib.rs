@@ -1,14 +1,16 @@
 mod envargs;
 mod ext;
+pub mod hash_output;
+mod hash_output_integration_test;
 pub mod out;
 pub mod site_fs;
 
 use builder_command::{LogDestination, LogLevel};
+use fs_err::OpenOptions;
 use log::{Log, Metadata, Record};
 use simplelog::{
     ColorChoice, ConfigBuilder, TermLogger, TerminalMode, WriteLogger, format_description,
 };
-use fs_err::OpenOptions;
 use std::sync::OnceLock;
 use time::OffsetDateTime;
 
@@ -159,10 +161,12 @@ impl Log for CargoLogger {
             let msg = record.args().to_string();
 
             // Filter out excessive wasm_bindgen logs at DEBUG level unless in Trace mode
-            if record.level() == log::Level::Debug && !is_trace()
+            if record.level() == log::Level::Debug
+                && !is_trace()
                 && let Some(module_path) = record.module_path()
-                && (module_path.starts_with("wasm_bindgen_cli_support") ||
-                   module_path.starts_with("walrus")) {
+                && (module_path.starts_with("wasm_bindgen_cli_support")
+                    || module_path.starts_with("walrus"))
+            {
                 return;
             }
 

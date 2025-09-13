@@ -2,8 +2,8 @@ use std::process::Command;
 
 use builder_command::FontForgeCmd;
 use camino_fs::*;
-use common::{Timer, log_command, log_operation, log_trace};
 use common::site_fs::{SiteFile, write_file_to_site};
+use common::{Timer, log_command, log_operation, log_trace};
 
 pub fn run(cmd: &FontForgeCmd) {
     let _timer = Timer::new("FONTFORGE processing");
@@ -17,10 +17,15 @@ pub fn run(cmd: &FontForgeCmd) {
     if !sfd_file.exists() {
         panic!("Font file not found: {:?}", sfd_file);
     }
-    
+
     let sfd_bytes = sfd_file.read_bytes().unwrap();
     let hash = format!("{:x}", seahash::hash(&sfd_bytes));
-    log_operation!("FONTFORGE", "Font file hash: {} ({} bytes)", hash, sfd_bytes.len());
+    log_operation!(
+        "FONTFORGE",
+        "Font file hash: {} ({} bytes)",
+        hash,
+        sfd_bytes.len()
+    );
 
     let sfd_dir = sfd_file.parent().unwrap();
 
@@ -49,7 +54,10 @@ pub fn run(cmd: &FontForgeCmd) {
 
         // copy otf file to font directory (only macos)
         if cfg!(target_os = "macos") {
-            log_operation!("FONTFORGE", "Installing font to macOS system (target_os=macos)");
+            log_operation!(
+                "FONTFORGE",
+                "Installing font to macOS system (target_os=macos)"
+            );
             macos_install_font(&otf_file, name);
         }
         log_trace!("FONTFORGE", "Removing temporary OTF file: {}", otf_file);
@@ -62,7 +70,12 @@ pub fn run(cmd: &FontForgeCmd) {
     let woff2_path = sfd_dir.join(&woff2_filename);
     let bytes = woff2_path.read_bytes().unwrap();
 
-    log_operation!("FONTFORGE", "Writing WOFF2 output: {} ({} bytes)", woff2_filename, bytes.len());
+    log_operation!(
+        "FONTFORGE",
+        "Writing WOFF2 output: {} ({} bytes)",
+        woff2_filename,
+        bytes.len()
+    );
     let site_file = SiteFile::new(name, "woff2");
     write_file_to_site(&site_file, &bytes, &cmd.output);
 }
@@ -70,9 +83,15 @@ pub fn run(cmd: &FontForgeCmd) {
 fn generate_woff2_otf(sfd_dir: &Utf8Path, name: &str) {
     let ff = format!("Open('{name}.sfd'); Generate('{name}.woff2'); Generate('{name}.otf')");
 
-    log_operation!("FONTFORGE", "Generating {}.woff2 and {}.otf from {}.sfd", name, name, name);
+    log_operation!(
+        "FONTFORGE",
+        "Generating {}.woff2 and {}.otf from {}.sfd",
+        name,
+        name,
+        name
+    );
     log_trace!("FONTFORGE", "FontForge command: {}", ff);
-    
+
     let cmd = Command::new("fontforge")
         .args(["-lang=ff", "-c", &ff])
         .current_dir(sfd_dir)
@@ -82,7 +101,7 @@ fn generate_woff2_otf(sfd_dir: &Utf8Path, name: &str) {
     if !cmd.success() {
         panic!("FontForge command failed")
     }
-    
+
     log_operation!("FONTFORGE", "FontForge generation completed successfully");
 }
 
@@ -92,7 +111,7 @@ fn macos_install_font(otf_file: &Utf8Path, name: &str) {
         .join("Library/Fonts")
         .join(name)
         .with_extension("otf");
-        
+
     log_trace!("FONTFORGE", "Installing font: {} -> {}", otf_file, dest);
     otf_file.cp(&dest).unwrap();
     log_operation!("FONTFORGE", "Font installed to macOS Library/Fonts");

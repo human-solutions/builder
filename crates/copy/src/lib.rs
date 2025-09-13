@@ -1,11 +1,16 @@
 use builder_command::CopyCmd;
-use common::{Timer, log_command, log_operation};
 use common::site_fs::copy_files_to_site;
+use common::{Timer, log_command, log_operation};
 
 pub fn run(cmd: &CopyCmd) {
     let _timer = Timer::new("COPY processing");
     log_command!("COPY", "Copying files from: {}", cmd.src_dir);
-    log_operation!("COPY", "Recursive: {}, Extensions: {:?}", cmd.recursive, cmd.file_extensions);
+    log_operation!(
+        "COPY",
+        "Recursive: {}, Extensions: {:?}",
+        cmd.recursive,
+        cmd.file_extensions
+    );
     log_operation!("COPY", "Output destinations: {}", cmd.output.len());
 
     if !cmd.src_dir.exists() {

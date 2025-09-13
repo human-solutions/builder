@@ -12,12 +12,18 @@ pub fn run(cmd: &UniffiCmd) {
     log_operation!("UNIFFI", "UDL file: {}", cmd.udl_file);
     log_operation!("UNIFFI", "Output directory: {}", cmd.out_dir);
     log_operation!("UNIFFI", "Kotlin: {}, Swift: {}", cmd.kotlin, cmd.swift);
-    
+
     let udl_copy = cmd.out_dir.join(cmd.udl_file.file_name().unwrap());
     let cli_copy = cmd.out_dir.join("self.json");
     let conf_copy = cmd.out_dir.join("uniffi.toml");
-    
-    log_trace!("UNIFFI", "Checking cache files: udl={}, cli={}, config={}", udl_copy, cli_copy, conf_copy);
+
+    log_trace!(
+        "UNIFFI",
+        "Checking cache files: udl={}, cli={}, config={}",
+        udl_copy,
+        cli_copy,
+        conf_copy
+    );
 
     if udl_copy.exists() && cli_copy.exists() {
         let udl_ref_bytes = udl_copy.read_bytes().unwrap();
@@ -48,13 +54,16 @@ pub fn run(cmd: &UniffiCmd) {
                 log_operation!("UNIFFI", "CLI parameters changed, regenerating bindings");
             }
             (_, _, false) => {
-                log_operation!("UNIFFI", "Configuration file changed, regenerating bindings");
+                log_operation!(
+                    "UNIFFI",
+                    "Configuration file changed, regenerating bindings"
+                );
             }
         }
     } else {
         log_operation!("UNIFFI", "First time processing, setting up cache files");
     }
-    
+
     log_operation!("UNIFFI", "Setting up output directory and cache files");
     cmd.out_dir.mkdirs().unwrap();
     cmd.udl_file.cp(&udl_copy).unwrap();
@@ -65,7 +74,11 @@ pub fn run(cmd: &UniffiCmd) {
     cli_copy.write(cmd.to_string()).unwrap();
 
     if cmd.kotlin {
-        log_operation!("UNIFFI", "Generating Kotlin bindings for library: {}", cmd.library_name);
+        log_operation!(
+            "UNIFFI",
+            "Generating Kotlin bindings for library: {}",
+            cmd.library_name
+        );
         generate_external_bindings(
             &KotlinBindingGenerator,
             &cmd.udl_file,
@@ -79,7 +92,11 @@ pub fn run(cmd: &UniffiCmd) {
         log_operation!("UNIFFI", "Kotlin bindings generation completed");
     }
     if cmd.swift {
-        log_operation!("UNIFFI", "Generating Swift bindings for library: {}", cmd.library_name);
+        log_operation!(
+            "UNIFFI",
+            "Generating Swift bindings for library: {}",
+            cmd.library_name
+        );
         generate_external_bindings(
             &SwiftBindingGenerator,
             &cmd.udl_file,
