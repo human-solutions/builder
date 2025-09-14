@@ -273,6 +273,7 @@ dependencies = [
  "cargo_metadata 0.22.0",
  "common",
  "insta",
+ "serde_json",
 ]
 
 [[package]]
@@ -305,6 +306,8 @@ dependencies = [
  "icu_locid",
  "insta",
  "log",
+ "serde",
+ "serde_json",
  "tempfile",
 ]
 
@@ -369,6 +372,7 @@ dependencies = [
  "camino-fs",
  "common",
  "log",
+ "serde_json",
  "uniffi_bindgen",
 ]
 
@@ -1250,6 +1254,7 @@ checksum = "13acbb8371917fc971be86fc8057c41a64b521c184808a698c02acc242dbf637"
 dependencies = [
  "displaydoc",
  "litemap 0.7.5",
+ "serde",
  "tinystr 0.7.6",
  "writeable 0.5.5",
 ]
@@ -2334,6 +2339,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9117f5d4db391c1cf6927e7bea3db74b9a1c1add8f7eda9ffd5364f40f57b82f"
 dependencies = [
  "displaydoc",
+ "serde",
 ]
 
 [[package]]

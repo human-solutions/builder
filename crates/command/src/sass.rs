@@ -1,10 +1,9 @@
-use std::{convert::Infallible, fmt::Display, str::FromStr};
-
 use camino_fs::Utf8PathBuf;
+use serde::{Deserialize, Serialize};
 
 use crate::Output;
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SassCmd {
     pub in_scss: Utf8PathBuf,
 
@@ -43,41 +42,5 @@ impl SassCmd {
     pub fn output(mut self, it: impl IntoIterator<Item = Output>) -> Self {
         self.output.extend(it);
         self
-    }
-}
-
-impl Display for SassCmd {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "in_scss={}", self.in_scss)?;
-        writeln!(f, "optimize={}", self.optimize)?;
-        for out in &self.output {
-            writeln!(f, "output={}", out)?;
-        }
-        for (from, to) in &self.replacements {
-            writeln!(f, "replacement={}:{}", from, to)?;
-        }
-        Ok(())
-    }
-}
-
-impl FromStr for SassCmd {
-    type Err = Infallible;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut cmd = SassCmd::default();
-        for line in s.lines() {
-            let (key, value) = line.split_once('=').unwrap();
-            match key {
-                "in_scss" => cmd.in_scss = value.into(),
-                "optimize" => cmd.optimize = value.parse().unwrap(),
-                "output" => cmd.output.push(value.parse().unwrap()),
-                "replacement" => {
-                    let (from, to) = value.split_once(':').unwrap();
-                    cmd.replacements.push((from.to_string(), to.to_string()));
-                }
-                _ => panic!("unknown key: {}", key),
-            }
-        }
-        Ok(cmd)
     }
 }

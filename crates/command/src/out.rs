@@ -1,8 +1,9 @@
 use camino_fs::*;
 use icu_locid::LanguageIdentifier;
-use std::{collections::BTreeMap, fmt::Display, str::FromStr};
+use serde::{Deserialize, Serialize};
+use std::{collections::BTreeMap, fmt::Display};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Encoding {
     Brotli,
     Gzip,
@@ -52,7 +53,7 @@ impl Encoding {
 }
 
 /// Metadata collected during file writing operations for asset code generation
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AssetMetadata {
     pub url_path: String,
     pub folder: Option<String>,
@@ -64,7 +65,7 @@ pub struct AssetMetadata {
     pub mime: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default, Serialize, Deserialize)]
 pub struct Output {
     /// Folder where the output files should be written
     pub dir: Utf8PathBuf,
@@ -334,47 +335,5 @@ pub fn get_asset_catalog() -> AssetCatalog {{
             .chars()
             .map(|c| if c.is_alphanumeric() { c } else { '_' })
             .collect()
-    }
-}
-
-impl Display for Output {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "dir={}\t", self.dir)?;
-        if let Some(site_dir) = &self.site_dir {
-            write!(f, "site_dir={}\t", site_dir)?;
-        }
-        write!(f, "brotli={}\t", self.brotli)?;
-        write!(f, "gzip={}\t", self.gzip)?;
-        write!(f, "uncompressed={}\t", self.uncompressed)?;
-        write!(f, "all_encodings={}\t", self.all_encodings)?;
-        write!(f, "checksum={}\t", self.checksum)?;
-        if let Some(hash_output_path) = &self.hash_output_path {
-            write!(f, "hash_output_path={}\t", hash_output_path)?;
-        }
-        Ok(())
-    }
-}
-
-impl FromStr for Output {
-    type Err = std::convert::Infallible;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut cmd = Output::default();
-        for item in s.split('\t').filter(|s| !s.is_empty()) {
-            let (key, value) = item.split_once('=').unwrap();
-
-            match key {
-                "dir" => cmd.dir = value.into(),
-                "site_dir" => cmd.site_dir = Some(value.into()),
-                "brotli" => cmd.brotli = value.parse().unwrap(),
-                "gzip" => cmd.gzip = value.parse().unwrap(),
-                "uncompressed" => cmd.uncompressed = value.parse().unwrap(),
-                "all_encodings" => cmd.all_encodings = value.parse().unwrap(),
-                "checksum" => cmd.checksum = value.parse().unwrap(),
-                "hash_output_path" => cmd.hash_output_path = Some(value.into()),
-                _ => panic!("unknown key: {}", key),
-            }
-        }
-        Ok(cmd)
     }
 }

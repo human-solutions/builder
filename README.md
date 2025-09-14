@@ -6,10 +6,10 @@ A command-line tool for building web assets, WASM, and mobile libraries. Builder
 
 Builder uses a two-phase architecture:
 
-1. **Generation Phase**: Rust build scripts use the `BuilderCmd` struct with fluent builder pattern methods to configure build commands programmatically, then generate a `builder.toml` configuration file
-2. **Execution Phase**: The `builder` CLI tool reads the configuration file and executes each build command in sequence
+1. **Generation Phase**: Rust build scripts use the `BuilderCmd` struct with fluent builder pattern methods to configure build commands programmatically, then generate a `builder.json` configuration file
+2. **Execution Phase**: The `builder` CLI tool reads the JSON configuration file and executes each build command in sequence
 
-This design allows for both programmatic configuration from Rust build scripts and standalone CLI usage.
+This design allows for both programmatic configuration from Rust build scripts and standalone CLI usage. The JSON format ensures all command data is preserved accurately and provides human-readable configuration files.
 
 ## Features
 
@@ -81,13 +81,13 @@ fn main() {
 
 ### CLI Usage
 
-Builder can also be used directly with a configuration file:
+Builder can also be used directly with a JSON configuration file:
 
 ```bash
-builder path/to/builder.toml
+builder path/to/builder.json
 ```
 
-The configuration file defines which build commands to execute and their parameters. Each command type has its own configuration options and will be executed in the order specified.
+The JSON configuration file defines which build commands to execute and their parameters. Each command type has its own configuration options and will be executed in the order specified. The JSON format is human-readable and can be manually edited or generated programmatically.
 
 ### WASM Debug Symbols
 

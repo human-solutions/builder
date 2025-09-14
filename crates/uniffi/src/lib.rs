@@ -30,7 +30,7 @@ pub fn run(cmd: &UniffiCmd) {
         let udl_src_bytes = cmd.udl_file.read_bytes().unwrap();
         let is_udl_same = udl_ref_bytes == udl_src_bytes;
 
-        let prev_cli: UniffiCmd = cli_copy.read_string().unwrap().parse().unwrap();
+        let prev_cli: UniffiCmd = serde_json::from_str(&cli_copy.read_string().unwrap()).unwrap();
         let is_cli_same = prev_cli == *cmd;
 
         // Check if config file content changed
@@ -71,7 +71,7 @@ pub fn run(cmd: &UniffiCmd) {
         log_trace!("UNIFFI", "Copying config file: {}", config_file);
         config_file.cp(&conf_copy).unwrap();
     }
-    cli_copy.write(cmd.to_string()).unwrap();
+    cli_copy.write(serde_json::to_string(cmd).unwrap()).unwrap();
 
     if cmd.kotlin {
         log_operation!(

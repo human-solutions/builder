@@ -13,8 +13,10 @@ builder-assets = { path = "../assets" }
 
 camino-fs.workspace = true
 fs-err.workspace = true
-icu_locid.workspace = true
+icu_locid = { workspace = true, features = ["serde"] }
 log.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
