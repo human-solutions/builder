@@ -17,7 +17,7 @@ pub use fontforge::FontForgeCmd;
 use fs_err as fs;
 pub use localized::LocalizedCmd;
 use log::LevelFilter;
-pub use out::{AssetMetadata, Encoding, Output};
+pub use out::{AssetMetadata, DataProvider, Encoding, Output};
 pub use sass::SassCmd;
 use serde::{Deserialize, Serialize};
 pub use swift_package::SwiftPackageCmd;

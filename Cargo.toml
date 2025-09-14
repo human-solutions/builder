@@ -60,6 +60,7 @@ wasmbin = "0.8"
 
 # Dev dependencies only
 insta = "1.40"
+rust-embed = "8.5"
 wasm-bindgen-cli-support = "0.2"
 wasm-opt = "0.116"
 which = "8.0"

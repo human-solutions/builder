@@ -7,35 +7,34 @@ expression: generated_code
 
 use builder_assets::*;
 use icu_locid::langid;
-use std::path::Path;
+use rust_embed::Embed;
+#[derive(Embed)]
+#[folder = "/tmp/test"]
+pub struct AssetFiles;
 
-/// Provider function for loading asset data from filesystem
-///
-/// # Panics
-/// Panics if the asset base path has not been configured using set_asset_base_path().
+
+/// Provider function for loading embedded asset data
 fn load_asset(path: &str) -> Option<Vec<u8>> {
-    let base_path = builder_assets::get_asset_base_path_or_panic();
-    let full_path = base_path.join(path);
-    std::fs::read(full_path).ok()
+    AssetFiles::get(path).map(|f| f.data.into_owned())
 }
 
-pub static STYLE_CSS: AssetSet = AssetSet {
-    url_path: "/style.css",
+pub static APP_JS: AssetSet = AssetSet {
+    url_path: "/app.js",
     file_path_parts: FilePathParts {
-        folder: None,
-        name: "style",
-        hash: Some("abc123="),
-        ext: "css",
+        folder: Some("js"),
+        name: "app",
+        hash: Some("xyz789="),
+        ext: "js",
     },
     available_encodings: &[Encoding::Identity, Encoding::Brotli],
     available_languages: None,
-    mime: "text/css",
+    mime: "application/javascript",
     provider: &load_asset,
 };
 
 /// All available assets as a static array
 pub static ASSETS: [&AssetSet; 1] = [
-        &STYLE_CSS
+        &APP_JS
 ];
 
 /// Asset catalog for efficient URL-based lookups

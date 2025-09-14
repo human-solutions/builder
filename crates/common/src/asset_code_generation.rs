@@ -1,30 +1,58 @@
 use anyhow;
-use builder_command::AssetMetadata;
+use builder_command::{AssetMetadata, DataProvider};
 use camino_fs::{Utf8Path, Utf8PathBuf};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 
 // Global storage for asset metadata from all outputs
-static ASSET_METADATA_COLLECTORS: OnceLock<Mutex<BTreeMap<Utf8PathBuf, Vec<AssetMetadata>>>> =
+#[derive(Debug, Clone)]
+struct AssetCodeConfig {
+    metadata: Vec<AssetMetadata>,
+    provider: DataProvider,
+    base_path: Utf8PathBuf,
+}
+
+static ASSET_CODE_CONFIGS: OnceLock<Mutex<BTreeMap<Utf8PathBuf, AssetCodeConfig>>> =
     OnceLock::new();
 
-fn get_asset_metadata_collectors() -> &'static Mutex<BTreeMap<Utf8PathBuf, Vec<AssetMetadata>>> {
-    ASSET_METADATA_COLLECTORS.get_or_init(|| Mutex::new(BTreeMap::new()))
+fn get_asset_code_configs() -> &'static Mutex<BTreeMap<Utf8PathBuf, AssetCodeConfig>> {
+    ASSET_CODE_CONFIGS.get_or_init(|| Mutex::new(BTreeMap::new()))
 }
 
 /// Registers asset metadata for a specific output file path
-pub fn register_asset_metadata_for_output(output_path: &Utf8Path, metadata: Vec<AssetMetadata>) {
-    let mut collectors = get_asset_metadata_collectors().lock().unwrap();
-    let entry = collectors.entry(output_path.to_path_buf()).or_default();
-    entry.extend(metadata);
+pub fn register_asset_metadata_for_output(
+    output_path: &Utf8Path,
+    metadata: Vec<AssetMetadata>,
+    provider: DataProvider,
+    base_path: &Utf8Path,
+) {
+    let mut configs = get_asset_code_configs().lock().unwrap();
+    let config = configs
+        .entry(output_path.to_path_buf())
+        .or_insert_with(|| AssetCodeConfig {
+            metadata: Vec::new(),
+            provider,
+            base_path: base_path.to_path_buf(),
+        });
+    config.metadata.extend(metadata);
 }
 
 /// Finalizes asset code generation and writes all accumulated metadata to their respective output files
 pub fn finalize_asset_code_outputs() -> anyhow::Result<()> {
-    let collectors = get_asset_metadata_collectors().lock().unwrap();
-    for (output_path, metadata) in collectors.iter() {
-        if !metadata.is_empty() {
-            let code = generate_asset_code_content(metadata, &metadata[0].url_path); // Use first metadata for base path detection
+    let configs = get_asset_code_configs().lock().unwrap();
+    for (output_path, config) in configs.iter() {
+        if !config.metadata.is_empty() {
+            let code = generate_asset_code_content_with_provider(
+                &config.metadata,
+                config.provider,
+                &config.base_path,
+            );
+
+            // Ensure parent directory exists
+            if let Some(parent) = output_path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+
             std::fs::write(output_path, code)?;
             crate::log_trace!("ASSET_CODE", "Wrote asset code to: {}", output_path);
         }
@@ -32,9 +60,48 @@ pub fn finalize_asset_code_outputs() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Generates the complete asset code content from metadata
-pub fn generate_asset_code_content(metadata: &[AssetMetadata], _sample_url: &str) -> String {
-    let provider_fn = generate_provider_function();
+/// Generates the complete asset code content from metadata with provider support
+pub fn generate_asset_code_content_with_provider(
+    metadata: &[AssetMetadata],
+    provider: DataProvider,
+    base_path: &Utf8Path,
+) -> String {
+    let (imports, provider_fn, rust_embed) = match provider {
+        DataProvider::Embed => {
+            let imports = "use builder_assets::*;\nuse icu_locid::langid;\nuse rust_embed::Embed;"
+                .to_string();
+            let rust_embed = format!(
+                r#"
+#[derive(Embed)]
+#[folder = "{}"]
+pub struct AssetFiles;
+"#,
+                base_path
+            );
+            let provider_fn = r#"/// Provider function for loading embedded asset data
+fn load_asset(path: &str) -> Option<Vec<u8>> {
+    AssetFiles::get(path).map(|f| f.data.into_owned())
+}"#
+            .to_string();
+            (imports, provider_fn, rust_embed)
+        }
+        DataProvider::FileSystem => {
+            let imports =
+                "use builder_assets::*;\nuse icu_locid::langid;\nuse std::path::Path;".to_string();
+            let provider_fn = r#"/// Provider function for loading asset data from filesystem
+///
+/// # Panics
+/// Panics if the asset base path has not been configured using set_asset_base_path().
+fn load_asset(path: &str) -> Option<Vec<u8>> {
+    let base_path = builder_assets::get_asset_base_path_or_panic();
+    let full_path = base_path.join(path);
+    std::fs::read(full_path).ok()
+}"#
+            .to_string();
+            (imports, provider_fn, String::new())
+        }
+    };
+
     let asset_sets = generate_asset_sets(metadata);
     let catalog = generate_asset_catalog(metadata);
 
@@ -42,8 +109,7 @@ pub fn generate_asset_code_content(metadata: &[AssetMetadata], _sample_url: &str
         r#"// Generated asset code using builder-assets crate
 // This file is auto-generated. Do not edit manually.
 
-use builder_assets::*;
-use icu_locid::langid;
+{imports}{rust_embed}
 
 {provider_fn}
 
@@ -54,15 +120,14 @@ use icu_locid::langid;
     )
 }
 
-/// Generates the provider function for filesystem access
-fn generate_provider_function() -> String {
-    // For now, use a generic filesystem provider
-    // In the future, this could be configurable based on the output type
-    r#"/// Provider function for loading asset data from filesystem
-fn load_asset(path: &str) -> Option<Vec<u8>> {
-    std::fs::read(path).ok()
-}"#
-    .to_string()
+/// Generates the complete asset code content from metadata (backward compatibility)
+pub fn generate_asset_code_content(metadata: &[AssetMetadata], _sample_url: &str) -> String {
+    // Default to FileSystem provider for backward compatibility
+    generate_asset_code_content_with_provider(
+        metadata,
+        DataProvider::FileSystem,
+        &Utf8PathBuf::from(""),
+    )
 }
 
 /// Generates static AssetSet declarations

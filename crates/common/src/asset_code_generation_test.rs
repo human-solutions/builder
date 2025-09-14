@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
     use crate::asset_code_generation::*;
-    use builder_command::{AssetMetadata, Encoding};
+    use builder_command::{AssetMetadata, DataProvider, Encoding};
+    use camino_fs::Utf8PathBuf;
     use icu_locid::langid;
     use insta::assert_snapshot;
 
@@ -122,5 +123,71 @@ mod tests {
         );
         assert_eq!(generate_const_name("file@2x", "png"), "FILE_2X_PNG");
         assert_eq!(generate_const_name("apple_store", "svg"), "APPLE_STORE_SVG");
+    }
+
+    #[test]
+    fn test_generate_filesystem_provider() {
+        let metadata = vec![AssetMetadata {
+            url_path: "/style.css".to_string(),
+            folder: None,
+            name: "style".to_string(),
+            hash: Some("abc123=".to_string()),
+            ext: "css".to_string(),
+            available_encodings: vec![Encoding::Identity, Encoding::Brotli],
+            available_languages: None,
+            mime: "text/css".to_string(),
+        }];
+
+        let generated_code = generate_asset_code_content_with_provider(
+            &metadata,
+            DataProvider::FileSystem,
+            &Utf8PathBuf::from("/tmp/test"),
+        );
+
+        assert_snapshot!(generated_code);
+    }
+
+    #[test]
+    fn test_generate_embed_provider() {
+        let metadata = vec![AssetMetadata {
+            url_path: "/app.js".to_string(),
+            folder: Some("js".to_string()),
+            name: "app".to_string(),
+            hash: Some("xyz789=".to_string()),
+            ext: "js".to_string(),
+            available_encodings: vec![Encoding::Identity, Encoding::Brotli],
+            available_languages: None,
+            mime: "application/javascript".to_string(),
+        }];
+
+        let generated_code = generate_asset_code_content_with_provider(
+            &metadata,
+            DataProvider::Embed,
+            &Utf8PathBuf::from("/tmp/test"),
+        );
+
+        assert_snapshot!(generated_code);
+    }
+
+    #[test]
+    fn test_generate_embed_multilingual() {
+        let metadata = vec![AssetMetadata {
+            url_path: "/messages.json".to_string(),
+            folder: None,
+            name: "messages".to_string(),
+            hash: None,
+            ext: "json".to_string(),
+            available_encodings: vec![Encoding::Identity, Encoding::Gzip],
+            available_languages: Some(vec![langid!("en"), langid!("fr"), langid!("de")]),
+            mime: "application/json".to_string(),
+        }];
+
+        let generated_code = generate_asset_code_content_with_provider(
+            &metadata,
+            DataProvider::Embed,
+            &Utf8PathBuf::from("/assets"),
+        );
+
+        assert_snapshot!(generated_code);
     }
 }

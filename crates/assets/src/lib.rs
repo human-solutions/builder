@@ -79,6 +79,7 @@ pub mod catalog;
 pub mod encoding;
 pub mod file_path;
 pub mod negotiation;
+pub mod runtime_config;
 
 // Re-export the main public API
 pub use asset::Asset;
@@ -86,6 +87,7 @@ pub use asset_set::AssetSet;
 pub use catalog::AssetCatalog;
 pub use encoding::Encoding;
 pub use file_path::FilePathParts;
+pub use runtime_config::{get_asset_base_path, get_asset_base_path_or_panic, set_asset_base_path};
 
 // Re-export icu_locid for convenience since it's part of the public API
 pub use icu_locid::LanguageIdentifier;

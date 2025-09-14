@@ -23,7 +23,7 @@ This design allows for both programmatic configuration from Rust build scripts a
 
 - **FontForge Integration** - Processes SFD (Spline Font Database) files using FontForge to generate WOFF2 and OTF formats. Includes content-based caching via seahash, and on macOS automatically installs OTF fonts to `~/Library/Fonts/`.
 
-- **Asset Assembly** - Scans asset directories and generates Rust code for asset management. Creates static variables, URL constants, and lookup functions. Generates formatted Rust code with rustfmt and includes change detection to avoid unnecessary regeneration.
+- **Asset Assembly** - Scans asset directories and generates Rust code for asset management using the `builder-assets` crate. Creates static AssetSet variables with content negotiation support. Supports both embedded assets (using rust-embed) and filesystem-based loading. Generates formatted Rust code with comprehensive metadata preservation.
 
 - **Localized Assets** - Handles internationalized content by scanning directories for language-specific files (e.g., `en.css`, `fr.css`). Parses ICU language identifiers and organizes content by locale for multi-language applications.
 
@@ -61,11 +61,13 @@ builder-command = "0.1"
 ```
 
 ```rust
-use builder_command::{BuilderCmd, DebugSymbolsMode, Profile, WasmProcessingCmd};
+use builder_command::{BuilderCmd, DataProvider, DebugSymbolsMode, Output, Profile, SassCmd, WasmProcessingCmd};
 
 fn main() {
     BuilderCmd::new()
-        .add_sass(SassCmd::new("styles/main.scss", "dist/main.css"))
+        .add_sass(SassCmd::new("styles/main.scss")
+            .add_output(Output::new("dist")
+                .asset_code_gen("src/assets.rs", DataProvider::Embed))) // Generate embedded asset code
         .add_wasm(
             WasmProcessingCmd::new("my-wasm-package", Profile::Release)
                 // Four debug symbol options:
@@ -73,8 +75,10 @@ fn main() {
                 // .debug_symbols(DebugSymbolsMode::Keep)       // Keep debug symbols in main WASM
                 // .debug_symbols(DebugSymbolsMode::WriteAdjacent) // Write .debug.wasm next to main file
                 // .debug_symbols(DebugSymbolsMode::write_to("debug/symbols.debug.wasm")) // Custom path
+                .add_output(Output::new("dist/wasm")
+                    .asset_code_gen("src/wasm_assets.rs", DataProvider::FileSystem)) // Generate filesystem asset code
         )
-        .verbose(true)
+        .log_level(LogLevel::Verbose)
         .run();
 }
 ```
@@ -88,6 +92,48 @@ builder path/to/builder.json
 ```
 
 The JSON configuration file defines which build commands to execute and their parameters. Each command type has its own configuration options and will be executed in the order specified. The JSON format is human-readable and can be manually edited or generated programmatically.
+
+### Asset Code Generation
+
+Builder can automatically generate Rust code for asset management using the `builder-assets` crate. This provides type-safe access to assets with content negotiation support:
+
+```rust
+// Generated assets.rs
+use builder_assets::*;
+use icu_locid::langid;
+
+pub static STYLE_CSS: AssetSet = AssetSet {
+    url_path: "/style.css",
+    // ... asset configuration
+};
+
+pub fn get_asset_catalog() -> AssetCatalog {
+    AssetCatalog::from_assets(&ASSETS)
+}
+```
+
+**Two Data Providers:**
+- **`DataProvider::FileSystem`** - Loads assets from disk at runtime (requires runtime path configuration)
+- **`DataProvider::Embed`** - Embeds assets in binary using rust-embed (no runtime setup needed)
+
+**Configuration:**
+```rust
+// Code generation configuration
+.add_output(Output::new("dist")
+    .asset_code_gen("src/assets.rs", DataProvider::FileSystem))
+
+// Runtime configuration (required for FileSystem provider)
+use builder_assets::set_asset_base_path;
+
+fn main() {
+    // Set asset path for your deployment scenario
+    set_asset_base_path("/opt/myapp/assets");  // Production
+    // set_asset_base_path("./assets");        // Development
+    // set_asset_base_path(exe_dir.join("assets")); // Relative to binary
+
+    // ... rest of application
+}
+```
 
 ### WASM Debug Symbols
 

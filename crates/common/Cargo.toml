@@ -25,3 +25,4 @@ time.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
+rust-embed.workspace = true

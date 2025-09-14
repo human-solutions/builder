@@ -10,6 +10,7 @@ version.workspace = true
 [dependencies]
 fluent-langneg.workspace = true
 icu_locid.workspace = true
+rust-embed.workspace = true
 
 [dev-dependencies]
 # Test dependencies will be added as needed

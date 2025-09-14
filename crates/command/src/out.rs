@@ -10,6 +10,14 @@ pub enum Encoding {
     Identity,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DataProvider {
+    /// Assets are embedded in the binary using rust-embed
+    Embed,
+    /// Assets are loaded from the filesystem at runtime
+    FileSystem,
+}
+
 impl Display for Encoding {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
@@ -86,8 +94,8 @@ pub struct Output {
     /// Optional path to write file hashes as a Rust file
     pub hash_output_path: Option<Utf8PathBuf>,
 
-    /// Optional path to write generated asset code as a Rust file
-    pub asset_code_output_path: Option<Utf8PathBuf>,
+    /// Asset code generation configuration (path and provider type)
+    pub asset_code_generation: Option<(Utf8PathBuf, DataProvider)>,
 
     /// Collected asset metadata during file operations
     pub asset_metadata: Vec<AssetMetadata>,
@@ -104,7 +112,7 @@ impl Output {
             all_encodings: false,
             checksum: false,
             hash_output_path: None,
-            asset_code_output_path: None,
+            asset_code_generation: None,
             asset_metadata: Vec::new(),
         }
     }
@@ -119,7 +127,7 @@ impl Output {
             all_encodings: true,
             checksum: true,
             hash_output_path: None,
-            asset_code_output_path: None,
+            asset_code_generation: None,
             asset_metadata: Vec::new(),
         }
     }
@@ -134,7 +142,7 @@ impl Output {
             all_encodings: true,
             checksum: false,
             hash_output_path: None,
-            asset_code_output_path: None,
+            asset_code_generation: None,
             asset_metadata: Vec::new(),
         }
     }
@@ -149,8 +157,12 @@ impl Output {
         self
     }
 
-    pub fn asset_code_output_path<P: Into<Utf8PathBuf>>(mut self, path: P) -> Self {
-        self.asset_code_output_path = Some(path.into());
+    pub fn asset_code_gen<P: Into<Utf8PathBuf>>(
+        mut self,
+        path: P,
+        data_provider: DataProvider,
+    ) -> Self {
+        self.asset_code_generation = Some((path.into(), data_provider));
         self
     }
 
