@@ -11,7 +11,6 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let temp_path = Utf8PathBuf::from_path(temp_dir.path()).unwrap();
         let site_dir = temp_path.join("site");
-        let assets_file = temp_path.join("generated_assets.rs");
 
         site_dir.mkdirs().unwrap();
 
@@ -85,14 +84,14 @@ mod tests {
         assert!(langs.contains(&langid!("fr")));
         assert!(langs.contains(&langid!("de")));
 
-        // Test code generation
-        output_configs[0]
-            .generate_asset_code(assets_file.as_str())
-            .unwrap();
+        // Test that asset metadata was collected correctly
+        assert_eq!(collected_metadata.len(), 3);
 
-        // Verify generated file exists and has correct content
-        assert!(assets_file.exists());
-        let generated_content = assets_file.read_string().unwrap();
+        // Test direct asset code generation from collected metadata
+        let generated_content = crate::asset_code_generation::generate_asset_code_content(
+            collected_metadata,
+            "/style.css",
+        );
 
         // Verify it contains all expected elements
         assert!(generated_content.contains("use builder_assets::*"));

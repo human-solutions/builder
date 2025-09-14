@@ -1,0 +1,83 @@
+---
+source: crates/common/src/asset_code_generation_test.rs
+expression: generated_code
+---
+// Generated asset code using builder-assets crate
+// This file is auto-generated. Do not edit manually.
+
+use builder_assets::*;
+use icu_locid::langid;
+
+/// Provider function for loading asset data from filesystem
+fn load_asset(path: &str) -> Option<Vec<u8>> {
+    std::fs::read(path).ok()
+}
+
+pub static FAVICON_ICO: AssetSet = AssetSet {
+    url_path: "/favicon.ico",
+    file_path_parts: FilePathParts {
+        folder: None,
+        name: "favicon",
+        hash: None,
+        ext: "ico",
+    },
+    available_encodings: &[Encoding::Identity],
+    available_languages: None,
+    mime: "image/x-icon",
+    provider: &load_asset,
+};
+
+pub static APP_JS: AssetSet = AssetSet {
+    url_path: "/js/app.js",
+    file_path_parts: FilePathParts {
+        folder: Some("js"),
+        name: "app",
+        hash: Some("hash123="),
+        ext: "js",
+    },
+    available_encodings: &[Encoding::Brotli, Encoding::Gzip],
+    available_languages: None,
+    mime: "application/javascript",
+    provider: &load_asset,
+};
+
+pub static MESSAGES_JSON: AssetSet = AssetSet {
+    url_path: "/messages.json",
+    file_path_parts: FilePathParts {
+        folder: None,
+        name: "messages",
+        hash: Some("xyz789="),
+        ext: "json",
+    },
+    available_encodings: &[Encoding::Identity, Encoding::Gzip],
+    available_languages: Some(&[langid!("en"), langid!("fr"), langid!("es-MX")]),
+    mime: "application/json",
+    provider: &load_asset,
+};
+
+pub static STYLE_CSS: AssetSet = AssetSet {
+    url_path: "/style.css",
+    file_path_parts: FilePathParts {
+        folder: None,
+        name: "style",
+        hash: None,
+        ext: "css",
+    },
+    available_encodings: &[Encoding::Identity],
+    available_languages: None,
+    mime: "text/css",
+    provider: &load_asset,
+};
+
+/// All available assets as a static array
+pub static ASSETS: [&AssetSet; 4] = [
+        &FAVICON_ICO,
+        &APP_JS,
+        &MESSAGES_JSON,
+        &STYLE_CSS
+];
+
+/// Asset catalog for efficient URL-based lookups
+pub fn get_asset_catalog() -> AssetCatalog {
+    AssetCatalog::from_assets(&ASSETS)
+}

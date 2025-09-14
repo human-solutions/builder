@@ -3,8 +3,6 @@ mod copy;
 mod fontforge;
 mod localized;
 mod out;
-mod out_integration_test;
-mod out_snapshot_test;
 mod sass;
 mod swift_package;
 mod uniffi;

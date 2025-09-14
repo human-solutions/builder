@@ -1,19 +1,13 @@
 #[cfg(test)]
 mod tests {
-    use crate::{AssetMetadata, Encoding, Output};
-    use camino_fs::{Utf8PathBuf, Utf8PathBufExt};
+    use crate::asset_code_generation::*;
+    use builder_command::{AssetMetadata, Encoding};
     use icu_locid::langid;
     use insta::assert_snapshot;
-    use tempfile::TempDir;
 
     #[test]
     fn test_generate_simple_asset_code() {
-        let temp_dir = TempDir::new().unwrap();
-        let temp_path = Utf8PathBuf::from_path(temp_dir.path()).unwrap();
-
-        let mut output = Output::new(&temp_path);
-
-        let metadata = AssetMetadata {
+        let metadata = vec![AssetMetadata {
             url_path: "/style.css".to_string(),
             folder: None,
             name: "style".to_string(),
@@ -22,26 +16,15 @@ mod tests {
             available_encodings: vec![Encoding::Identity, Encoding::Brotli],
             available_languages: None,
             mime: "text/css".to_string(),
-        };
+        }];
 
-        output.asset_metadata.push(metadata);
-
-        let generated_code = output.generate_asset_code_content();
-
-        // Replace the temp path with a placeholder for consistent snapshots
-        let normalized_code = generated_code.replace(&temp_path.to_string(), "/tmp/test");
-
-        assert_snapshot!(normalized_code);
+        let generated_code = generate_asset_code_content(&metadata, "/style.css");
+        assert_snapshot!(generated_code);
     }
 
     #[test]
     fn test_generate_multilingual_asset_code() {
-        let temp_dir = TempDir::new().unwrap();
-        let temp_path = Utf8PathBuf::from_path(temp_dir.path()).unwrap();
-
-        let mut output = Output::new(&temp_path);
-
-        let metadata = AssetMetadata {
+        let metadata = vec![AssetMetadata {
             url_path: "/components/button.css".to_string(),
             folder: Some("components".to_string()),
             name: "button".to_string(),
@@ -50,25 +33,15 @@ mod tests {
             available_encodings: vec![Encoding::Identity, Encoding::Brotli, Encoding::Gzip],
             available_languages: Some(vec![langid!("en"), langid!("fr"), langid!("de")]),
             mime: "text/css".to_string(),
-        };
+        }];
 
-        output.asset_metadata.push(metadata);
-
-        let generated_code = output.generate_asset_code_content();
-        let normalized_code = generated_code.replace(&temp_path.to_string(), "/tmp/test");
-
-        assert_snapshot!(normalized_code);
+        let generated_code = generate_asset_code_content(&metadata, "/components/button.css");
+        assert_snapshot!(generated_code);
     }
 
     #[test]
     fn test_generate_multiple_assets_code() {
-        let temp_dir = TempDir::new().unwrap();
-        let temp_path = Utf8PathBuf::from_path(temp_dir.path()).unwrap();
-
-        let mut output = Output::new(&temp_path);
-
-        // Add multiple diverse assets
-        let assets = vec![
+        let metadata = vec![
             AssetMetadata {
                 url_path: "/style.css".to_string(),
                 folder: None,
@@ -111,22 +84,13 @@ mod tests {
             },
         ];
 
-        output.asset_metadata.extend(assets);
-
-        let generated_code = output.generate_asset_code_content();
-        let normalized_code = generated_code.replace(&temp_path.to_string(), "/tmp/test");
-
-        assert_snapshot!(normalized_code);
+        let generated_code = generate_asset_code_content(&metadata, "/style.css");
+        assert_snapshot!(generated_code);
     }
 
     #[test]
     fn test_generate_edge_case_names() {
-        let temp_dir = TempDir::new().unwrap();
-        let temp_path = Utf8PathBuf::from_path(temp_dir.path()).unwrap();
-
-        let mut output = Output::new(&temp_path);
-
-        let metadata = AssetMetadata {
+        let metadata = vec![AssetMetadata {
             url_path: "/assets/roboto-bold@2x.woff2".to_string(),
             folder: Some("assets".to_string()),
             name: "roboto-bold@2x".to_string(),
@@ -135,27 +99,28 @@ mod tests {
             available_encodings: vec![Encoding::Identity],
             available_languages: None,
             mime: "font/woff2".to_string(),
-        };
+        }];
 
-        output.asset_metadata.push(metadata);
-
-        let generated_code = output.generate_asset_code_content();
-        let normalized_code = generated_code.replace(&temp_path.to_string(), "/tmp/test");
-
-        assert_snapshot!(normalized_code);
+        let generated_code = generate_asset_code_content(&metadata, "/assets/roboto-bold@2x.woff2");
+        assert_snapshot!(generated_code);
     }
 
     #[test]
     fn test_generate_empty_assets() {
-        let temp_dir = TempDir::new().unwrap();
-        let temp_path = Utf8PathBuf::from_path(temp_dir.path()).unwrap();
+        let metadata: Vec<AssetMetadata> = vec![];
+        let generated_code = generate_asset_code_content(&metadata, "");
+        assert_snapshot!(generated_code);
+    }
 
-        let output = Output::new(&temp_path);
-        // No metadata added
-
-        let generated_code = output.generate_asset_code_content();
-        let normalized_code = generated_code.replace(&temp_path.to_string(), "/tmp/test");
-
-        assert_snapshot!(normalized_code);
+    #[test]
+    fn test_const_name_generation() {
+        assert_eq!(generate_const_name("style", "css"), "STYLE_CSS");
+        assert_eq!(generate_const_name("app-bundle", "js"), "APP_BUNDLE_JS");
+        assert_eq!(
+            generate_const_name("my.file.name", "woff2"),
+            "MY_FILE_NAME_WOFF2"
+        );
+        assert_eq!(generate_const_name("file@2x", "png"), "FILE_2X_PNG");
+        assert_eq!(generate_const_name("apple_store", "svg"), "APPLE_STORE_SVG");
     }
 }

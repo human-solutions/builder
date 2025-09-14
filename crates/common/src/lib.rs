@@ -1,3 +1,5 @@
+pub mod asset_code_generation;
+mod asset_code_generation_test;
 mod envargs;
 mod ext;
 pub mod hash_output;

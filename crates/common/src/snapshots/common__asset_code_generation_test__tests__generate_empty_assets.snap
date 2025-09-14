@@ -1,0 +1,19 @@
+---
+source: crates/common/src/asset_code_generation_test.rs
+expression: generated_code
+---
+// Generated asset code using builder-assets crate
+// This file is auto-generated. Do not edit manually.
+
+use builder_assets::*;
+use icu_locid::langid;
+
+/// Provider function for loading asset data from filesystem
+fn load_asset(path: &str) -> Option<Vec<u8>> {
+    std::fs::read(path).ok()
+}
+
+
+
+/// No assets available
+pub static ASSETS: [&AssetSet; 0] = [];

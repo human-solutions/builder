@@ -38,7 +38,7 @@ install-path = "CARGO_HOME"
 anyhow = "1.0"
 base64 = "0.22"
 brotli = "8.0"
-camino-fs = "0.1"
+camino-fs = { version = "0.1", features = ["serde"] }
 cargo_metadata = "0.22"
 flate2 = "1.1"
 fluent-langneg = "0.14.1"

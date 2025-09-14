@@ -211,7 +211,15 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &mut [Outp
             available_languages: None,
             mime: crate::mime::mime_from_ext(&asset.name_ext.ext).to_string(),
         };
-        out.asset_metadata.push(metadata);
+        out.asset_metadata.push(metadata.clone());
+
+        // Register metadata for asset code generation if configured
+        if let Some(asset_code_path) = &out.asset_code_output_path {
+            crate::asset_code_generation::register_asset_metadata_for_output(
+                asset_code_path,
+                vec![metadata],
+            );
+        }
     }
 }
 
@@ -332,7 +340,15 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
             available_languages: Some(languages),
             mime: crate::mime::mime_from_ext(&site_file.ext).to_string(),
         };
-        out.asset_metadata.push(metadata);
+        out.asset_metadata.push(metadata.clone());
+
+        // Register metadata for asset code generation if configured
+        if let Some(asset_code_path) = &out.asset_code_output_path {
+            crate::asset_code_generation::register_asset_metadata_for_output(
+                asset_code_path,
+                vec![metadata],
+            );
+        }
     }
 }
 
