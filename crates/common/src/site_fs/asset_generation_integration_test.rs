@@ -87,15 +87,20 @@ mod tests {
         // Test that asset metadata was collected correctly
         assert_eq!(collected_metadata.len(), 3);
 
-        // Test direct asset code generation from collected metadata
-        let generated_content = crate::asset_code_generation::generate_asset_code_content(
-            collected_metadata,
-            "/style.css",
-        );
+        // Test direct asset code generation from collected metadata using new multi-provider system
+        let config = crate::asset_code_generation::AssetCodeConfig {
+            embed_config: None,
+            filesystem_config: Some(crate::asset_code_generation::ProviderConfig {
+                metadata: collected_metadata.to_vec(),
+                base_path: camino_fs::Utf8PathBuf::from(""),
+            }),
+        };
+        let generated_content =
+            crate::asset_code_generation::generate_multi_provider_asset_code(&config);
 
-        // Verify it contains all expected elements
+        // Verify it contains all expected elements for multi-provider system
         assert!(generated_content.contains("use builder_assets::*"));
-        assert!(generated_content.contains("fn load_asset"));
+        assert!(generated_content.contains("fn load_filesystem_asset"));
         assert!(generated_content.contains("pub static STYLE_CSS"));
         assert!(generated_content.contains("pub static APP_JS"));
         assert!(generated_content.contains("pub static MESSAGES_JSON"));

@@ -182,6 +182,38 @@ impl BuilderCmd {
         }
     }
 
+    /// Execute using a specific binary path, automatically appending the config file path
+    ///
+    /// Examples:
+    /// - `exec("target/release/builder")` → runs `target/release/builder /path/to/config.json`
+    /// - `exec("target/debug/builder")` → runs `target/debug/builder /path/to/config.json`
+    pub fn exec(self, binary_path: &str) {
+        let path = &self.builder_toml;
+
+        if let Some(parent) = path.parent()
+            && !parent.exists()
+        {
+            fs::create_dir_all(parent).unwrap();
+        }
+
+        self.log(&format!("Writing builder.json to {path}"));
+        let json_content = serde_json::to_string_pretty(&self).unwrap();
+        fs::write(path, json_content).unwrap();
+
+        // Execute the binary with the config file as argument
+        let cmd = Command::new(binary_path.trim())
+            .arg(path.as_str())
+            .status()
+            .unwrap();
+
+        self.log(&format!("Processed {path} using binary: {}", binary_path));
+        if cmd.success() {
+            self.log("Command succeeded");
+        } else {
+            panic!("Command failed");
+        }
+    }
+
     fn log(&self, msg: &str) {
         let is_verbose = matches!(self.log_level, LogLevel::Verbose | LogLevel::Trace);
         if is_verbose {

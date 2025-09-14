@@ -90,7 +90,7 @@ pub use file_path::FilePathParts;
 pub use runtime_config::{get_asset_base_path, get_asset_base_path_or_panic, set_asset_base_path};
 
 // Re-export icu_locid for convenience since it's part of the public API
-pub use icu_locid::{langid, LanguageIdentifier};
+pub use icu_locid::{LanguageIdentifier, langid};
 
 // Re-export rust_embed for generated code
 pub use rust_embed::Embed;

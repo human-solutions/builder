@@ -5,18 +5,20 @@ expression: generated_code
 // Generated asset code using builder-assets crate
 // This file is auto-generated. Do not edit manually.
 
+#[allow(unused_imports)]
 use builder_assets::*;
+
 #[derive(Embed)]
 #[folder = "/assets"]
-pub struct AssetFiles;
-
+pub struct EmbedAssetFiles;
 
 /// Provider function for loading embedded asset data
-static LOAD_ASSET: fn(&str) -> Option<Vec<u8>> = load_asset;
-fn load_asset(path: &str) -> Option<Vec<u8>> {
-    AssetFiles::get(path).map(|f| f.data.into_owned())
+fn load_embed_asset(path: &str) -> Option<Vec<u8>> {
+    EmbedAssetFiles::get(path).map(|f| f.data.into_owned())
 }
+static LOAD_EMBED_ASSET: fn(&str) -> Option<Vec<u8>> = load_embed_asset;
 
+// Embedded assets
 pub static MESSAGES_JSON: AssetSet = AssetSet {
     url_path: "/messages.json",
     file_path_parts: FilePathParts {
@@ -28,7 +30,7 @@ pub static MESSAGES_JSON: AssetSet = AssetSet {
     available_encodings: &[Encoding::Identity, Encoding::Gzip],
     available_languages: Some(&[langid!("en"), langid!("fr"), langid!("de")]),
     mime: "application/json",
-    provider: &LOAD_ASSET,
+    provider: &LOAD_EMBED_ASSET,
 };
 
 /// All available assets as a static array

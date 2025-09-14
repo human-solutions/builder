@@ -188,9 +188,10 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &mut [Outp
         let url_path = if asset.subdir.as_str().is_empty() {
             format!("/{}.{}", asset.name_ext.name, asset.name_ext.ext)
         } else {
+            let clean_subdir = asset.subdir.as_str().trim_end_matches('/');
             format!(
                 "/{}/{}.{}",
-                asset.subdir, asset.name_ext.name, asset.name_ext.ext
+                clean_subdir, asset.name_ext.name, asset.name_ext.ext
             )
         };
 
