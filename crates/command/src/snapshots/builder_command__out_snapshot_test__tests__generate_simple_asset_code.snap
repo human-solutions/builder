@@ -14,7 +14,7 @@ fn load_asset(path: &str) -> Option<Vec<u8>> {
     std::fs::read(full_path).ok()
 }
 
-pub static STYLE: AssetSet = AssetSet {
+pub static STYLE_CSS: AssetSet = AssetSet {
     url_path: "/style.css",
     file_path_parts: FilePathParts {
         folder: None,
@@ -30,7 +30,7 @@ pub static STYLE: AssetSet = AssetSet {
 
 /// All available assets as a static array
 pub static ASSETS: [&AssetSet; 1] = [
-        &STYLE
+        &STYLE_CSS
 ];
 
 /// Asset catalog for efficient URL-based lookups

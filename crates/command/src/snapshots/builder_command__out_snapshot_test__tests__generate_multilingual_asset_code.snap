@@ -14,7 +14,7 @@ fn load_asset(path: &str) -> Option<Vec<u8>> {
     std::fs::read(full_path).ok()
 }
 
-pub static BUTTON: AssetSet = AssetSet {
+pub static BUTTON_CSS: AssetSet = AssetSet {
     url_path: "/components/button.css",
     file_path_parts: FilePathParts {
         folder: Some("components"),
@@ -30,7 +30,7 @@ pub static BUTTON: AssetSet = AssetSet {
 
 /// All available assets as a static array
 pub static ASSETS: [&AssetSet; 1] = [
-        &BUTTON
+        &BUTTON_CSS
 ];
 
 /// Asset catalog for efficient URL-based lookups

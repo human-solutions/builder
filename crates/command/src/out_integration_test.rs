@@ -37,7 +37,7 @@ mod tests {
         assert!(content.contains("use builder_assets::*"));
         assert!(content.contains("use icu_locid::langid"));
         assert!(content.contains("fn load_asset"));
-        assert!(content.contains("pub static FAVICON: AssetSet"));
+        assert!(content.contains("pub static FAVICON_ICO: AssetSet"));
         assert!(content.contains(r#"mime: "image/x-icon""#));
     }
 
@@ -59,10 +59,20 @@ mod tests {
     fn test_const_name_generation() {
         let output = Output::new("test");
 
-        assert_eq!(output.generate_const_name("style"), "STYLE");
-        assert_eq!(output.generate_const_name("app-bundle"), "APP_BUNDLE");
-        assert_eq!(output.generate_const_name("my.file.name"), "MY_FILE_NAME");
-        assert_eq!(output.generate_const_name("file@2x"), "FILE_2X");
+        assert_eq!(output.generate_const_name("style", "css"), "STYLE_CSS");
+        assert_eq!(
+            output.generate_const_name("app-bundle", "js"),
+            "APP_BUNDLE_JS"
+        );
+        assert_eq!(
+            output.generate_const_name("my.file.name", "woff2"),
+            "MY_FILE_NAME_WOFF2"
+        );
+        assert_eq!(output.generate_const_name("file@2x", "png"), "FILE_2X_PNG");
+        assert_eq!(
+            output.generate_const_name("apple_store", "svg"),
+            "APPLE_STORE_SVG"
+        );
     }
 
     #[test]
@@ -91,12 +101,14 @@ mod tests {
 
         let generated_code = output.generate_asset_code_content();
 
-        // Should only have one STYLE constant despite duplicate metadata
-        let style_count = generated_code.matches("pub static STYLE: AssetSet").count();
+        // Should only have one STYLE_CSS constant despite duplicate metadata
+        let style_count = generated_code
+            .matches("pub static STYLE_CSS: AssetSet")
+            .count();
         assert_eq!(style_count, 1);
 
         // Catalog should only reference it once
-        let catalog_ref_count = generated_code.matches("&STYLE").count();
+        let catalog_ref_count = generated_code.matches("&STYLE_CSS").count();
         assert_eq!(catalog_ref_count, 1);
     }
 

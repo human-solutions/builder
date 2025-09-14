@@ -97,9 +97,9 @@ mod tests {
         // Verify it contains all expected elements
         assert!(generated_content.contains("use builder_assets::*"));
         assert!(generated_content.contains("fn load_asset"));
-        assert!(generated_content.contains("pub static STYLE"));
-        assert!(generated_content.contains("pub static APP"));
-        assert!(generated_content.contains("pub static MESSAGES"));
+        assert!(generated_content.contains("pub static STYLE_CSS"));
+        assert!(generated_content.contains("pub static APP_JS"));
+        assert!(generated_content.contains("pub static MESSAGES_JSON"));
         assert!(generated_content.contains("pub static ASSETS"));
         assert!(generated_content.contains("pub fn get_asset_catalog"));
 

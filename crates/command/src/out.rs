@@ -232,7 +232,7 @@ fn load_asset(path: &str) -> Option<Vec<u8>> {{
 
     /// Generates a single static AssetSet
     fn generate_single_asset_set(&self, metadata: &AssetMetadata) -> String {
-        let const_name = self.generate_const_name(&metadata.name);
+        let const_name = self.generate_const_name(&metadata.name, &metadata.ext);
 
         let encodings = metadata
             .available_encodings
@@ -302,7 +302,7 @@ fn load_asset(path: &str) -> Option<Vec<u8>> {{
         let asset_refs = deduplicated
             .values()
             .map(|metadata| {
-                let const_name = self.generate_const_name(&metadata.name);
+                let const_name = self.generate_const_name(&metadata.name, &metadata.ext);
                 format!("        &{}", const_name)
             })
             .collect::<Vec<_>>()
@@ -327,9 +327,10 @@ pub fn get_asset_catalog() -> AssetCatalog {{
         )
     }
 
-    /// Generates a constant name from an asset name
-    pub fn generate_const_name(&self, name: &str) -> String {
-        name.to_uppercase()
+    /// Generates a constant name from an asset name and extension
+    pub fn generate_const_name(&self, name: &str, ext: &str) -> String {
+        format!("{}_{}", name, ext)
+            .to_uppercase()
             .chars()
             .map(|c| if c.is_alphanumeric() { c } else { '_' })
             .collect()

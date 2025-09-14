@@ -14,7 +14,7 @@ fn load_asset(path: &str) -> Option<Vec<u8>> {
     std::fs::read(full_path).ok()
 }
 
-pub static FAVICON: AssetSet = AssetSet {
+pub static FAVICON_ICO: AssetSet = AssetSet {
     url_path: "/favicon.ico",
     file_path_parts: FilePathParts {
         folder: None,
@@ -28,7 +28,7 @@ pub static FAVICON: AssetSet = AssetSet {
     provider: &load_asset,
 };
 
-pub static APP: AssetSet = AssetSet {
+pub static APP_JS: AssetSet = AssetSet {
     url_path: "/js/app.js",
     file_path_parts: FilePathParts {
         folder: Some("js"),
@@ -42,7 +42,7 @@ pub static APP: AssetSet = AssetSet {
     provider: &load_asset,
 };
 
-pub static MESSAGES: AssetSet = AssetSet {
+pub static MESSAGES_JSON: AssetSet = AssetSet {
     url_path: "/messages.json",
     file_path_parts: FilePathParts {
         folder: None,
@@ -56,7 +56,7 @@ pub static MESSAGES: AssetSet = AssetSet {
     provider: &load_asset,
 };
 
-pub static STYLE: AssetSet = AssetSet {
+pub static STYLE_CSS: AssetSet = AssetSet {
     url_path: "/style.css",
     file_path_parts: FilePathParts {
         folder: None,
@@ -72,10 +72,10 @@ pub static STYLE: AssetSet = AssetSet {
 
 /// All available assets as a static array
 pub static ASSETS: [&AssetSet; 4] = [
-        &FAVICON,
-        &APP,
-        &MESSAGES,
-        &STYLE
+        &FAVICON_ICO,
+        &APP_JS,
+        &MESSAGES_JSON,
+        &STYLE_CSS
 ];
 
 /// Asset catalog for efficient URL-based lookups

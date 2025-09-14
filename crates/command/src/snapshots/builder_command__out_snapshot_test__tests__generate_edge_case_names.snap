@@ -14,7 +14,7 @@ fn load_asset(path: &str) -> Option<Vec<u8>> {
     std::fs::read(full_path).ok()
 }
 
-pub static ROBOTO_BOLD_2X: AssetSet = AssetSet {
+pub static ROBOTO_BOLD_2X_WOFF2: AssetSet = AssetSet {
     url_path: "/assets/roboto-bold@2x.woff2",
     file_path_parts: FilePathParts {
         folder: Some("assets"),
@@ -30,7 +30,7 @@ pub static ROBOTO_BOLD_2X: AssetSet = AssetSet {
 
 /// All available assets as a static array
 pub static ASSETS: [&AssetSet; 1] = [
-        &ROBOTO_BOLD_2X
+        &ROBOTO_BOLD_2X_WOFF2
 ];
 
 /// Asset catalog for efficient URL-based lookups
