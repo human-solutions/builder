@@ -1,5 +1,4 @@
 pub mod asset_code_generation;
-mod asset_code_generation_integration_test;
 mod asset_code_generation_test;
 mod envargs;
 mod ext;

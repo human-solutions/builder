@@ -68,8 +68,7 @@ pub fn generate_asset_code_content_with_provider(
 ) -> String {
     let (imports, provider_fn, rust_embed) = match provider {
         DataProvider::Embed => {
-            let imports = "use builder_assets::*;\nuse icu_locid::langid;\nuse rust_embed::Embed;"
-                .to_string();
+            let imports = "use builder_assets::*;".to_string();
             let rust_embed = format!(
                 r#"
 #[derive(Embed)]
@@ -79,6 +78,7 @@ pub struct AssetFiles;
                 base_path
             );
             let provider_fn = r#"/// Provider function for loading embedded asset data
+static LOAD_ASSET: fn(&str) -> Option<Vec<u8>> = load_asset;
 fn load_asset(path: &str) -> Option<Vec<u8>> {
     AssetFiles::get(path).map(|f| f.data.into_owned())
 }"#
@@ -86,12 +86,12 @@ fn load_asset(path: &str) -> Option<Vec<u8>> {
             (imports, provider_fn, rust_embed)
         }
         DataProvider::FileSystem => {
-            let imports =
-                "use builder_assets::*;\nuse icu_locid::langid;\nuse std::path::Path;".to_string();
+            let imports = "use builder_assets::*;".to_string();
             let provider_fn = r#"/// Provider function for loading asset data from filesystem
 ///
 /// # Panics
 /// Panics if the asset base path has not been configured using set_asset_base_path().
+static LOAD_ASSET: fn(&str) -> Option<Vec<u8>> = load_asset;
 fn load_asset(path: &str) -> Option<Vec<u8>> {
     let base_path = builder_assets::get_asset_base_path_or_panic();
     let full_path = base_path.join(path);
@@ -192,7 +192,7 @@ fn generate_single_asset_set(metadata: &AssetMetadata) -> String {
     available_encodings: &[{encodings}],
     available_languages: {languages},
     mime: "{mime}",
-    provider: &load_asset,
+    provider: &LOAD_ASSET,
 }};"#,
         const_name = const_name,
         url_path = metadata.url_path,

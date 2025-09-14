@@ -199,7 +199,7 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &mut [Outp
             folder: if asset.subdir.as_str().is_empty() {
                 None
             } else {
-                Some(asset.subdir.to_string())
+                Some(asset.subdir.as_str().trim_end_matches('/').to_string())
             },
             name: asset.name_ext.name.clone(),
             hash: checksum.clone(),
@@ -331,7 +331,10 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
 
         let metadata = AssetMetadata {
             url_path,
-            folder: site_file.site_dir.clone(),
+            folder: site_file
+                .site_dir
+                .as_ref()
+                .map(|s| s.trim_end_matches('/').to_string()),
             name: site_file.name.clone(),
             hash: checksum.clone(),
             ext: site_file.ext.clone(),

@@ -6,13 +6,12 @@ expression: generated_code
 // This file is auto-generated. Do not edit manually.
 
 use builder_assets::*;
-use icu_locid::langid;
-use std::path::Path;
 
 /// Provider function for loading asset data from filesystem
 ///
 /// # Panics
 /// Panics if the asset base path has not been configured using set_asset_base_path().
+static LOAD_ASSET: fn(&str) -> Option<Vec<u8>> = load_asset;
 fn load_asset(path: &str) -> Option<Vec<u8>> {
     let base_path = builder_assets::get_asset_base_path_or_panic();
     let full_path = base_path.join(path);
@@ -30,7 +29,7 @@ pub static FAVICON_ICO: AssetSet = AssetSet {
     available_encodings: &[Encoding::Identity],
     available_languages: None,
     mime: "image/x-icon",
-    provider: &load_asset,
+    provider: &LOAD_ASSET,
 };
 
 pub static APP_JS: AssetSet = AssetSet {
@@ -44,7 +43,7 @@ pub static APP_JS: AssetSet = AssetSet {
     available_encodings: &[Encoding::Brotli, Encoding::Gzip],
     available_languages: None,
     mime: "application/javascript",
-    provider: &load_asset,
+    provider: &LOAD_ASSET,
 };
 
 pub static MESSAGES_JSON: AssetSet = AssetSet {
@@ -58,7 +57,7 @@ pub static MESSAGES_JSON: AssetSet = AssetSet {
     available_encodings: &[Encoding::Identity, Encoding::Gzip],
     available_languages: Some(&[langid!("en"), langid!("fr"), langid!("es-MX")]),
     mime: "application/json",
-    provider: &load_asset,
+    provider: &LOAD_ASSET,
 };
 
 pub static STYLE_CSS: AssetSet = AssetSet {
@@ -72,7 +71,7 @@ pub static STYLE_CSS: AssetSet = AssetSet {
     available_encodings: &[Encoding::Identity],
     available_languages: None,
     mime: "text/css",
-    provider: &load_asset,
+    provider: &LOAD_ASSET,
 };
 
 /// All available assets as a static array

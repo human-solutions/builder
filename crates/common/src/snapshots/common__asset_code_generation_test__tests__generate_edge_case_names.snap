@@ -6,13 +6,12 @@ expression: generated_code
 // This file is auto-generated. Do not edit manually.
 
 use builder_assets::*;
-use icu_locid::langid;
-use std::path::Path;
 
 /// Provider function for loading asset data from filesystem
 ///
 /// # Panics
 /// Panics if the asset base path has not been configured using set_asset_base_path().
+static LOAD_ASSET: fn(&str) -> Option<Vec<u8>> = load_asset;
 fn load_asset(path: &str) -> Option<Vec<u8>> {
     let base_path = builder_assets::get_asset_base_path_or_panic();
     let full_path = base_path.join(path);
@@ -30,7 +29,7 @@ pub static ROBOTO_BOLD_2X_WOFF2: AssetSet = AssetSet {
     available_encodings: &[Encoding::Identity],
     available_languages: None,
     mime: "font/woff2",
-    provider: &load_asset,
+    provider: &LOAD_ASSET,
 };
 
 /// All available assets as a static array

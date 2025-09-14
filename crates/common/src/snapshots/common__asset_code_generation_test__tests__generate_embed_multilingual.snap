@@ -6,14 +6,13 @@ expression: generated_code
 // This file is auto-generated. Do not edit manually.
 
 use builder_assets::*;
-use icu_locid::langid;
-use rust_embed::Embed;
 #[derive(Embed)]
 #[folder = "/assets"]
 pub struct AssetFiles;
 
 
 /// Provider function for loading embedded asset data
+static LOAD_ASSET: fn(&str) -> Option<Vec<u8>> = load_asset;
 fn load_asset(path: &str) -> Option<Vec<u8>> {
     AssetFiles::get(path).map(|f| f.data.into_owned())
 }
@@ -29,7 +28,7 @@ pub static MESSAGES_JSON: AssetSet = AssetSet {
     available_encodings: &[Encoding::Identity, Encoding::Gzip],
     available_languages: Some(&[langid!("en"), langid!("fr"), langid!("de")]),
     mime: "application/json",
-    provider: &load_asset,
+    provider: &LOAD_ASSET,
 };
 
 /// All available assets as a static array

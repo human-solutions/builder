@@ -90,7 +90,13 @@ pub use file_path::FilePathParts;
 pub use runtime_config::{get_asset_base_path, get_asset_base_path_or_panic, set_asset_base_path};
 
 // Re-export icu_locid for convenience since it's part of the public API
-pub use icu_locid::LanguageIdentifier;
+pub use icu_locid::{langid, LanguageIdentifier};
+
+// Re-export rust_embed for generated code
+pub use rust_embed::Embed;
+
+// Re-export std::path for filesystem operations
+pub use std::path::PathBuf;
 
 #[cfg(test)]
 mod integration_tests {
