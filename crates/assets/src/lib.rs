@@ -47,7 +47,7 @@
 //! };
 //!
 //! // Content negotiation
-//! let asset = ASSET_SET.asset_for("br, gzip", "en");
+//! let asset = ASSET_SET.asset_for(Some("br, gzip"), Some("en")).unwrap();
 //! assert_eq!(asset.encoding, Encoding::Brotli);
 //! assert_eq!(asset.file_path(), "css/style.css.br");
 //!
@@ -167,7 +167,9 @@ mod integration_tests {
         catalog.add_asset(&BUTTON_ASSET);
 
         // Test basic asset lookup and content negotiation
-        let asset = catalog.get_asset("/assets/style.css", "br, gzip", "");
+        let asset = catalog
+            .get_asset_set("/assets/style.css")
+            .and_then(|set| set.asset_for(Some("br, gzip"), None));
         assert!(asset.is_some());
         let asset = asset.unwrap();
         assert_eq!(asset.encoding, Encoding::Brotli);
@@ -175,7 +177,9 @@ mod integration_tests {
         assert_eq!(asset.data_for(), b"brotli css");
 
         // Test translated asset with content negotiation
-        let asset = catalog.get_asset("/assets/button.hash123=.css", "br", "fr-CA, fr, en");
+        let asset = catalog
+            .get_asset_set("/assets/button.hash123=.css")
+            .and_then(|set| set.asset_for(Some("br"), Some("fr-CA, fr, en")));
         assert!(asset.is_some());
         let asset = asset.unwrap();
         assert_eq!(asset.encoding, Encoding::Brotli);
@@ -184,7 +188,9 @@ mod integration_tests {
         assert_eq!(asset.data_for(), b"compressed french button");
 
         // Test fallback when preferred isn't available
-        let asset = catalog.get_asset("/assets/button.hash123=.css", "gzip", "de, en");
+        let asset = catalog
+            .get_asset_set("/assets/button.hash123=.css")
+            .and_then(|set| set.asset_for(Some("gzip"), Some("de, en")));
         assert!(asset.is_some());
         let asset = asset.unwrap();
         assert_eq!(asset.encoding, Encoding::Brotli); // Most preferred available encoding
@@ -275,15 +281,17 @@ mod integration_tests {
     #[test]
     fn test_encoding_preference() {
         // Brotli should be preferred
-        let asset = TEST_FILE_ASSET.asset_for("br, gzip", "");
+        let asset = TEST_FILE_ASSET.asset_for(Some("br, gzip"), None).unwrap();
         assert_eq!(asset.encoding, Encoding::Brotli);
 
         // Quality values should be respected (gzip q=1.0 beats br q=0.8)
-        let asset = TEST_FILE_ASSET.asset_for("gzip; q=1.0, br; q=0.8", "");
+        let asset = TEST_FILE_ASSET
+            .asset_for(Some("gzip; q=1.0, br; q=0.8"), None)
+            .unwrap();
         assert_eq!(asset.encoding, Encoding::Gzip);
 
         // Fallback to most preferred available when none match
-        let asset = TEST_FILE_ASSET.asset_for("compress", ""); // Unknown encoding
+        let asset = TEST_FILE_ASSET.asset_for(Some("compress"), None).unwrap(); // Unknown encoding
         assert_eq!(asset.encoding, Encoding::Brotli); // Most preferred available
     }
 }

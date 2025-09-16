@@ -36,24 +36,38 @@ impl AssetSet {
     }
 
     /// Performs content negotiation and returns the best matching Asset
-    pub fn asset_for(&self, accept_encodings: &str, accept_languages: &str) -> Asset {
+    ///
+    pub fn asset_for(
+        &self,
+        accept_encodings: Option<&str>,
+        accept_languages: Option<&str>,
+    ) -> Option<Asset> {
         // Negotiate encoding
-        let encoding = negotiation::negotiate_encoding(accept_encodings, self.available_encodings);
+        let encoding = if let Some(enc) = accept_encodings {
+            negotiation::negotiate_encoding(enc, self.available_encodings)
+        } else if let Some(&enc) = self.available_encodings.last() {
+            enc
+        } else {
+            return None;
+        };
 
         // Negotiate language (if languages are available)
-        let lang = if let Some(available_langs) = self.available_languages {
-            negotiation::negotiate_language(accept_languages, available_langs)
+        let lang = if let Some(available_languages) = self.available_languages {
+            let accepted_languages = accept_languages.unwrap_or("");
+            // Try to negotiate, fall back to first available language if no match
+            negotiation::negotiate_language(accepted_languages, available_languages)
+                .or_else(|| available_languages.first().cloned())
         } else {
             None
         };
 
-        Asset::new(
+        Some(Asset::new(
             encoding,
             self.mime,
             lang,
             self.file_path_parts,
             self.provider,
-        )
+        ))
     }
 
     /// Gets a specific Asset variant without content negotiation
@@ -176,13 +190,13 @@ mod tests {
         );
 
         // Test Brotli preference
-        let asset = asset_set.asset_for("br, gzip", "");
+        let asset = asset_set.asset_for(Some("br, gzip"), None).unwrap();
         assert_eq!(asset.encoding, Encoding::Brotli);
         assert_eq!(asset.file_path(), "css/style.css.br");
         assert!(asset.lang.is_none());
 
         // Test Gzip fallback
-        let asset = asset_set.asset_for("gzip", "");
+        let asset = asset_set.asset_for(Some("gzip"), None).unwrap();
         assert_eq!(asset.encoding, Encoding::Gzip);
         assert_eq!(asset.file_path(), "css/style.css.gzip");
     }
@@ -199,13 +213,22 @@ mod tests {
         );
 
         // Test language negotiation
-        let asset = asset_set.asset_for("br", "fr, en");
+        let asset = asset_set.asset_for(Some("br"), Some("fr, en")).unwrap();
         assert_eq!(asset.encoding, Encoding::Brotli);
         assert_eq!(asset.lang, Some(langid!("fr")));
         assert_eq!(asset.file_path(), "css/style.hash123=.css/fr.css.br");
 
         // Test fallback to first available language when requested isn't available
-        let asset = asset_set.asset_for("identity", "es, de");
+        let asset = asset_set
+            .asset_for(Some("identity"), Some("es, fr"))
+            .unwrap();
+        assert_eq!(asset.encoding, Encoding::Identity);
+        assert_eq!(asset.lang, Some(langid!("fr")));
+        assert_eq!(asset.file_path(), "css/style.hash123=.css/fr.css");
+
+        let asset = asset_set
+            .asset_for(Some("identity"), Some("es, de"))
+            .unwrap();
         assert_eq!(asset.encoding, Encoding::Identity);
         assert_eq!(asset.lang, Some(langid!("de")));
         assert_eq!(asset.file_path(), "css/style.hash123=.css/de.css");

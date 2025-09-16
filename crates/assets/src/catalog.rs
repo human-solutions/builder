@@ -1,4 +1,4 @@
-use crate::{asset::Asset, asset_set::AssetSet};
+use crate::asset_set::AssetSet;
 use std::collections::BTreeMap;
 
 /// AssetCatalog provides efficient URL-based lookups for assets
@@ -32,17 +32,6 @@ impl AssetCatalog {
     /// Looks up an AssetSet by URL path
     pub fn get_asset_set(&self, url_path: &str) -> Option<&'static AssetSet> {
         self.assets.get(url_path).copied()
-    }
-
-    /// Performs content negotiation and returns the best matching Asset for a URL
-    pub fn get_asset(
-        &self,
-        url_path: &str,
-        accept_encodings: &str,
-        accept_languages: &str,
-    ) -> Option<Asset> {
-        self.get_asset_set(url_path)
-            .map(|asset_set| asset_set.asset_for(accept_encodings, accept_languages))
     }
 
     /// Returns an iterator over all URL paths in the catalog
@@ -91,6 +80,28 @@ impl AssetCatalog {
             .values()
             .filter(move |asset_set| asset_set.mime_type() == mime_type)
             .copied()
+    }
+
+    /// Joins another AssetCatalog into this one, combining all assets
+    ///
+    /// If both catalogs contain assets with the same URL path, the other catalog's asset
+    /// will overwrite the existing one in this catalog.
+    ///
+    /// # Arguments
+    /// * `other` - The other catalog to merge into this one
+    ///
+    /// # Example
+    /// ```
+    /// use builder_assets::AssetCatalog;
+    /// let mut catalog1 = AssetCatalog::new();
+    /// let catalog2 = AssetCatalog::new();
+    /// catalog1.join(catalog2);
+    /// ```
+    pub fn join(mut self, other: AssetCatalog) -> AssetCatalog {
+        for (url_path, asset_set) in other.assets {
+            self.assets.insert(url_path, asset_set);
+        }
+        self
     }
 }
 
@@ -174,7 +185,10 @@ mod tests {
 
         catalog.add_asset(&SCRIPT_ASSET);
 
-        let asset = catalog.get_asset("/js/app.hash123=.js", "br, gzip", "");
+        let asset = catalog
+            .get_asset_set("/js/app.hash123=.js")
+            .and_then(|set| set.asset_for(Some("br, gzip"), None));
+
         assert!(asset.is_some());
 
         let asset = asset.unwrap();
@@ -321,5 +335,117 @@ mod tests {
         assert_eq!(catalog.len(), 2);
         assert!(catalog.contains_url("/file1.css"));
         assert!(catalog.contains_url("/file2.js"));
+    }
+
+    #[test]
+    fn test_catalog_join() {
+        // Create first catalog with CSS asset
+        let mut catalog1 = AssetCatalog::new();
+
+        static CSS_PARTS: FilePathParts = FilePathParts {
+            folder: None,
+            name: "style",
+            hash: None,
+            ext: "css",
+        };
+        static CSS_ENCODINGS: [Encoding; 1] = [Encoding::Identity];
+        static CSS_ASSET: AssetSet = AssetSet {
+            url_path: "/style.css",
+            file_path_parts: CSS_PARTS,
+            available_encodings: &CSS_ENCODINGS,
+            available_languages: None,
+            mime: "text/css",
+            provider: &MOCK_PROVIDER,
+        };
+
+        catalog1.add_asset(&CSS_ASSET);
+        assert_eq!(catalog1.len(), 1);
+
+        // Create second catalog with JS asset
+        let mut catalog2 = AssetCatalog::new();
+
+        static JS_PARTS: FilePathParts = FilePathParts {
+            folder: None,
+            name: "app",
+            hash: None,
+            ext: "js",
+        };
+        static JS_ENCODINGS: [Encoding; 1] = [Encoding::Identity];
+        static JS_ASSET: AssetSet = AssetSet {
+            url_path: "/app.js",
+            file_path_parts: JS_PARTS,
+            available_encodings: &JS_ENCODINGS,
+            available_languages: None,
+            mime: "application/javascript",
+            provider: &MOCK_PROVIDER,
+        };
+
+        catalog2.add_asset(&JS_ASSET);
+        assert_eq!(catalog2.len(), 1);
+
+        // Join catalog2 into catalog1
+        let catalog1 = catalog1.join(catalog2);
+
+        // Verify the joined catalog contains both assets
+        assert_eq!(catalog1.len(), 2);
+        assert!(catalog1.contains_url("/style.css"));
+        assert!(catalog1.contains_url("/app.js"));
+
+        // Verify we can retrieve both assets
+        assert!(catalog1.get_asset_set("/style.css").is_some());
+        assert!(catalog1.get_asset_set("/app.js").is_some());
+    }
+
+    #[test]
+    fn test_catalog_join_overwrites_duplicates() {
+        // Create first catalog with an asset
+        let mut catalog1 = AssetCatalog::new();
+
+        static ORIGINAL_PARTS: FilePathParts = FilePathParts {
+            folder: None,
+            name: "original",
+            hash: None,
+            ext: "css",
+        };
+        static ORIGINAL_ENCODINGS: [Encoding; 1] = [Encoding::Identity];
+        static ORIGINAL_ASSET: AssetSet = AssetSet {
+            url_path: "/style.css",
+            file_path_parts: ORIGINAL_PARTS,
+            available_encodings: &ORIGINAL_ENCODINGS,
+            available_languages: None,
+            mime: "text/css",
+            provider: &MOCK_PROVIDER,
+        };
+
+        catalog1.add_asset(&ORIGINAL_ASSET);
+
+        // Create second catalog with asset at same URL
+        let mut catalog2 = AssetCatalog::new();
+
+        static UPDATED_PARTS: FilePathParts = FilePathParts {
+            folder: None,
+            name: "updated",
+            hash: None,
+            ext: "css",
+        };
+        static UPDATED_ENCODINGS: [Encoding; 1] = [Encoding::Identity];
+        static UPDATED_ASSET: AssetSet = AssetSet {
+            url_path: "/style.css", // Same URL as original
+            file_path_parts: UPDATED_PARTS,
+            available_encodings: &UPDATED_ENCODINGS,
+            available_languages: None,
+            mime: "text/css",
+            provider: &MOCK_PROVIDER,
+        };
+
+        catalog2.add_asset(&UPDATED_ASSET);
+
+        // Join catalog2 into catalog1 - should overwrite
+        let catalog1 = catalog1.join(catalog2);
+
+        // Verify the catalog still has 1 asset but with updated content
+        assert_eq!(catalog1.len(), 1);
+        let asset_set = catalog1.get_asset_set("/style.css").unwrap();
+        assert_eq!(asset_set.file_path_parts.name, "updated"); // Should be the new one
     }
 }

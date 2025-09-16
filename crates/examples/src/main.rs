@@ -43,10 +43,15 @@ fn main() {
 
         // Try to load the asset using proper content negotiation
         // For localized assets, specify a language; for others, use defaults
-        let (asset, is_localized) = if asset_set.available_languages.is_some() {
-            (asset_set.asset_for("identity", "en"), true) // Use English for localized assets
+        let (asset_opt, is_localized) = if asset_set.available_languages.is_some() {
+            (asset_set.asset_for(Some("identity"), Some("en")), true) // Use English for localized assets
         } else {
-            (asset_set.asset_for("", ""), false) // Use defaults for non-localized assets
+            (asset_set.asset_for(None, None), false) // Use defaults for non-localized assets
+        };
+
+        let Some(asset) = asset_opt else {
+            println!("   ⚠️  Failed to negotiate asset (no matching encoding/language)");
+            continue;
         };
         match std::panic::catch_unwind(|| asset.data_for()) {
             Ok(data) => {
@@ -66,8 +71,8 @@ fn main() {
                 // For compressed data, compare with original file
                 if asset.encoding != builder_assets::Encoding::Identity {
                     // Load the identity version for comparison
-                    let identity_asset = asset_set.asset_for("identity", "");
-                    match std::panic::catch_unwind(|| identity_asset.data_for()) {
+                    if let Some(identity_asset) = asset_set.asset_for(Some("identity"), None) {
+                        match std::panic::catch_unwind(|| identity_asset.data_for()) {
                         Ok(original_data) => {
                             println!("   📄 Original file: {} bytes", original_data.len());
                             println!(
@@ -100,6 +105,9 @@ fn main() {
                         Err(_) => {
                             println!("   ⚠️  Could not load original file for comparison");
                         }
+                        }
+                    } else {
+                        println!("   ⚠️  Could not negotiate identity version for comparison");
                     }
                 } else {
                     // Show preview for uncompressed text files
@@ -143,11 +151,17 @@ fn main() {
     for url in &test_urls {
         if let Some(asset_set) = catalog.get_asset_set(url) {
             // Use the asset set to create an Asset with content negotiation
-            let _asset = asset_set.asset_for("", "");
-            println!(
-                "   ✅ Found asset for URL: {} -> {}",
-                url, asset_set.file_path_parts.name
-            );
+            if let Some(_asset) = asset_set.asset_for(None, None) {
+                println!(
+                    "   ✅ Found asset for URL: {} -> {}",
+                    url, asset_set.file_path_parts.name
+                );
+            } else {
+                println!(
+                    "   ⚠️  Found asset set for URL: {} but failed content negotiation",
+                    url
+                );
+            }
         } else {
             println!("   ❌ No asset found for URL: {}", url);
         }

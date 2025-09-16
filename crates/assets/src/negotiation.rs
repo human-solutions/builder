@@ -57,6 +57,7 @@ pub fn negotiate_encoding(accept_encoding: &str, available_encodings: &[Encoding
 }
 
 /// Negotiates the best language from the Accept-Language header
+/// or falls back to "en" if present otherwise the first available language
 pub fn negotiate_language(
     accept_language: &str,
     available_languages: &[LanguageIdentifier],
@@ -79,17 +80,14 @@ pub fn negotiate_language(
     }
 
     // Use fluent-langneg for proper language negotiation
-    let supported: Vec<&LanguageIdentifier> = available_languages.iter().collect();
-    let _default_language = &available_languages[0]; // First available as default
-
     let result = negotiate_languages(
         &requested,
-        &supported,
-        None, // No default language for strict matching
+        available_languages,
+        None, // No default language - return None if no match
         NegotiationStrategy::Filtering,
     );
 
-    result.into_iter().next().cloned().cloned()
+    result.into_iter().next().cloned()
 }
 
 /// Parses a quality value from a q-parameter (e.g., "q=0.8")

@@ -3,6 +3,9 @@ use builder_command::{BuilderCmd, CopyCmd, DataProvider, LocalizedCmd, Output};
 use camino_fs::Utf8PathBuf;
 use std::env;
 
+// static CARGO_PREFIX: &str = "cargo:warning=";
+static CARGO_PREFIX: &str = "";
+
 /// Find the target dir which is the CARGO_MANIFEST_DIR if it contains
 /// the Cargo.lock file, or the first parent directory that contains it.
 fn target_dir() -> Utf8PathBuf {
@@ -22,9 +25,9 @@ fn main() -> Result<()> {
     let dist_out = target_dir().join("dist");
     let asset_rs_path = dist_out.join("assets.rs");
 
-    println!("cargo:warning=Setting up multi-provider asset generation");
-    println!("cargo:warning=Workspace target dir: {}", dist_out);
-    println!("cargo:warning=Asset code output: {}", asset_rs_path);
+    println!("{CARGO_PREFIX}Setting up multi-provider asset generation");
+    println!("{CARGO_PREFIX}Workspace target dir: {}", dist_out);
+    println!("{CARGO_PREFIX}    Asset code output: {}", asset_rs_path);
 
     // Export the asset code path as environment variable
     println!("cargo:rustc-env=ASSET_RS_PATH={}", asset_rs_path);
@@ -55,7 +58,7 @@ fn main() -> Result<()> {
         );
 
     // Build the latest release binary first
-    println!("cargo:warning=Building release binary to ensure latest version");
+    println!("{CARGO_PREFIX}Building release binary to ensure latest version");
     let build_status = std::process::Command::new("cargo")
         .args(["build", "-r", "-p", "builder"])
         .status()?;
@@ -71,7 +74,7 @@ fn main() -> Result<()> {
         .add_copy(embed_copy)
         .exec("../../target/release/builder");
 
-    println!("cargo:warning=Multi-provider asset generation completed successfully");
+    println!("{CARGO_PREFIX}Multi-provider asset generation completed successfully");
 
     Ok(())
 }
