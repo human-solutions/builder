@@ -26,7 +26,7 @@ pub fn run(cmd: &mut WasmProcessingCmd) {
 
     let tmp_dir = Utf8PathBuf::from("target/wasm_tmp");
     log_trace!("WASM", "Creating temp directory: {}", tmp_dir);
-    tmp_dir.mkdir().unwrap();
+    tmp_dir.mkdirs().unwrap();
 
     let wasm_path = Utf8PathBuf::from(format!(
         "target/wasm32-unknown-unknown/{}/{package_name}.wasm",
