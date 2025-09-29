@@ -51,7 +51,7 @@ simplelog = "0.12"
 swift-package = "0.1"
 uniffi_bindgen = "0.29"
 uuid = { version = "1.18", features = ["v4"] }
-tempfile = "3.21"
+tempfile = "3.23"
 time = "0.3"
 wasmbin = "0.8"
 wasm-bindgen-cli-support = "0.2"
