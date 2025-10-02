@@ -20,7 +20,7 @@ This is a Rust workspace containing a command-line tool for building web assets,
 - **Common utilities**: `crates/common/` - Shared utilities including file system operations and logging
 
 The tool works by:
-1. Reading a JSON configuration file (builder.json format)
+1. Reading a YAML configuration file (builder.yaml format)
 2. Parsing it into a `BuilderCmd` structure containing multiple command types using serde
 3. Executing each command in sequence through their respective modules
 
@@ -28,6 +28,12 @@ The tool works by:
 
 ### Building and Testing
 ```bash
+# Clean build workflow (build builder binary first, then everything else)
+cargo build -p builder && cargo build
+
+# Or for tests
+cargo build -p builder && cargo nextest run
+
 # Build the project
 cargo build
 
@@ -47,9 +53,9 @@ cargo build -p builder
 - **WASM target**: `rustup target add wasm32-unknown-unknown`
 
 ### Running the Tool
-The builder binary expects a JSON configuration file as its first argument:
+The builder binary expects a YAML configuration file as its first argument:
 ```bash
-./target/debug/builder path/to/builder.json
+./target/debug/builder path/to/builder.yaml
 ```
 
 ### Release Process
@@ -74,4 +80,4 @@ When adding new commands or modifying existing ones:
 4. Update the match statements in both the enum implementation and main dispatcher
 5. Create a corresponding crate in `crates/` for the actual implementation
 
-The builder uses JSON serialization via serde for configuration files, providing human-readable and standard format handling with automatic field serialization.
+The builder uses YAML serialization via serde for configuration files, providing human-readable and standard format handling with automatic field serialization.
