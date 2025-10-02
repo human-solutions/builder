@@ -1,8 +1,7 @@
-use std::{convert::Infallible, fmt::Display, str::FromStr};
-
 use camino_fs::Utf8PathBuf;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SwiftPackageCmd {
     pub manifest_dir: Utf8PathBuf,
     pub release: bool,
@@ -19,30 +18,5 @@ impl SwiftPackageCmd {
     pub fn release(mut self, release: bool) -> Self {
         self.release = release;
         self
-    }
-}
-
-impl Display for SwiftPackageCmd {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "manifest_dir={}", self.manifest_dir)?;
-        writeln!(f, "release={}", self.release)
-    }
-}
-
-impl FromStr for SwiftPackageCmd {
-    type Err = Infallible;
-
-    fn from_str(_s: &str) -> Result<Self, Self::Err> {
-        let mut cmd = SwiftPackageCmd::default();
-
-        for line in _s.lines() {
-            let (key, value) = line.split_once('=').unwrap();
-            match key {
-                "manifest_dir" => cmd.manifest_dir = value.into(),
-                "release" => cmd.release = value.parse().unwrap(),
-                _ => panic!("unexpected key: {}", key),
-            }
-        }
-        Ok(cmd)
     }
 }

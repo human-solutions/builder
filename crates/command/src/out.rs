@@ -1,11 +1,21 @@
 use camino_fs::*;
-use std::{fmt::Display, str::FromStr};
+use icu_locid::LanguageIdentifier;
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Encoding {
     Brotli,
     Gzip,
     Identity,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DataProvider {
+    /// Assets are embedded in the binary using rust-embed
+    Embed,
+    /// Assets are loaded from the filesystem at runtime
+    FileSystem,
 }
 
 impl Display for Encoding {
@@ -50,7 +60,20 @@ impl Encoding {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+/// Metadata collected during file writing operations for asset code generation
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AssetMetadata {
+    pub url_path: String,
+    pub folder: Option<String>,
+    pub name: String,
+    pub hash: Option<String>,
+    pub ext: String,
+    pub available_encodings: Vec<Encoding>,
+    pub available_languages: Option<Vec<LanguageIdentifier>>,
+    pub mime: String,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Default, Serialize, Deserialize)]
 pub struct Output {
     /// Folder where the output files should be written
     pub dir: Utf8PathBuf,
@@ -70,6 +93,12 @@ pub struct Output {
 
     /// Optional path to write file hashes as a Rust file
     pub hash_output_path: Option<Utf8PathBuf>,
+
+    /// Asset code generation configuration (path and provider type)
+    pub asset_code_generation: Option<(Utf8PathBuf, DataProvider)>,
+
+    /// Collected asset metadata during file operations
+    pub asset_metadata: Vec<AssetMetadata>,
 }
 
 impl Output {
@@ -83,6 +112,8 @@ impl Output {
             all_encodings: false,
             checksum: false,
             hash_output_path: None,
+            asset_code_generation: None,
+            asset_metadata: Vec::new(),
         }
     }
 
@@ -96,6 +127,8 @@ impl Output {
             all_encodings: true,
             checksum: true,
             hash_output_path: None,
+            asset_code_generation: None,
+            asset_metadata: Vec::new(),
         }
     }
 
@@ -109,6 +142,8 @@ impl Output {
             all_encodings: true,
             checksum: false,
             hash_output_path: None,
+            asset_code_generation: None,
+            asset_metadata: Vec::new(),
         }
     }
 
@@ -119,6 +154,15 @@ impl Output {
 
     pub fn hash_output_path<P: Into<Utf8PathBuf>>(mut self, path: P) -> Self {
         self.hash_output_path = Some(path.into());
+        self
+    }
+
+    pub fn asset_code_gen<P: Into<Utf8PathBuf>>(
+        mut self,
+        path: P,
+        data_provider: DataProvider,
+    ) -> Self {
+        self.asset_code_generation = Some((path.into(), data_provider));
         self
     }
 
@@ -148,47 +192,5 @@ impl Output {
             encodings.push(Encoding::Identity);
         }
         encodings
-    }
-}
-
-impl Display for Output {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "dir={}\t", self.dir)?;
-        if let Some(site_dir) = &self.site_dir {
-            write!(f, "site_dir={}\t", site_dir)?;
-        }
-        write!(f, "brotli={}\t", self.brotli)?;
-        write!(f, "gzip={}\t", self.gzip)?;
-        write!(f, "uncompressed={}\t", self.uncompressed)?;
-        write!(f, "all_encodings={}\t", self.all_encodings)?;
-        write!(f, "checksum={}\t", self.checksum)?;
-        if let Some(hash_output_path) = &self.hash_output_path {
-            write!(f, "hash_output_path={}\t", hash_output_path)?;
-        }
-        Ok(())
-    }
-}
-
-impl FromStr for Output {
-    type Err = std::convert::Infallible;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut cmd = Output::default();
-        for item in s.split('\t').filter(|s| !s.is_empty()) {
-            let (key, value) = item.split_once('=').unwrap();
-
-            match key {
-                "dir" => cmd.dir = value.into(),
-                "site_dir" => cmd.site_dir = Some(value.into()),
-                "brotli" => cmd.brotli = value.parse().unwrap(),
-                "gzip" => cmd.gzip = value.parse().unwrap(),
-                "uncompressed" => cmd.uncompressed = value.parse().unwrap(),
-                "all_encodings" => cmd.all_encodings = value.parse().unwrap(),
-                "checksum" => cmd.checksum = value.parse().unwrap(),
-                "hash_output_path" => cmd.hash_output_path = Some(value.into()),
-                _ => panic!("unknown key: {}", key),
-            }
-        }
-        Ok(cmd)
     }
 }

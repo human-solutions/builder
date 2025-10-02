@@ -20,6 +20,8 @@ pub fn run(cmd: &SwiftPackageCmd) {
         verbose_level > 0
     );
 
+    // manifest_path must point to Cargo.toml file, not just the directory
+    let manifest_path = cmd.manifest_dir.join("Cargo.toml");
     let cli = CliArgs {
         quiet: false,
         package: None,
@@ -31,7 +33,7 @@ pub fn run(cmd: &SwiftPackageCmd) {
         all_features: false,
         no_default_features: false,
         target_dir: None,
-        manifest_path: Some(cmd.manifest_dir.clone()),
+        manifest_path: Some(manifest_path),
     };
 
     log_operation!("SWIFT_PACKAGE", "Executing swift-package build command");

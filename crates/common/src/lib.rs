@@ -1,7 +1,10 @@
+pub mod asset_code_generation;
+mod asset_code_generation_test;
 mod envargs;
 mod ext;
 pub mod hash_output;
 mod hash_output_integration_test;
+pub mod mime;
 pub mod out;
 pub mod site_fs;
 

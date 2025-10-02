@@ -3,8 +3,8 @@ use std::env;
 
 use builder_command::{BuilderCmd, Cmd};
 use camino_fs::*;
-use common::site_fs;
 use common::{LOG_LEVEL, RELEASE, setup_logging};
+use common::{asset_code_generation, site_fs};
 
 fn main() {
     let args = std::env::args().collect::<Vec<_>>();
@@ -19,7 +19,7 @@ fn main() {
         panic!("File not found: {:?}", file);
     }
     let content = file.read_string().unwrap();
-    let builder: BuilderCmd = content.parse().unwrap();
+    let builder: BuilderCmd = serde_yaml::from_str(&content).unwrap();
 
     RELEASE.set(builder.release).unwrap();
 
@@ -44,8 +44,8 @@ fn main() {
     run(builder);
 }
 
-pub fn run(builder: BuilderCmd) {
-    for cmd in &builder.cmds {
+pub fn run(mut builder: BuilderCmd) {
+    for cmd in &mut builder.cmds {
         match cmd {
             Cmd::Uniffi(cmd) => builder_uniffi::run(cmd),
             Cmd::Sass(cmd) => builder_sass::run(cmd),
@@ -61,5 +61,10 @@ pub fn run(builder: BuilderCmd) {
     // Finalize hash output files after all commands have completed
     if let Err(e) = site_fs::finalize_hash_outputs() {
         eprintln!("Failed to write hash output files: {}", e);
+    }
+
+    // Finalize asset code generation after all commands have completed
+    if let Err(e) = asset_code_generation::finalize_asset_code_outputs() {
+        eprintln!("Failed to write asset code files: {}", e);
     }
 }

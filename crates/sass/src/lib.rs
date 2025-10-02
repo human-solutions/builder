@@ -9,7 +9,7 @@ use lightningcss::{
 use std::process::Command;
 use which::which;
 
-pub fn run(sass_cmd: &SassCmd) {
+pub fn run(sass_cmd: &mut SassCmd) {
     let _timer = Timer::new("SASS processing");
     log_command!("SASS", "Processing file: {}", sass_cmd.in_scss);
     log_operation!(
@@ -99,9 +99,9 @@ pub fn run(sass_cmd: &SassCmd) {
             out_css.code.len(),
             savings
         );
-        write_file_to_site(&site_file, out_css.code.as_bytes(), &sass_cmd.output);
+        write_file_to_site(&site_file, out_css.code.as_bytes(), &mut sass_cmd.output);
     } else {
         log_operation!("SASS", "Writing unoptimized CSS ({} bytes)", css.len());
-        write_file_to_site(&site_file, css.as_bytes(), &sass_cmd.output);
+        write_file_to_site(&site_file, css.as_bytes(), &mut sass_cmd.output);
     }
 }

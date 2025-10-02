@@ -1,0 +1,23 @@
+[package]
+name = "multi-provider-examples"
+version.workspace = true
+edition.workspace = true
+description = "Examples demonstrating multi-provider asset code generation"
+
+[dependencies]
+builder-command = { path = "../command" }
+builder-assets = { path = "../assets" }
+rust-embed.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+camino-fs.workspace = true
+
+[build-dependencies]
+builder-command = { path = "../command" }
+builder-assets = { path = "../assets" }
+builder-copy = { path = "../copy" }
+builder-localized = { path = "../localized" }
+common = { path = "../common" }
+anyhow.workspace = true
+camino-fs.workspace = true
+serde_json.workspace = true

@@ -1,4 +1,5 @@
 mod asset;
+mod asset_generation_integration_test;
 mod asset_path;
 mod encoding;
 #[cfg(test)]
@@ -10,7 +11,7 @@ pub use anyhow::Result;
 pub use asset::Asset;
 pub use asset_path::{AssetPath, SiteFile, TranslatedAssetPath};
 use base64::{Engine, engine::general_purpose::URL_SAFE};
-use builder_command::Output;
+use builder_command::{AssetMetadata, Encoding as CmdEncoding, Output};
 use camino_fs::*;
 pub use encoding::AssetEncodings;
 use icu_locid::LanguageIdentifier;
@@ -76,7 +77,7 @@ pub fn copy_files_to_site<F: Fn(&Utf8PathBuf) -> bool>(
     folder: &Utf8Path,
     recursive: bool,
     predicate: F,
-    output: &[Output],
+    output: &mut [Output],
 ) {
     let mut copied_count = 0;
     let mut total_size = 0u64;
@@ -109,7 +110,7 @@ pub fn copy_files_to_site<F: Fn(&Utf8PathBuf) -> bool>(
     }
 }
 
-pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output]) {
+pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &mut [Output]) {
     for out in output {
         let mut subdir = Utf8PathBuf::new();
         if let Some(dir) = &out.site_dir {
@@ -158,8 +159,12 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
         }
 
         // remove any files that have the same name and extension
-        out.dir
-            .join(&asset.subdir)
+        let target_dir = out.dir.join(&asset.subdir);
+        // Create directory if it doesn't exist
+        if !target_dir.exists() {
+            target_dir.mkdirs().unwrap();
+        }
+        target_dir
             .ls()
             .files()
             .filter(|path| {
@@ -181,7 +186,47 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
             bytes.len(),
             encodings
         );
-        encodings.write(&path, bytes).unwrap()
+        encodings.write(&path, bytes).unwrap();
+
+        // Collect asset metadata for code generation
+        let url_path = if asset.subdir.as_str().is_empty() {
+            format!("/{}.{}", asset.name_ext.name, asset.name_ext.ext)
+        } else {
+            let clean_subdir = asset.subdir.as_str().trim_end_matches('/');
+            format!(
+                "/{}/{}.{}",
+                clean_subdir, asset.name_ext.name, asset.name_ext.ext
+            )
+        };
+
+        let metadata = AssetMetadata {
+            url_path,
+            folder: if asset.subdir.as_str().is_empty() {
+                None
+            } else {
+                Some(asset.subdir.as_str().trim_end_matches('/').to_string())
+            },
+            name: asset.name_ext.name.clone(),
+            hash: checksum.clone(),
+            ext: asset.name_ext.ext.clone(),
+            available_encodings: encodings
+                .into_iter()
+                .map(encoding_to_cmd_encoding)
+                .collect(),
+            available_languages: None,
+            mime: crate::mime::mime_from_ext(&asset.name_ext.ext).to_string(),
+        };
+        out.asset_metadata.push(metadata.clone());
+
+        // Register metadata for asset code generation if configured
+        if let Some((asset_code_path, data_provider)) = &out.asset_code_generation {
+            crate::asset_code_generation::register_asset_metadata_for_output(
+                asset_code_path,
+                vec![metadata],
+                *data_provider,
+                &out.dir,
+            );
+        }
     }
 }
 
@@ -190,7 +235,7 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &[Output])
 pub fn write_translations<P: Into<Utf8PathBuf>>(
     rel_path: P,
     lang_and_bytes: &[(LanguageIdentifier, Vec<u8>)],
-    output: &[Output],
+    output: &mut [Output],
 ) {
     let rel_path = rel_path.into();
     debug!("Writing translations for {rel_path}");
@@ -261,8 +306,8 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
         }
 
         let mut asset = TranslatedAssetPath {
-            site_file,
-            checksum,
+            site_file: site_file.clone(),
+            checksum: checksum.clone(),
             lang: "".to_string(),
         };
         for (lang, bytes) in lang_and_bytes {
@@ -271,6 +316,50 @@ pub fn write_translations<P: Into<Utf8PathBuf>>(
             debug!("Writing to {path}");
             let encodings = AssetEncodings::from_output(out);
             encodings.write(&path, bytes).unwrap()
+        }
+
+        // Collect translation metadata (one AssetSet for all languages)
+        let languages: Vec<LanguageIdentifier> = lang_and_bytes
+            .iter()
+            .map(|(lang, _)| lang.clone())
+            .collect();
+
+        let url_path = if let Some(site_dir) = &site_file.site_dir {
+            if site_dir.is_empty() {
+                format!("/{}.{}", site_file.name, site_file.ext)
+            } else {
+                format!("/{}/{}.{}", site_dir, site_file.name, site_file.ext)
+            }
+        } else {
+            format!("/{}.{}", site_file.name, site_file.ext)
+        };
+
+        let metadata = AssetMetadata {
+            url_path,
+            folder: site_file
+                .site_dir
+                .as_ref()
+                .map(|s| s.trim_end_matches('/').to_string()),
+            name: site_file.name.clone(),
+            hash: checksum.clone(),
+            ext: site_file.ext.clone(),
+            available_encodings: AssetEncodings::from_output(out)
+                .into_iter()
+                .map(encoding_to_cmd_encoding)
+                .collect(),
+            available_languages: Some(languages),
+            mime: crate::mime::mime_from_ext(&site_file.ext).to_string(),
+        };
+        out.asset_metadata.push(metadata.clone());
+
+        // Register metadata for asset code generation if configured
+        if let Some((asset_code_path, data_provider)) = &out.asset_code_generation {
+            crate::asset_code_generation::register_asset_metadata_for_output(
+                asset_code_path,
+                vec![metadata],
+                *data_provider,
+                &out.dir,
+            );
         }
     }
 }
@@ -284,4 +373,9 @@ fn checksum_for_all<'a>(bytes_it: impl Iterator<Item = &'a [u8]>) -> String {
 pub fn checksum_from(bytes: &[u8]) -> String {
     let sum = seahash::hash(bytes);
     URL_SAFE.encode(sum.to_be_bytes())
+}
+
+/// Converts internal Encoding enum to command Encoding enum
+fn encoding_to_cmd_encoding(e: CmdEncoding) -> CmdEncoding {
+    e // They're the same type
 }

@@ -1,4 +1,5 @@
-use crate::{asset_ext::AssetExt, mime::mime_from_ext};
+use crate::asset_ext::AssetExt;
+use common::mime::mime_from_ext;
 use common::{RustNaming, site_fs::Asset};
 
 pub fn generate_code(assets: &[Asset]) -> String {

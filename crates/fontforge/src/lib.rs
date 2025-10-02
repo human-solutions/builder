@@ -5,7 +5,7 @@ use camino_fs::*;
 use common::site_fs::{SiteFile, write_file_to_site};
 use common::{Timer, log_command, log_operation, log_trace};
 
-pub fn run(cmd: &FontForgeCmd) {
+pub fn run(cmd: &mut FontForgeCmd) {
     let _timer = Timer::new("FONTFORGE processing");
     let sfd_file = Utf8Path::new(&cmd.font_file);
     let sum_file = sfd_file.with_extension("hash");
@@ -77,7 +77,7 @@ pub fn run(cmd: &FontForgeCmd) {
         bytes.len()
     );
     let site_file = SiteFile::new(name, "woff2");
-    write_file_to_site(&site_file, &bytes, &cmd.output);
+    write_file_to_site(&site_file, &bytes, &mut cmd.output);
 }
 
 fn generate_woff2_otf(sfd_dir: &Utf8Path, name: &str) {

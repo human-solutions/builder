@@ -8,7 +8,7 @@ mod swift_package;
 mod uniffi;
 mod wasm;
 
-use std::{convert::Infallible, env, fmt::Display, path::Path, process::Command, str::FromStr};
+use std::{env, path::Path, process::Command};
 
 pub use assemble::AssembleCmd;
 use camino_fs::Utf8PathBuf;
@@ -17,20 +17,21 @@ pub use fontforge::FontForgeCmd;
 use fs_err as fs;
 pub use localized::LocalizedCmd;
 use log::LevelFilter;
-pub use out::{Encoding, Output};
+pub use out::{AssetMetadata, DataProvider, Encoding, Output};
 pub use sass::SassCmd;
+use serde::{Deserialize, Serialize};
 pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
 pub use wasm::{DebugSymbolsMode, Profile, WasmProcessingCmd};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum LogLevel {
     Normal,  // Info level + enhanced summaries
     Verbose, // Debug + detailed operations
     Trace,   // Everything including file-level operations
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum LogDestination {
     Cargo,             // via cargo::warning
     File(Utf8PathBuf), // given a path
@@ -48,7 +49,7 @@ impl LogLevel {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct BuilderCmd {
     pub log_level: LogLevel,
     pub log_destination: LogDestination,
@@ -83,7 +84,7 @@ impl BuilderCmd {
             builder_toml: Utf8PathBuf::from(
                 env::var("OUT_DIR").ok().unwrap_or_else(|| ".".to_string()),
             )
-            .join("builder.toml"),
+            .join("builder.yaml"),
         }
     }
 
@@ -165,7 +166,8 @@ impl BuilderCmd {
         }
 
         self.log(&format!("Writing builder.yaml to {path}"));
-        fs::write(path, self.to_string().as_bytes()).unwrap();
+        let yaml_content = serde_yaml::to_string(&self).unwrap();
+        fs::write(path, yaml_content).unwrap();
 
         let cmd = Command::new("builder")
             .arg(self.builder_toml.as_str())
@@ -173,6 +175,38 @@ impl BuilderCmd {
             .unwrap();
 
         self.log(&format!("Processed {path}"));
+        if cmd.success() {
+            self.log("Command succeeded");
+        } else {
+            panic!("Command failed");
+        }
+    }
+
+    /// Execute using a specific binary path, automatically appending the config file path
+    ///
+    /// Examples:
+    /// - `exec("target/release/builder")` → runs `target/release/builder /path/to/config.yaml`
+    /// - `exec("target/debug/builder")` → runs `target/debug/builder /path/to/config.yaml`
+    pub fn exec(self, binary_path: &str) {
+        let path = &self.builder_toml;
+
+        if let Some(parent) = path.parent()
+            && !parent.exists()
+        {
+            fs::create_dir_all(parent).unwrap();
+        }
+
+        self.log(&format!("Writing builder.yaml to {path}"));
+        let yaml_content = serde_yaml::to_string(&self).unwrap();
+        fs::write(path, yaml_content).unwrap();
+
+        // Execute the binary with the config file as argument
+        let cmd = Command::new(binary_path.trim())
+            .arg(path.as_str())
+            .status()
+            .unwrap();
+
+        self.log(&format!("Processed {path} using binary: {}", binary_path));
         if cmd.success() {
             self.log("Command succeeded");
         } else {
@@ -188,86 +222,7 @@ impl BuilderCmd {
     }
 }
 
-impl Display for BuilderCmd {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let log_level_str = match self.log_level {
-            LogLevel::Normal => "normal",
-            LogLevel::Verbose => "verbose",
-            LogLevel::Trace => "trace",
-        };
-        writeln!(f, "log_level={}", log_level_str)?;
-
-        let log_destination_str = match &self.log_destination {
-            LogDestination::Cargo => "cargo".to_string(),
-            LogDestination::File(path) => format!("file:{}", path),
-            LogDestination::Terminal => "terminal".to_string(),
-            LogDestination::TerminalPlain => "terminal_plain".to_string(),
-        };
-        writeln!(f, "log_destination={}", log_destination_str)?;
-
-        writeln!(f, "release={}", self.release)?;
-        writeln!(f, "builder_toml={}", self.builder_toml)?;
-        for cmd in &self.cmds {
-            writeln!(f, "{}", cmd)?;
-        }
-        Ok(())
-    }
-}
-impl FromStr for BuilderCmd {
-    type Err = Infallible;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut lines = s.lines();
-        let mut builder = BuilderCmd::new();
-        for line in lines.by_ref().take(4) {
-            let (key, value) = line.split_once('=').unwrap();
-            match key {
-                "log_level" => {
-                    builder.log_level = match value {
-                        "normal" => LogLevel::Normal,
-                        "verbose" => LogLevel::Verbose,
-                        "trace" => LogLevel::Trace,
-                        _ => LogLevel::Normal,
-                    };
-                }
-                "log_destination" => {
-                    builder.log_destination = if let Some(path) = value.strip_prefix("file:") {
-                        LogDestination::File(Utf8PathBuf::from(path))
-                    } else {
-                        match value {
-                            "cargo" => LogDestination::Cargo,
-                            "terminal" => LogDestination::Terminal,
-                            "terminal_plain" => LogDestination::TerminalPlain,
-                            _ => LogDestination::Terminal,
-                        }
-                    };
-                }
-                "verbose" => {
-                    // Keep backward compatibility
-                    let verbose: bool = value.parse().unwrap();
-                    builder.log_level = if verbose {
-                        LogLevel::Verbose
-                    } else {
-                        LogLevel::Normal
-                    };
-                }
-                "release" => builder.release = value.parse().unwrap(),
-                "builder_toml" => builder.builder_toml = value.parse().unwrap(),
-                _ => panic!("Unknown key: {}", key),
-            }
-        }
-        let rest = lines.collect::<Vec<_>>().join("\n");
-        for cmd in rest.split('>') {
-            if cmd.is_empty() {
-                continue;
-            }
-            builder.cmds.push(cmd.parse().unwrap());
-        }
-        Ok(builder)
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Cmd {
     Uniffi(UniffiCmd),
     Sass(SassCmd),
@@ -277,43 +232,6 @@ pub enum Cmd {
     Wasm(WasmProcessingCmd),
     Copy(CopyCmd),
     SwiftPackage(SwiftPackageCmd),
-}
-
-impl Display for Cmd {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Cmd::Uniffi(cmd) => write!(f, ">Uniffi\n{}", cmd),
-            Cmd::Sass(cmd) => write!(f, ">Sass\n{}", cmd),
-            Cmd::Localized(cmd) => write!(f, ">Localized\n{}", cmd),
-            Cmd::FontForge(cmd) => write!(f, ">FontForge\n{}", cmd),
-            Cmd::Assemble(cmd) => write!(f, ">Assemble\n{}", cmd),
-            Cmd::Wasm(cmd) => write!(f, ">Wasm\n{}", cmd),
-            Cmd::Copy(cmd) => write!(f, ">Copy\n{}", cmd),
-            Cmd::SwiftPackage(cmd) => write!(f, ">SwiftPackage\n{}", cmd),
-        }
-    }
-}
-
-impl FromStr for Cmd {
-    type Err = Infallible;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut lines = s.lines();
-
-        let cmd = lines.next().unwrap();
-        let rest = lines.collect::<Vec<_>>().join("\n");
-        match cmd {
-            "Uniffi" => Ok(Cmd::Uniffi(rest.parse().unwrap())),
-            "Sass" => Ok(Cmd::Sass(rest.parse().unwrap())),
-            "Localized" => Ok(Cmd::Localized(rest.parse().unwrap())),
-            "FontForge" => Ok(Cmd::FontForge(rest.parse().unwrap())),
-            "Assemble" => Ok(Cmd::Assemble(rest.parse().unwrap())),
-            "Wasm" => Ok(Cmd::Wasm(rest.parse().unwrap())),
-            "Copy" => Ok(Cmd::Copy(rest.parse().unwrap())),
-            "SwiftPackage" => Ok(Cmd::SwiftPackage(rest.parse().unwrap())),
-            _ => panic!("Unknown command: {}", cmd),
-        }
-    }
 }
 
 #[test]
@@ -332,10 +250,10 @@ fn roundtrip() {
             "/tmp/builder.log",
         )))
         .release(true)
-        .builder_toml("builder.toml");
+        .builder_toml("builder.yaml");
 
-    let s = cmd.to_string();
-    let cmd2 = s.parse::<BuilderCmd>().unwrap();
+    let json = serde_json::to_string(&cmd).unwrap();
+    let cmd2 = serde_json::from_str::<BuilderCmd>(&json).unwrap();
     assert_eq!(cmd, cmd2);
 }
 
@@ -354,8 +272,8 @@ fn roundtrip_log_destinations() {
             .log_destination(destination)
             .log_level(LogLevel::Normal);
 
-        let s = cmd.to_string();
-        let cmd2 = s.parse::<BuilderCmd>().unwrap();
+        let json = serde_json::to_string(&cmd).unwrap();
+        let cmd2 = serde_json::from_str::<BuilderCmd>(&json).unwrap();
         assert_eq!(cmd, cmd2);
     }
 }
