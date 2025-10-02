@@ -129,6 +129,10 @@ pub fn run(cmd: &mut WasmProcessingCmd) {
         }
         DebugSymbolsMode::WriteTo(debug_path) => {
             log_operation!("WASM", "Splitting debug symbols to: {}", debug_path);
+            // Create parent directory if it doesn't exist
+            if let Some(parent) = debug_path.parent() {
+                std::fs::create_dir_all(parent).unwrap();
+            }
             split_debug_symbols(&wasm_file_path, debug_path).unwrap();
         }
         DebugSymbolsMode::WriteAdjacent => {

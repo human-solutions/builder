@@ -19,7 +19,7 @@ fn main() {
         panic!("File not found: {:?}", file);
     }
     let content = file.read_string().unwrap();
-    let builder: BuilderCmd = serde_json::from_str(&content).unwrap();
+    let builder: BuilderCmd = serde_yaml::from_str(&content).unwrap();
 
     RELEASE.set(builder.release).unwrap();
 

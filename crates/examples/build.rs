@@ -57,22 +57,43 @@ fn main() -> Result<()> {
                 .asset_code_gen(&asset_rs_path, DataProvider::Embed),
         );
 
-    // Build the latest release binary first
-    println!("{CARGO_PREFIX}Building release binary to ensure latest version");
-    let build_status = std::process::Command::new("cargo")
-        .args(["build", "-r", "-p", "builder"])
-        .status()?;
+    // Try to find an existing builder binary
+    // Prefer debug since it's faster to build and this is just a build tool
+    let binary_path = if std::path::Path::new("../../target/debug/builder").exists() {
+        "../../target/debug/builder"
+    } else if std::path::Path::new("../../target/release/builder").exists() {
+        "../../target/release/builder"
+    } else {
+        eprintln!("Warning: Builder binary not found in target/debug or target/release");
+        eprintln!("Please build the builder binary first with: cargo build -p builder");
+        eprintln!("Generating stub asset file to allow compilation...");
 
-    if !build_status.success() {
-        return Err(anyhow::anyhow!("Failed to build release binary"));
-    }
+        // Create a stub assets.rs file so the lib.rs can compile
+        if let Some(parent) = asset_rs_path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&asset_rs_path, r#"
+// Stub asset file - run 'cargo build -p builder' then rebuild this crate to generate real assets
+#[allow(unused_imports)]
+use builder_assets::*;
 
-    // Execute using the freshly built release binary
+/// No assets available
+pub static ASSETS: [&AssetSet; 0] = [];
+
+/// Asset catalog for efficient URL-based lookups
+pub fn get_asset_catalog() -> AssetCatalog {
+    AssetCatalog::from_assets(&ASSETS)
+}
+"#)?;
+        return Ok(());
+    };
+
+    // Execute using the existing binary
     BuilderCmd::new()
         .add_copy(filesystem_copy)
         .add_localized(localized_images)
         .add_copy(embed_copy)
-        .exec("../../target/release/builder");
+        .exec(binary_path);
 
     println!("{CARGO_PREFIX}Multi-provider asset generation completed successfully");
 

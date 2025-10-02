@@ -159,8 +159,12 @@ pub fn write_file_to_site(site_file: &SiteFile, bytes: &[u8], output: &mut [Outp
         }
 
         // remove any files that have the same name and extension
-        out.dir
-            .join(&asset.subdir)
+        let target_dir = out.dir.join(&asset.subdir);
+        // Create directory if it doesn't exist
+        if !target_dir.exists() {
+            target_dir.mkdirs().unwrap();
+        }
+        target_dir
             .ls()
             .files()
             .filter(|path| {

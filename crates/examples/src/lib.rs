@@ -30,7 +30,7 @@ mod tests {
         setup_asset_base_path();
 
         // Verify that assets were generated
-        assert!(ASSETS.len() > 0, "No assets were generated");
+        assert!(!ASSETS.is_empty(), "No assets were generated");
 
         println!("Generated {} assets:", ASSETS.len());
         for asset in &ASSETS {
@@ -57,7 +57,7 @@ mod tests {
             })
             .collect();
 
-        assert!(fs_assets.len() > 0, "No filesystem assets found");
+        assert!(!fs_assets.is_empty(), "No filesystem assets found");
 
         for asset_set in fs_assets {
             // Handle localized assets by specifying a language
@@ -74,7 +74,7 @@ mod tests {
 
             match std::panic::catch_unwind(|| asset.data_for()) {
                 Ok(data) => {
-                    assert!(data.len() > 0, "Asset {} is empty", asset_set.url_path);
+                    assert!(!data.is_empty(), "Asset {} is empty", asset_set.url_path);
                     println!("✅ Loaded {} ({} bytes)", asset_set.url_path, data.len());
                 }
                 Err(_) => {
@@ -97,7 +97,7 @@ mod tests {
             })
             .collect();
 
-        assert!(embed_assets.len() > 0, "No embedded assets found");
+        assert!(!embed_assets.is_empty(), "No embedded assets found");
 
         for asset_set in embed_assets {
             let Some(asset) = asset_set.asset_for(None, None) else {
@@ -106,7 +106,7 @@ mod tests {
             };
             match std::panic::catch_unwind(|| asset.data_for()) {
                 Ok(data) => {
-                    assert!(data.len() > 0, "Asset {} is empty", asset_set.url_path);
+                    assert!(!data.is_empty(), "Asset {} is empty", asset_set.url_path);
                     println!(
                         "✅ Loaded embedded {} ({} bytes)",
                         asset_set.url_path,
@@ -127,7 +127,12 @@ mod tests {
         let catalog = get_asset_catalog();
 
         // Test that we can find assets by URL (including site_dir paths)
-        let expected_urls = ["/styles.css", "/app.js", "/static/config.json", "/static/favicon.ico"];
+        let expected_urls = [
+            "/styles.css",
+            "/app.js",
+            "/static/config.json",
+            "/static/favicon.ico",
+        ];
 
         for url in expected_urls {
             let asset_set = catalog.get_asset_set(url);
@@ -169,7 +174,7 @@ mod tests {
             match std::panic::catch_unwind(|| asset.data_for()) {
                 Ok(data) => {
                     assert!(
-                        data.len() > 0,
+                        !data.is_empty(),
                         "Asset {} loaded but is empty",
                         asset_set.url_path
                     );
@@ -194,8 +199,14 @@ mod tests {
             }
         }
 
-        assert!(fs_loaded >= 2, "Should load at least 2 filesystem assets (app.js, styles.css)");
-        assert!(embed_loaded >= 1, "Should load at least 1 embedded asset (favicon.ico)");
+        assert!(
+            fs_loaded >= 2,
+            "Should load at least 2 filesystem assets (app.js, styles.css)"
+        );
+        assert!(
+            embed_loaded >= 1,
+            "Should load at least 1 embedded asset (favicon.ico)"
+        );
 
         println!(
             "Successfully loaded {} filesystem and {} embedded assets",
@@ -216,7 +227,10 @@ mod tests {
             };
 
             let Some(asset) = asset_opt else {
-                println!("⚠️ Failed to negotiate identity asset for {}", asset_set.url_path);
+                println!(
+                    "⚠️ Failed to negotiate identity asset for {}",
+                    asset_set.url_path
+                );
                 continue;
             };
 
@@ -260,7 +274,7 @@ mod tests {
                         }
                         _ => {
                             // Unknown extension, just verify it's not empty
-                            assert!(data.len() > 0, "Asset {} is empty", asset_set.url_path);
+                            assert!(!data.is_empty(), "Asset {} is empty", asset_set.url_path);
                         }
                     }
 
@@ -303,7 +317,7 @@ mod tests {
             .filter(|asset| asset.url_path.contains("welcome.svg"))
             .collect();
 
-        if welcome_assets.len() > 0 {
+        if !welcome_assets.is_empty() {
             for asset_set in welcome_assets {
                 println!("Found localized asset: {}", asset_set.url_path);
 
@@ -315,53 +329,64 @@ mod tests {
 
                     // Test loading different language variants
                     for lang in languages {
-                        if let Some(asset) = asset_set.asset_for(Some("identity"), Some(&lang.to_string())) {
+                        if let Some(asset) =
+                            asset_set.asset_for(Some("identity"), Some(&lang.to_string()))
+                        {
                             match std::panic::catch_unwind(|| asset.data_for()) {
-                            Ok(data) => {
-                                assert!(
-                                    data.len() > 0,
-                                    "Localized asset {} for {} is empty",
-                                    asset_set.url_path,
-                                    lang
-                                );
+                                Ok(data) => {
+                                    assert!(
+                                        !data.is_empty(),
+                                        "Localized asset {} for {} is empty",
+                                        asset_set.url_path,
+                                        lang
+                                    );
 
-                                let content = String::from_utf8_lossy(&data);
-                                assert!(
-                                    content.contains("<svg"),
-                                    "Localized asset {} should be SVG content",
-                                    asset_set.url_path
-                                );
+                                    let content = String::from_utf8_lossy(&data);
+                                    assert!(
+                                        content.contains("<svg"),
+                                        "Localized asset {} should be SVG content",
+                                        asset_set.url_path
+                                    );
 
-                                // Debug: check what language we actually got
-                                if let Some(actual_lang) = &asset.lang {
-                                    println!("    🔍 Actually loaded language: {}", actual_lang);
-                                } else {
-                                    println!("    🔍 No language set in loaded asset");
+                                    // Debug: check what language we actually got
+                                    if let Some(actual_lang) = &asset.lang {
+                                        println!(
+                                            "    🔍 Actually loaded language: {}",
+                                            actual_lang
+                                        );
+                                    } else {
+                                        println!("    🔍 No language set in loaded asset");
+                                    }
+
+                                    // Verify language-specific content (but be flexible since negotiation might not work as expected)
+                                    let lang_str = lang.to_string();
+                                    let expected_content_found = match lang_str.as_str() {
+                                        "en" => content.contains("Welcome"),
+                                        "es" => content.contains("Bienvenido"),
+                                        "fr" => content.contains("Bienvenue"),
+                                        _ => true, // Unknown language, skip validation
+                                    };
+
+                                    if !expected_content_found {
+                                        println!(
+                                            "    ⚠️  Expected content for {} not found, might be language negotiation issue",
+                                            lang_str
+                                        );
+                                        println!(
+                                            "    📝 Content preview: {}",
+                                            content.lines().next().unwrap_or("")
+                                        );
+                                    }
+
+                                    println!(
+                                        "  ✅ Successfully loaded {} variant ({} bytes)",
+                                        lang,
+                                        data.len()
+                                    );
                                 }
-
-                                // Verify language-specific content (but be flexible since negotiation might not work as expected)
-                                let lang_str = lang.to_string();
-                                let expected_content_found = match lang_str.as_str() {
-                                    "en" => content.contains("Welcome"),
-                                    "es" => content.contains("Bienvenido"),
-                                    "fr" => content.contains("Bienvenue"),
-                                    _ => true, // Unknown language, skip validation
-                                };
-
-                                if !expected_content_found {
-                                    println!("    ⚠️  Expected content for {} not found, might be language negotiation issue", lang_str);
-                                    println!("    📝 Content preview: {}", content.lines().next().unwrap_or(""));
+                                Err(_) => {
+                                    println!("  ⚠️  Failed to load {} variant", lang);
                                 }
-
-                                println!(
-                                    "  ✅ Successfully loaded {} variant ({} bytes)",
-                                    lang,
-                                    data.len()
-                                );
-                            }
-                            Err(_) => {
-                                println!("  ⚠️  Failed to load {} variant", lang);
-                            }
                             }
                         } else {
                             println!("  ⚠️  Failed to negotiate {} variant", lang);

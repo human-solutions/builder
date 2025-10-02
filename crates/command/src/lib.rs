@@ -84,7 +84,7 @@ impl BuilderCmd {
             builder_toml: Utf8PathBuf::from(
                 env::var("OUT_DIR").ok().unwrap_or_else(|| ".".to_string()),
             )
-            .join("builder.toml"),
+            .join("builder.yaml"),
         }
     }
 
@@ -165,9 +165,9 @@ impl BuilderCmd {
             fs::create_dir_all(parent).unwrap();
         }
 
-        self.log(&format!("Writing builder.json to {path}"));
-        let json_content = serde_json::to_string_pretty(&self).unwrap();
-        fs::write(path, json_content).unwrap();
+        self.log(&format!("Writing builder.yaml to {path}"));
+        let yaml_content = serde_yaml::to_string(&self).unwrap();
+        fs::write(path, yaml_content).unwrap();
 
         let cmd = Command::new("builder")
             .arg(self.builder_toml.as_str())
@@ -185,8 +185,8 @@ impl BuilderCmd {
     /// Execute using a specific binary path, automatically appending the config file path
     ///
     /// Examples:
-    /// - `exec("target/release/builder")` → runs `target/release/builder /path/to/config.json`
-    /// - `exec("target/debug/builder")` → runs `target/debug/builder /path/to/config.json`
+    /// - `exec("target/release/builder")` → runs `target/release/builder /path/to/config.yaml`
+    /// - `exec("target/debug/builder")` → runs `target/debug/builder /path/to/config.yaml`
     pub fn exec(self, binary_path: &str) {
         let path = &self.builder_toml;
 
@@ -196,9 +196,9 @@ impl BuilderCmd {
             fs::create_dir_all(parent).unwrap();
         }
 
-        self.log(&format!("Writing builder.json to {path}"));
-        let json_content = serde_json::to_string_pretty(&self).unwrap();
-        fs::write(path, json_content).unwrap();
+        self.log(&format!("Writing builder.yaml to {path}"));
+        let yaml_content = serde_yaml::to_string(&self).unwrap();
+        fs::write(path, yaml_content).unwrap();
 
         // Execute the binary with the config file as argument
         let cmd = Command::new(binary_path.trim())
@@ -250,7 +250,7 @@ fn roundtrip() {
             "/tmp/builder.log",
         )))
         .release(true)
-        .builder_toml("builder.toml");
+        .builder_toml("builder.yaml");
 
     let json = serde_json::to_string(&cmd).unwrap();
     let cmd2 = serde_json::from_str::<BuilderCmd>(&json).unwrap();

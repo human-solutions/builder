@@ -73,38 +73,39 @@ fn main() {
                     // Load the identity version for comparison
                     if let Some(identity_asset) = asset_set.asset_for(Some("identity"), None) {
                         match std::panic::catch_unwind(|| identity_asset.data_for()) {
-                        Ok(original_data) => {
-                            println!("   📄 Original file: {} bytes", original_data.len());
-                            println!(
-                                "   🗜️  Compressed to: {} bytes ({:.1}% reduction)",
-                                data.len(),
-                                (1.0 - data.len() as f64 / original_data.len() as f64) * 100.0
-                            );
+                            Ok(original_data) => {
+                                println!("   📄 Original file: {} bytes", original_data.len());
+                                println!(
+                                    "   🗜️  Compressed to: {} bytes ({:.1}% reduction)",
+                                    data.len(),
+                                    (1.0 - data.len() as f64 / original_data.len() as f64) * 100.0
+                                );
 
-                            // Show preview of original text files only
-                            if asset_set.mime.starts_with("text/")
-                                || asset_set.mime == "application/javascript"
-                                || asset_set.mime == "application/json"
-                            {
-                                let preview = String::from_utf8_lossy(&original_data);
-                                let preview_lines: Vec<&str> = preview.lines().take(2).collect();
-                                if !preview_lines.is_empty() {
-                                    println!("   Preview (original):");
-                                    for line in preview_lines {
-                                        println!("     {}", line.trim());
-                                    }
-                                    if preview.lines().count() > 2 {
-                                        println!(
-                                            "     ... ({} more lines)",
-                                            preview.lines().count() - 2
-                                        );
+                                // Show preview of original text files only
+                                if asset_set.mime.starts_with("text/")
+                                    || asset_set.mime == "application/javascript"
+                                    || asset_set.mime == "application/json"
+                                {
+                                    let preview = String::from_utf8_lossy(&original_data);
+                                    let preview_lines: Vec<&str> =
+                                        preview.lines().take(2).collect();
+                                    if !preview_lines.is_empty() {
+                                        println!("   Preview (original):");
+                                        for line in preview_lines {
+                                            println!("     {}", line.trim());
+                                        }
+                                        if preview.lines().count() > 2 {
+                                            println!(
+                                                "     ... ({} more lines)",
+                                                preview.lines().count() - 2
+                                            );
+                                        }
                                     }
                                 }
                             }
-                        }
-                        Err(_) => {
-                            println!("   ⚠️  Could not load original file for comparison");
-                        }
+                            Err(_) => {
+                                println!("   ⚠️  Could not load original file for comparison");
+                            }
                         }
                     } else {
                         println!("   ⚠️  Could not negotiate identity version for comparison");
@@ -147,7 +148,12 @@ fn main() {
     let catalog = get_asset_catalog();
 
     // Test URL-based lookups with content negotiation
-    let test_urls = ["/styles.css", "/app.js", "/static/config.json", "/static/favicon.ico"];
+    let test_urls = [
+        "/styles.css",
+        "/app.js",
+        "/static/config.json",
+        "/static/favicon.ico",
+    ];
     for url in &test_urls {
         if let Some(asset_set) = catalog.get_asset_set(url) {
             // Use the asset set to create an Asset with content negotiation

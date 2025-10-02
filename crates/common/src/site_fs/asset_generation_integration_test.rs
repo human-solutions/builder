@@ -16,7 +16,7 @@ mod tests {
 
         // Create output configuration with asset generation
         let output =
-            Output::new_compress_and_sum(&site_dir).hash_output_path(&temp_path.join("hashes.rs"));
+            Output::new_compress_and_sum(&site_dir).hash_output_path(temp_path.join("hashes.rs"));
         let mut output_configs = [output];
 
         // Test 1: Regular file writing
