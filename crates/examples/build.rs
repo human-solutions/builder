@@ -21,6 +21,10 @@ fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=assets/");
     println!("cargo:rerun-if-changed=embedded/");
 
+    // Tell cargo to rerun if the builder binary changes
+    println!("cargo:rerun-if-changed=../../target/debug/builder");
+    println!("cargo:rerun-if-changed=../../target/release/builder");
+
     // Get paths relative to the crate root
     let dist_out = target_dir().join("dist");
     let asset_rs_path = dist_out.join("assets.rs");
@@ -57,23 +61,21 @@ fn main() -> Result<()> {
                 .asset_code_gen(&asset_rs_path, DataProvider::Embed),
         );
 
-    // Try to find an existing builder binary
-    // Prefer debug since it's faster to build and this is just a build tool
+    // Look for builder binary - try debug first, then release
     let binary_path = if std::path::Path::new("../../target/debug/builder").exists() {
         "../../target/debug/builder"
     } else if std::path::Path::new("../../target/release/builder").exists() {
         "../../target/release/builder"
     } else {
-        eprintln!("Warning: Builder binary not found in target/debug or target/release");
-        eprintln!("Please build the builder binary first with: cargo build -p builder");
-        eprintln!("Generating stub asset file to allow compilation...");
+        // Builder binary doesn't exist yet - create stub and let it build later
+        eprintln!("Note: Builder binary not found. Creating stub assets.");
+        eprintln!("To generate real assets, run: cargo build -p builder && cargo build");
 
-        // Create a stub assets.rs file so the lib.rs can compile
         if let Some(parent) = asset_rs_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
         std::fs::write(&asset_rs_path, r#"
-// Stub asset file - run 'cargo build -p builder' then rebuild this crate to generate real assets
+// Stub asset file - run 'cargo build -p builder && cargo build' to generate real assets
 #[allow(unused_imports)]
 use builder_assets::*;
 
@@ -93,7 +95,7 @@ pub fn get_asset_catalog() -> AssetCatalog {
         .add_copy(filesystem_copy)
         .add_localized(localized_images)
         .add_copy(embed_copy)
-        .exec(binary_path);
+        .exec(&binary_path);
 
     println!("{CARGO_PREFIX}Multi-provider asset generation completed successfully");
 
