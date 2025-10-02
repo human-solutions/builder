@@ -67,27 +67,19 @@ fn main() -> Result<()> {
     } else if std::path::Path::new("../../target/release/builder").exists() {
         "../../target/release/builder"
     } else {
-        // Builder binary doesn't exist yet - create stub and let it build later
-        eprintln!("Note: Builder binary not found. Creating stub assets.");
-        eprintln!("To generate real assets, run: cargo build -p builder && cargo build");
+        // Builder binary doesn't exist - fail the build with clear instructions
+        eprintln!("\n❌ ERROR: Builder binary not found!");
+        eprintln!("\nThis crate requires the builder binary to generate assets.");
+        eprintln!("\nPlease build the builder binary first:");
+        eprintln!("    cargo build -p builder");
+        eprintln!("\nThen rebuild this crate:");
+        eprintln!("    cargo build");
+        eprintln!("\nOr use this one-liner:");
+        eprintln!("    cargo build -p builder && cargo build\n");
 
-        if let Some(parent) = asset_rs_path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        std::fs::write(&asset_rs_path, r#"
-// Stub asset file - run 'cargo build -p builder && cargo build' to generate real assets
-#[allow(unused_imports)]
-use builder_assets::*;
-
-/// No assets available
-pub static ASSETS: [&AssetSet; 0] = [];
-
-/// Asset catalog for efficient URL-based lookups
-pub fn get_asset_catalog() -> AssetCatalog {
-    AssetCatalog::from_assets(&ASSETS)
-}
-"#)?;
-        return Ok(());
+        return Err(anyhow::anyhow!(
+            "Builder binary not found. Build it first with: cargo build -p builder"
+        ));
     };
 
     // Execute using the existing binary
@@ -95,7 +87,7 @@ pub fn get_asset_catalog() -> AssetCatalog {
         .add_copy(filesystem_copy)
         .add_localized(localized_images)
         .add_copy(embed_copy)
-        .exec(&binary_path);
+        .exec(binary_path);
 
     println!("{CARGO_PREFIX}Multi-provider asset generation completed successfully");
 
