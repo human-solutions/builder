@@ -54,6 +54,23 @@ cd crates/examples && cargo build
 
 **Note**: The `builder` crate provides both a library and binary. Examples use `builder::execute()` directly (no subprocess spawning), eliminating cargo locking issues.
 
+### Code Quality Checks
+
+**All code modifications MUST be followed by these quality checks:**
+
+In a sub-agent run:
+
+```bash
+# 1. Format code & lint
+cargo fmt --all; cargo clippy --workspace --all-targets
+```
+
+
+```bash
+# 3. Run tests
+cargo test
+```
+
 ### External Dependencies Required for Testing
 - **FontForge**:
   - Linux: `sudo apt-get install fontforge`
