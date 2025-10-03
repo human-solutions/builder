@@ -278,6 +278,7 @@ dependencies = [
  "builder-uniffi",
  "builder-wasm",
  "camino-fs",
+ "cargo-husky",
  "cargo_metadata 0.22.0",
  "common",
  "insta",
@@ -445,6 +446,12 @@ checksum = "0a5974e8c37d34ddffaccff7ccfe16a03f36dd9131946c06f7a71c7ab1ec846f"
 dependencies = [
  "camino",
 ]
+
+[[package]]
+name = "cargo-husky"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b02b629252fe8ef6460461409564e2c21d0c8e77e0944f3d189ff06c4e932ad"
 
 [[package]]
 name = "cargo-platform"

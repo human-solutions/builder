@@ -60,6 +60,7 @@ time = "0.3"
 wasmbin = "0.8"
 
 # Dev dependencies only
+cargo-husky = { version = "1", default-features = false, features = ["user-hooks"] }
 insta = "1.40"
 rust-embed = "8.5"
 wasm-bindgen-cli-support = "0.2"

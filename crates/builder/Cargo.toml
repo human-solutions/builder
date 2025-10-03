@@ -32,5 +32,6 @@ cargo_metadata.workspace = true
 serde_yaml.workspace = true
 
 [dev-dependencies]
+cargo-husky.workspace = true
 insta = "1.43"
 camino-fs.workspace = true
