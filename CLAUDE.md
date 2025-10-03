@@ -66,10 +66,23 @@ The builder binary expects a YAML configuration file as its first argument:
 ## Key Design Patterns
 
 - **Command Pattern**: Each build operation is implemented as a separate command struct with its own module
-- **Configuration-driven**: The tool is entirely driven by TOML configuration files
+- **Configuration-driven**: The tool is entirely driven by YAML configuration files
 - **Workspace architecture**: Modular design with separate crates for different responsibilities
 - **Error handling**: Uses `anyhow` for error handling throughout
 - **File system abstraction**: Uses `camino-fs` for UTF-8 path handling
+
+## Command Types
+
+The `Cmd` enum supports these build operations:
+
+- **Sass** - SCSS compilation with dart-sass or built-in grass compiler
+- **Wasm** - Rust to WebAssembly compilation with wasm-bindgen and optimization
+- **Uniffi** - Swift/Kotlin bindings generation from UniFFI .udl files
+- **SwiftPackage** - Swift package creation
+- **FontForge** - Font processing (SFD to WOFF2/OTF)
+- **Assemble** - Asset scanning and Rust code generation
+- **Localized** - Internationalized content handling
+- **Copy** - Simple file copying with filtering
 
 ## Working with Command Modules
 
@@ -81,3 +94,45 @@ When adding new commands or modifying existing ones:
 5. Create a corresponding crate in `crates/` for the actual implementation
 
 The builder uses YAML serialization via serde for configuration files, providing human-readable and standard format handling with automatic field serialization.
+
+## Asset Code Generation
+
+Builder can generate Rust code for type-safe asset access with two data providers:
+
+- **DataProvider::FileSystem** - Loads assets from disk at runtime
+- **DataProvider::Embed** - Embeds assets in binary using rust-embed
+
+Usage in build scripts:
+```rust
+.add_output(Output::new("dist")
+    .asset_code_gen("src/assets.rs", DataProvider::Embed))
+```
+
+Runtime configuration (FileSystem provider only):
+```rust
+use builder_assets::set_asset_base_path;
+set_asset_base_path("/path/to/assets");
+```
+
+See `crates/examples/` for a complete working example.
+
+## WASM Debug Symbols
+
+Four debug symbol modes for WASM builds:
+
+```rust
+WasmProcessingCmd::new("package", Profile::Release)
+    .debug_symbols(DebugSymbolsMode::Strip)        // Remove (default)
+    .debug_symbols(DebugSymbolsMode::Keep)         // Keep in main file
+    .debug_symbols(DebugSymbolsMode::WriteAdjacent) // Separate .debug.wasm
+    .debug_symbols(DebugSymbolsMode::WriteTo("path")) // Custom path
+```
+
+## Key Implementation Notes
+
+- Uses `camino-fs` for UTF-8 path handling throughout
+- Error handling with `anyhow`
+- YAML serialization via `serde` for configuration files
+- Workspace uses Rust 2024 edition
+- All command modules implement caching based on content hashes
+- Asset code generation supports content negotiation and compression
