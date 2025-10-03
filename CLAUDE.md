@@ -9,7 +9,6 @@ This is a Rust workspace containing a command-line tool for building web assets,
 - **Main binary**: `crates/builder/` - CLI entry point that reads a configuration file and dispatches to command modules
 - **Command library**: `crates/command/` - Contains all command implementations and the main `BuilderCmd` struct
 - **Feature crates**: Individual crates for each build command type:
-  - `assemble/` - Asset assembly and inclusion
   - `sass/` - SASS/SCSS compilation
   - `localized/` - Localized asset handling
   - `fontforge/` - FontForge integration
@@ -93,9 +92,8 @@ The `Cmd` enum supports these build operations:
 - **Uniffi** - Swift/Kotlin bindings generation from UniFFI .udl files
 - **SwiftPackage** - Swift package creation
 - **FontForge** - Font processing (SFD to WOFF2/OTF)
-- **Assemble** - Asset scanning and Rust code generation
 - **Localized** - Internationalized content handling
-- **Copy** - Simple file copying with filtering
+- **Copy** - File copying with filtering and asset code generation support
 
 ## Working with Command Modules
 

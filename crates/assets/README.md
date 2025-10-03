@@ -23,7 +23,7 @@ Created the `crates/assets` crate implementing the complete API specification fr
 
 ## Usage
 
-The crate is designed to be used by generated code from `AssembleCmd`:
+The crate is designed to be used by generated code from the builder asset code generator:
 
 ```rust
 use builder_assets::*;

@@ -1,4 +1,3 @@
-mod assemble;
 mod copy;
 mod fontforge;
 mod localized;
@@ -10,7 +9,6 @@ mod wasm;
 
 use std::{env, path::Path, process::Command};
 
-pub use assemble::AssembleCmd;
 use camino_fs::Utf8PathBuf;
 pub use copy::CopyCmd;
 pub use fontforge::FontForgeCmd;
@@ -109,12 +107,6 @@ impl BuilderCmd {
     /// Add a FontForgeCmd using it's builder
     pub fn add_fontforge(mut self, cmd: FontForgeCmd) -> Self {
         self.cmds.push(Cmd::FontForge(cmd));
-        self
-    }
-
-    /// Add a AssembleCmd using it's builder
-    pub fn add_assemble(mut self, cmd: AssembleCmd) -> Self {
-        self.cmds.push(Cmd::Assemble(cmd));
         self
     }
 
@@ -228,7 +220,6 @@ pub enum Cmd {
     Sass(SassCmd),
     Localized(LocalizedCmd),
     FontForge(FontForgeCmd),
-    Assemble(AssembleCmd),
     Wasm(WasmProcessingCmd),
     Copy(CopyCmd),
     SwiftPackage(SwiftPackageCmd),
@@ -241,7 +232,6 @@ fn roundtrip() {
         .add_sass(SassCmd::default())
         .add_localized(LocalizedCmd::default())
         .add_fontforge(FontForgeCmd::default())
-        .add_assemble(AssembleCmd::default())
         .add_wasm(WasmProcessingCmd::default().debug_symbols(DebugSymbolsMode::Keep))
         .add_copy(CopyCmd::default())
         .add_swift_package(SwiftPackageCmd::default())

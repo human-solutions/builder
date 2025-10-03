@@ -269,7 +269,6 @@ dependencies = [
 name = "builder"
 version = "0.1.28"
 dependencies = [
- "builder-assemble",
  "builder-command",
  "builder-copy",
  "builder-fontforge",
@@ -283,18 +282,6 @@ dependencies = [
  "common",
  "insta",
  "serde_yaml",
-]
-
-[[package]]
-name = "builder-assemble"
-version = "0.1.28"
-dependencies = [
- "base64",
- "builder-command",
- "camino-fs",
- "common",
- "log",
- "tempfile",
 ]
 
 [[package]]
