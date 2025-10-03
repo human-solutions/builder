@@ -1,0 +1,23 @@
+
+log_level: Normal
+log_destination: Terminal
+release: false
+builder_toml: tests/fixtures/copy/builder.yaml
+in_cargo: false
+cmds:
+  - !Copy
+    src_dir: tests/fixtures/copy/src
+    recursive: false
+    file_extensions:
+      - css
+    output:
+      - dir: tests/fixtures/copy/out
+        site_dir: null
+        brotli: false
+        gzip: false
+        uncompressed: true
+        all_encodings: false
+        checksum: false
+        hash_output_path: null
+        asset_code_generation: null
+        asset_metadata: []

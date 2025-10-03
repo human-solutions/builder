@@ -13,7 +13,7 @@ anyhow.workspace = true
 camino-fs.workspace = true
 
 [build-dependencies]
-builder-command = { path = "../command" }
+builder = { path = "../builder" }
 builder-assets = { path = "../assets" }
 builder-copy = { path = "../copy" }
 builder-localized = { path = "../localized" }

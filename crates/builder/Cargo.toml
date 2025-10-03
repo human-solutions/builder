@@ -8,13 +8,21 @@ license.workspace = true
 repository.workspace = true
 version.workspace = true
 
+[lib]
+name = "builder"
+path = "src/lib.rs"
+
+[[bin]]
+name = "builder"
+path = "src/main.rs"
+
 [dependencies]
+builder-command = { path = "../command" }
 builder-copy = { path = "../copy" }
 builder-fontforge = { path = "../fontforge" }
 builder-sass = { path = "../sass" }
 builder-localized = { path = "../localized" }
 builder-uniffi = { path = "../uniffi" }
-builder-command = { path = "../command" }
 builder-wasm = { path = "../wasm" }
 builder-swift-package = { path = "../swift_package" }
 common = { path = "../common" }
@@ -25,3 +33,4 @@ serde_yaml.workspace = true
 
 [dev-dependencies]
 insta = "1.43"
+camino-fs.workspace = true

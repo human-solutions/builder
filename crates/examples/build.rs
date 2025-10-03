@@ -1,5 +1,5 @@
 use anyhow::Result;
-use builder_command::{BuilderCmd, CopyCmd, DataProvider, LocalizedCmd, Output};
+use builder::builder_command::{BuilderCmd, CopyCmd, DataProvider, LocalizedCmd, Output};
 use camino_fs::Utf8PathBuf;
 use std::env;
 
@@ -20,10 +20,6 @@ fn target_dir() -> Utf8PathBuf {
 fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=assets/");
     println!("cargo:rerun-if-changed=embedded/");
-
-    // Tell cargo to rerun if the builder binary changes
-    println!("cargo:rerun-if-changed=../../target/debug/builder");
-    println!("cargo:rerun-if-changed=../../target/release/builder");
 
     // Get paths relative to the crate root
     let dist_out = target_dir().join("dist");
@@ -61,33 +57,13 @@ fn main() -> Result<()> {
                 .asset_code_gen(&asset_rs_path, DataProvider::Embed),
         );
 
-    // Look for builder binary - try debug first, then release
-    let binary_path = if std::path::Path::new("../../target/debug/builder").exists() {
-        "../../target/debug/builder"
-    } else if std::path::Path::new("../../target/release/builder").exists() {
-        "../../target/release/builder"
-    } else {
-        // Builder binary doesn't exist - fail the build with clear instructions
-        eprintln!("\n❌ ERROR: Builder binary not found!");
-        eprintln!("\nThis crate requires the builder binary to generate assets.");
-        eprintln!("\nPlease build the builder binary first:");
-        eprintln!("    cargo build -p builder");
-        eprintln!("\nThen rebuild this crate:");
-        eprintln!("    cargo build");
-        eprintln!("\nOr use this one-liner:");
-        eprintln!("    cargo build -p builder && cargo build\n");
-
-        return Err(anyhow::anyhow!(
-            "Builder binary not found. Build it first with: cargo build -p builder"
-        ));
-    };
-
-    // Execute using the existing binary
-    BuilderCmd::new()
+    // Execute commands directly (no binary spawning needed!)
+    let cmd = BuilderCmd::new()
         .add_copy(filesystem_copy)
         .add_localized(localized_images)
-        .add_copy(embed_copy)
-        .exec(binary_path);
+        .add_copy(embed_copy);
+
+    builder::execute(cmd);
 
     println!("{CARGO_PREFIX}Multi-provider asset generation completed successfully");
 

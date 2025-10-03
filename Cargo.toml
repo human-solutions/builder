@@ -3,7 +3,6 @@
 resolver = "2"
 
 members = ["crates/*"]
-exclude = ["crates/examples"]
 
 [workspace.package]
 version = "0.1.28"

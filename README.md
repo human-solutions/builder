@@ -4,12 +4,11 @@ A command-line tool for building web assets, WASM, and mobile libraries. Builder
 
 ## Overview
 
-Builder uses a two-phase architecture:
+Builder is both a library and a CLI tool. The `builder` crate provides:
+- **Library API** (`builder::execute()`): Direct in-process execution for use in build.rs scripts
+- **CLI Binary**: Standalone tool that reads YAML configuration files
 
-1. **Generation Phase**: Rust build scripts use the `BuilderCmd` struct with fluent builder pattern methods to configure build commands programmatically, then generate a `builder.json` configuration file
-2. **Execution Phase**: The `builder` CLI tool reads the JSON configuration file and executes each build command in sequence
-
-This design allows for both programmatic configuration from Rust build scripts and standalone CLI usage. The JSON format ensures all command data is preserved accurately and provides human-readable configuration files.
+This dual approach eliminates nested cargo calls and locking issues while providing flexibility for both programmatic and standalone usage.
 
 ## Features
 
@@ -57,14 +56,14 @@ Add builder as a build dependency and use it in your `build.rs`:
 
 ```toml
 [build-dependencies]
-builder-command = "0.1"
+builder = "0.1"
 ```
 
 ```rust
-use builder_command::{BuilderCmd, DataProvider, DebugSymbolsMode, Output, Profile, SassCmd, WasmProcessingCmd};
+use builder::builder_command::{BuilderCmd, DataProvider, DebugSymbolsMode, LogLevel, Output, Profile, SassCmd, WasmProcessingCmd};
 
 fn main() {
-    BuilderCmd::new()
+    let cmd = BuilderCmd::new()
         .add_sass(SassCmd::new("styles/main.scss")
             .add_output(Output::new("dist")
                 .asset_code_gen("src/assets.rs", DataProvider::Embed))) // Generate embedded asset code
@@ -78,20 +77,21 @@ fn main() {
                 .add_output(Output::new("dist/wasm")
                     .asset_code_gen("src/wasm_assets.rs", DataProvider::FileSystem)) // Generate filesystem asset code
         )
-        .log_level(LogLevel::Verbose)
-        .run();
+        .log_level(LogLevel::Verbose);
+
+    builder::execute(cmd);  // Direct in-process execution
 }
 ```
 
 ### CLI Usage
 
-Builder can also be used directly with a JSON configuration file:
+Builder can also be used directly with a YAML configuration file:
 
 ```bash
-builder path/to/builder.json
+builder path/to/builder.yaml
 ```
 
-The JSON configuration file defines which build commands to execute and their parameters. Each command type has its own configuration options and will be executed in the order specified. The JSON format is human-readable and can be manually edited or generated programmatically.
+The YAML configuration file defines which build commands to execute and their parameters. Each command type has its own configuration options and will be executed in the order specified.
 
 ### Asset Code Generation
 
@@ -164,15 +164,22 @@ debug_symbols=write_to:debug/my-app.debug.wasm
 ### Building and Testing
 
 ```bash
-# Build the project
+# Build the project (examples included in workspace)
 cargo build
 
-# Run tests (requires external dependencies)
-cargo nextest run
+# Run all tests
+cargo test
 
-# Check code without building
-cargo check
+# Run specific test suites
+cargo test -p common          # Common utilities
+cargo test -p localized       # Localization
+cargo test -p builder         # Integration tests
+
+# Build examples (real-world usage)
+cd crates/examples && cargo build
 ```
+
+The project uses a library + binary architecture where `builder` crate provides both `builder::execute()` for programmatic use and a CLI binary. This eliminates nested cargo calls and allows the examples to be part of the workspace.
 
 ### External Dependencies
 

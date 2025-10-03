@@ -6,8 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Rust workspace containing a command-line tool for building web assets, WASM, and mobile libraries. The project is structured as follows:
 
-- **Main binary**: `crates/builder/` - CLI entry point that reads a configuration file and dispatches to command modules
-- **Command library**: `crates/command/` - Contains all command implementations and the main `BuilderCmd` struct
+- **Builder crate**: `crates/builder/` - Both library (`lib.rs`) and binary (`main.rs`)
+  - **Library**: Exports `builder::execute(BuilderCmd)` for direct in-process execution
+  - **Binary**: CLI wrapper that reads YAML config files and calls the library
+- **Command library**: `crates/command/` - Contains command type definitions and `BuilderCmd` struct
 - **Feature crates**: Individual crates for each build command type:
   - `sass/` - SASS/SCSS compilation
   - `localized/` - Localized asset handling
@@ -18,39 +20,39 @@ This is a Rust workspace containing a command-line tool for building web assets,
   - `swift_package/` - Swift package generation
 - **Common utilities**: `crates/common/` - Shared utilities including file system operations and logging
 - **Runtime library**: `crates/assets/` - Runtime support for generated asset code with content negotiation
-- **Examples**: `crates/examples/` - Working example demonstrating multi-provider asset generation (excluded from workspace, requires builder binary)
+- **Examples**: `crates/examples/` - Working example demonstrating multi-provider asset generation
 
 The tool works by:
 1. Reading a YAML configuration file (builder.yaml format)
 2. Parsing it into a `BuilderCmd` structure containing multiple command types using serde
-3. Executing each command in sequence through their respective modules
+3. Executing each command in sequence via `builder::execute()` (library) or the CLI binary
 
 ## Development Commands
 
 ### Building and Testing
 ```bash
-# Clean build workflow (build builder binary first, then everything else)
-# This is required because build.rs files in the workspace use the builder binary
-cargo build -p builder && cargo build
-
-# Or for tests
-cargo build -p builder && cargo nextest run
-
-# Build the project
+# Build the project (examples included in workspace)
 cargo build
 
-# Run tests (requires external dependencies)
+# Run all tests
+cargo test
+
+# Or use nextest for better output
 cargo nextest run
+
+# Run specific test suites
+cargo test -p common          # Common utilities
+cargo test -p localized       # Localization
+cargo test -p builder         # Integration tests (CLI + library)
 
 # Check code without building
 cargo check
 
-# Build specific crate
-cargo build -p builder
-
-# Run the examples crate (excluded from workspace, requires builder binary)
-cd crates/examples && cargo run
+# Build examples (real-world usage)
+cd crates/examples && cargo build
 ```
+
+**Note**: The `builder` crate provides both a library and binary. Examples use `builder::execute()` directly (no subprocess spawning), eliminating cargo locking issues.
 
 ### External Dependencies Required for Testing
 - **FontForge**:
@@ -98,13 +100,22 @@ The `Cmd` enum supports these build operations:
 ## Working with Command Modules
 
 When adding new commands or modifying existing ones:
-1. Each command has its own module in `crates/command/src/`
-2. Commands must implement `Display` and `FromStr` for serialization
-3. Add the command variant to the `Cmd` enum in `lib.rs`
-4. Update the match statements in both the enum implementation and main dispatcher
-5. Create a corresponding crate in `crates/` for the actual implementation
+1. Each command type definition lives in `crates/command/src/`
+2. Commands must implement serialization via serde
+3. Add the command variant to the `Cmd` enum in `crates/command/src/lib.rs`
+4. Create the implementation crate in `crates/` with a public `run()` function
+5. Add the crate dependency to `crates/builder/Cargo.toml`
+6. Update the match statement in `crates/builder/src/lib.rs` `run_commands()` function
 
 The builder uses YAML serialization via serde for configuration files, providing human-readable and standard format handling with automatic field serialization.
+
+## Testing
+
+- **Unit tests**: In `crates/common/src/site_fs/tests/` and `crates/localized/src/tests/`
+- **Integration tests**: In `crates/builder/tests/cli_integration.rs` - tests both CLI and library execution
+- **Examples**: `crates/examples/` provides real-world usage in build.rs
+
+The architecture eliminates nested cargo calls by using direct library execution (`builder::execute()`) instead of spawning the binary.
 
 ## Asset Code Generation
 
@@ -115,15 +126,16 @@ Builder can generate Rust code for type-safe asset access with two data provider
 
 Usage in build.rs:
 ```rust
-use builder_command::{BuilderCmd, CopyCmd, DataProvider, Output};
+use builder::builder_command::{BuilderCmd, CopyCmd, DataProvider, Output};
 
-BuilderCmd::new()
+let cmd = BuilderCmd::new()
     .add_copy(CopyCmd::new("assets")
         .recursive(true)
         .file_extensions(["css", "js", "png"])
         .add_output(Output::new("dist")
-            .asset_code_gen("src/assets.rs", DataProvider::Embed)))
-    .exec("path/to/builder");  // Execute using builder binary
+            .asset_code_gen("src/assets.rs", DataProvider::Embed)));
+
+builder::execute(cmd);  // Direct in-process execution
 ```
 
 Runtime configuration (FileSystem provider only):
