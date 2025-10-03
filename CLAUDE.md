@@ -18,6 +18,8 @@ This is a Rust workspace containing a command-line tool for building web assets,
   - `copy/` - File copying operations
   - `swift_package/` - Swift package generation
 - **Common utilities**: `crates/common/` - Shared utilities including file system operations and logging
+- **Runtime library**: `crates/assets/` - Runtime support for generated asset code with content negotiation
+- **Examples**: `crates/examples/` - Working example demonstrating multi-provider asset generation (excluded from workspace, requires builder binary)
 
 The tool works by:
 1. Reading a YAML configuration file (builder.yaml format)
@@ -29,6 +31,7 @@ The tool works by:
 ### Building and Testing
 ```bash
 # Clean build workflow (build builder binary first, then everything else)
+# This is required because build.rs files in the workspace use the builder binary
 cargo build -p builder && cargo build
 
 # Or for tests
@@ -45,12 +48,18 @@ cargo check
 
 # Build specific crate
 cargo build -p builder
+
+# Run the examples crate (excluded from workspace, requires builder binary)
+cd crates/examples && cargo run
 ```
 
 ### External Dependencies Required for Testing
-- **FontForge**: `sudo apt-get install fontforge` (Linux) or equivalent
-- **Sass**: Download dart-sass from GitHub releases
+- **FontForge**:
+  - Linux: `sudo apt-get install fontforge`
+  - macOS: `brew install fontforge`
+- **Sass**: Download dart-sass from GitHub releases (optional - has grass fallback)
 - **WASM target**: `rustup target add wasm32-unknown-unknown`
+- **nextest** (optional): `cargo install cargo-nextest` for better test output
 
 ### Running the Tool
 The builder binary expects a YAML configuration file as its first argument:
@@ -59,9 +68,13 @@ The builder binary expects a YAML configuration file as its first argument:
 ```
 
 ### Release Process
-1. Update version in `Cargo.toml`
-2. Create and push git tag: `git tag v0.1.20 -m"Version 0.1.20: description"`
-3. CI automatically builds and releases via cargo-dist
+1. Update version in root `Cargo.toml` (workspace.package.version)
+2. Create and push annotated git tag: `git tag v0.1.X -m "Version 0.1.X: description"`
+3. Push tag: `git push --tags`
+4. CI automatically builds and releases via cargo-dist
+5. Users can install via: `cargo binstall builder`
+
+Current version: 0.1.28
 
 ## Key Design Patterns
 
@@ -102,10 +115,17 @@ Builder can generate Rust code for type-safe asset access with two data provider
 - **DataProvider::FileSystem** - Loads assets from disk at runtime
 - **DataProvider::Embed** - Embeds assets in binary using rust-embed
 
-Usage in build scripts:
+Usage in build.rs:
 ```rust
-.add_output(Output::new("dist")
-    .asset_code_gen("src/assets.rs", DataProvider::Embed))
+use builder_command::{BuilderCmd, CopyCmd, DataProvider, Output};
+
+BuilderCmd::new()
+    .add_copy(CopyCmd::new("assets")
+        .recursive(true)
+        .file_extensions(["css", "js", "png"])
+        .add_output(Output::new("dist")
+            .asset_code_gen("src/assets.rs", DataProvider::Embed)))
+    .exec("path/to/builder");  // Execute using builder binary
 ```
 
 Runtime configuration (FileSystem provider only):
@@ -114,7 +134,7 @@ use builder_assets::set_asset_base_path;
 set_asset_base_path("/path/to/assets");
 ```
 
-See `crates/examples/` for a complete working example.
+The generated code uses the `builder-assets` crate for runtime support. See `crates/examples/build.rs` for a complete working example with both providers.
 
 ## WASM Debug Symbols
 
