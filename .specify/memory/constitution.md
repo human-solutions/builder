@@ -4,35 +4,39 @@
 Sync Impact Report - Constitution Amendment
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-VERSION CHANGE: 1.0.0 → 1.1.0
+VERSION CHANGE: 1.1.0 → 1.2.0
 
-RATIONALE: Adding "Relentless Simplicity" principle. MINOR bump because this adds a new
-principle that materially expands governance guidance without removing or redefining
-existing principles.
+RATIONALE: Adding new code organization principles, expanding error handling guidance,
+and documenting platform requirements. MINOR bump because this materially expands
+governance with new principles without removing or redefining existing core principles.
 
 MODIFIED PRINCIPLES:
-- Principle II: "Configuration-Driven Design" → renumbered to III
-- Principle III: "Content-Based Caching" → renumbered to IV
-- Principle IV: "Workspace Modularity" → renumbered to V
-- Principle V: "CLI Interface Standard" → renumbered to VI
+- Principle V: "Workspace Modularity" → expanded with workspace-defined dependencies rule
 
 ADDED PRINCIPLES:
-- Principle II: "Relentless Simplicity" (new)
+- Principle VII: "Code Organization" (new - method implementation, traits, file size)
+
+EXPANDED SECTIONS:
+- Quality Standards → Error Handling (layered types, propagation patterns, messages)
+- Quality Standards → Documentation Requirements (close to source, justified documentation)
+- Quality Standards → Platform Requirements (new section - Linux & macOS)
 
 SECTIONS UNCHANGED:
-- Quality Standards
+- Principles I-IV, VI (Library-First, Relentless Simplicity, Configuration-Driven,
+  Content-Based Caching, CLI Interface)
 - Development Workflow
 - Governance
 
 TEMPLATE DEPENDENCIES:
-✅ plan-template.md - Updated Constitution Check section with Principle II + renumbered III-VI
-⚠ spec-template.md - May require review for consistency (currently generic)
-⚠ tasks-template.md - May require review for Rust/workspace-specific task patterns
+✅ plan-template.md - Already references constitution generally; no changes needed
+✅ spec-template.md - Generic enough; no changes needed
+✅ tasks-template.md - Generic enough; no changes needed
+✅ No command template files found
 
 FOLLOW-UP TODOS:
-- Consider adding workspace-specific task patterns to tasks-template.md
-- Review if CLAUDE.md should reference constitution for governance
-- Consider CI enforcement scripts for constitutional principles (especially dependency auditing for Principle II)
+- Consider adding linting rules to enforce code file size limits (300/600/1000 lines)
+- Consider CI checks for workspace dependency definitions
+- Review CLAUDE.md alignment with expanded error handling guidance
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -->
@@ -90,15 +94,17 @@ All build operations MUST implement caching based on content hashes (seahash), n
 
 ### V. Workspace Modularity
 
-The workspace MUST maintain strict dependency hierarchy: common utilities → feature crates → command library → binary. Cross-dependencies between feature crates are prohibited.
+The workspace MUST maintain strict dependency hierarchy: common utilities → feature crates → command library → binary. Cross-dependencies between feature crates are prohibited. All dependencies MUST be defined in the workspace `Cargo.toml` and referenced via `workspace = true`.
 
-**Rationale**: Circular dependencies create coupling and prevent independent development. The current structure (`common` → `sass`/`wasm`/etc. → `command` → `builder`) enforces clean boundaries and enables parallel development.
+**Rationale**: Circular dependencies create coupling and prevent independent development. The current structure (`common` → `sass`/`wasm`/etc. → `command` → `builder`) enforces clean boundaries and enables parallel development. Workspace-level dependency definitions ensure version consistency and reduce maintenance overhead.
 
 **Non-negotiable rules**:
 - Feature crates (`sass`, `wasm`, etc.) MUST NOT depend on each other
 - All shared code goes in `crates/common`
 - Binary crate (`crates/builder`) is the only executable entry point
 - Examples crate excluded from workspace to enforce clean boundaries
+- All dependencies MUST be defined in workspace `Cargo.toml` with `[workspace.dependencies]`
+- Crate-level `Cargo.toml` files MUST use `dependency.workspace = true` for all deps
 
 ### VI. CLI Interface Standard
 
@@ -112,26 +118,80 @@ Every library MUST expose functionality via a command-line interface. Commands M
 - Exit codes: 0 = success, non-zero = failure
 - All operations MUST be scriptable (no interactive prompts in CI mode)
 
+### VII. Code Organization
+
+Code MUST be organized into small, focused files with clear responsibilities. Prefer associated methods on structs and enums over standalone module functions. Use traits to extend external types when functionality stays cohesive.
+
+**Rationale**: Small files are easier to understand, test, and maintain. Associated methods make ownership and context explicit. Traits enable extensibility without forking dependencies or creating wrapper bloat.
+
+**Non-negotiable rules**:
+- Keep files under 300 lines when practical; refactor files over 600 lines; MUST split files over 1000 lines
+- Prefer `impl MyType { fn method(&self) }` over standalone `fn process_my_type(t: &MyType)`
+- Use trait implementations to add methods to external types when cohesive
+- Each file SHOULD contain a single primary struct/enum definition with its implementations
+- Split large implementations across multiple files using submodules when necessary
+
 ## Quality Standards
+
+### Platform Requirements
+
+Builder officially supports Linux and macOS. All features MUST work on both platforms. Windows support is not guaranteed.
+
+**Non-negotiable rules**:
+- Test on both Linux and macOS before release
+- Use portable path handling (`camino`, `std::path`)
+- Document any platform-specific behavior or limitations
+- CI MUST run tests on both Linux and macOS
 
 ### Testing Requirements
 
-- **Unit tests**: Required for all public functions in library crates
-- **Integration tests**: Required for command execution end-to-end flows
-- **Contract tests**: Required when adding new command types (verify JSON config parsing)
-- **External dependencies**: Tests requiring FontForge, dart-sass, or wasm-bindgen MUST be optional or skipped gracefully
+Unit tests are written only when complexity justifies the maintenance cost. Rust's compile-time validation reduces the need for trivial tests.
+
+**Non-negotiable rules**:
+- Unit tests required for complex logic (algorithms, validation, parsing)
+- Do NOT test simple getters, setters, or trivial delegations
+- Integration tests required for command execution end-to-end flows
+- Contract tests required when adding new command types (verify JSON config parsing)
+- External dependencies (FontForge, dart-sass, wasm-bindgen) tests MUST be optional or skip gracefully
 
 ### Documentation Requirements
 
+Documentation is written close to the source code and only when necessary. Avoid documenting obvious code.
+
+**Non-negotiable rules**:
 - Public crates MUST have crate-level documentation (`//!`)
-- Public functions MUST have doc comments with examples
+- Public functions MUST have doc comments when behavior is not immediately obvious
+- Complex algorithms or non-obvious design decisions MUST be documented in comments
+- Do NOT document simple getters, setters, or self-explanatory functions
 - CLAUDE.md MUST be updated when adding new command types
 - README.md MUST reflect current command types and usage patterns
 
 ### Error Handling
 
-- Use `anyhow::Result` for all fallible operations
+Libraries use `thiserror` with custom error enums in dedicated `error.rs` files. User-facing applications use `anyhow::Result` and `anyhow::Context`. Internal CLI tools prefer `panic!()` for fast debugging.
+
+**Error handling by context**:
+- **Libraries**: Use `thiserror` with custom error enums in `error.rs`
+- **User-facing apps**: Use `anyhow::Result` with `.context()` for graceful handling
+- **Internal CLI tools**: Use `panic!()` for immediate stack traces during development
+- Use `#[from]` attribute for automatic error conversion
+
+**Layered error types**:
+- Separate user-facing errors from detailed internal errors
+- Use descriptive `#[error("...")]` messages with context
+- Include methods to map errors to HTTP status codes where applicable (400 client, 500 server)
+- Provide both user-friendly and developer-detailed messages
+
+**Error propagation**:
+- Prefer `?` operator over explicit matching
+- Only use `unwrap()` when invariants guarantee success (document with comments)
+- Reserve `expect()` for programmer errors or initialization that cannot fail in production
+- Add context with `.context()` to enrich error messages
+
+**Error messages**:
 - Error messages MUST be actionable (what failed, why, how to fix)
+- Include problematic values for debugging
+- Include file locations or operation context where errors occurred
 - No panics in library code - only in binary for unrecoverable states
 - Errors MUST include context chain (`with_context`)
 
@@ -180,4 +240,4 @@ This constitution supersedes all other development practices. Amendments require
 - CI checks MUST enforce: no circular dependencies, workspace structure, caching requirements
 - Documentation updates MUST accompany new command types
 
-**Version**: 1.1.0 | **Ratified**: 2025-10-03 | **Last Amended**: 2025-10-03
+**Version**: 1.2.0 | **Ratified**: 2025-10-03 | **Last Amended**: 2025-10-05

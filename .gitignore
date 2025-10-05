@@ -5,3 +5,7 @@
 **/gen/*
 pkg
 **/tmp
+
+/*.md
+!/README.md
+!/CLAUDE.md
