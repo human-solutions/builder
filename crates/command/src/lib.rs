@@ -9,6 +9,7 @@ mod wasm;
 
 use std::{env, path::Path, process::Command};
 
+pub use builder_mtimes::{InputFiles, OutputFiles};
 use camino_fs::Utf8PathBuf;
 pub use copy::CopyCmd;
 pub use fontforge::FontForgeCmd;
@@ -21,6 +22,15 @@ use serde::{Deserialize, Serialize};
 pub use swift_package::SwiftPackageCmd;
 pub use uniffi::UniffiCmd;
 pub use wasm::{DebugSymbolsMode, Profile, WasmProcessingCmd};
+
+/// Trait for command metadata needed for execution
+pub trait CommandMetadata {
+    /// Get the output directory for this command
+    fn output_dir(&self) -> &camino_fs::Utf8Path;
+
+    /// Get the command name (used for logging)
+    fn name(&self) -> &'static str;
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum LogLevel {

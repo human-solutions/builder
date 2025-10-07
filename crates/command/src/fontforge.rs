@@ -1,3 +1,4 @@
+use builder_mtimes::{InputFiles, OutputFiles};
 use camino_fs::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
@@ -27,5 +28,35 @@ impl FontForgeCmd {
     pub fn output(mut self, it: impl IntoIterator<Item = Output>) -> Self {
         self.output.extend(it);
         self
+    }
+}
+
+impl InputFiles for FontForgeCmd {
+    fn input_files(&self) -> Vec<Utf8PathBuf> {
+        vec![self.font_file.clone()]
+    }
+}
+
+impl OutputFiles for FontForgeCmd {
+    fn output_files(&self) -> Vec<Utf8PathBuf> {
+        let stem = self.font_file.file_stem().unwrap_or_default();
+        self.output
+            .iter()
+            .map(|out| out.dir.join(format!("{}.woff2", stem)))
+            .collect()
+    }
+}
+
+impl crate::CommandMetadata for FontForgeCmd {
+    fn output_dir(&self) -> &camino_fs::Utf8Path {
+        &self
+            .output
+            .first()
+            .expect("FontForge command must have output")
+            .dir
+    }
+
+    fn name(&self) -> &'static str {
+        "fontforge"
     }
 }

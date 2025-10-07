@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use builder_mtimes::{InputFiles, OutputFiles};
 use camino_fs::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
@@ -104,5 +105,44 @@ impl WasmProcessingCmd {
 impl Default for WasmProcessingCmd {
     fn default() -> Self {
         Self::new("", Profile::default())
+    }
+}
+
+impl InputFiles for WasmProcessingCmd {
+    fn input_files(&self) -> Vec<Utf8PathBuf> {
+        let package_name = self.package.replace("-", "_");
+        vec![Utf8PathBuf::from(format!(
+            "target/wasm32-unknown-unknown/{}/{}.wasm",
+            self.profile.as_target_folder(),
+            package_name
+        ))]
+    }
+}
+
+impl OutputFiles for WasmProcessingCmd {
+    fn output_files(&self) -> Vec<Utf8PathBuf> {
+        let package_name = self.package.replace("-", "_");
+        self.output
+            .iter()
+            .flat_map(|out| {
+                let wasm_path = out.dir.join(format!("{}_bg.wasm", package_name));
+                let js_path = out.dir.join(format!("{}.js", package_name));
+                vec![wasm_path, js_path]
+            })
+            .collect()
+    }
+}
+
+impl crate::CommandMetadata for WasmProcessingCmd {
+    fn output_dir(&self) -> &camino_fs::Utf8Path {
+        &self
+            .output
+            .first()
+            .expect("Wasm command must have output")
+            .dir
+    }
+
+    fn name(&self) -> &'static str {
+        "wasm"
     }
 }

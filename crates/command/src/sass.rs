@@ -1,3 +1,4 @@
+use builder_mtimes::{InputFiles, OutputFiles};
 use camino_fs::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
@@ -42,5 +43,53 @@ impl SassCmd {
     pub fn output(mut self, it: impl IntoIterator<Item = Output>) -> Self {
         self.output.extend(it);
         self
+    }
+}
+
+impl InputFiles for SassCmd {
+    fn input_files(&self) -> Vec<Utf8PathBuf> {
+        vec![self.in_scss.clone()]
+    }
+}
+
+impl OutputFiles for SassCmd {
+    fn output_files(&self) -> Vec<Utf8PathBuf> {
+        self.output
+            .iter()
+            .flat_map(|out| {
+                let stem = self.in_scss.file_stem().unwrap_or_default();
+                let css_path = out.dir.join(format!("{}.css", stem));
+                let mut paths = vec![];
+
+                // Add uncompressed if enabled
+                if out.uncompressed() {
+                    paths.push(css_path.clone());
+                }
+                // Add gzip variant if enabled
+                if out.gzip() {
+                    paths.push(css_path.with_extension("css.gz"));
+                }
+                // Add brotli variant if enabled
+                if out.brotli() {
+                    paths.push(css_path.with_extension("css.br"));
+                }
+
+                paths
+            })
+            .collect()
+    }
+}
+
+impl crate::CommandMetadata for SassCmd {
+    fn output_dir(&self) -> &camino_fs::Utf8Path {
+        &self
+            .output
+            .first()
+            .expect("SASS command must have output")
+            .dir
+    }
+
+    fn name(&self) -> &'static str {
+        "sass"
     }
 }

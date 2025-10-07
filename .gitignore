@@ -5,6 +5,7 @@
 **/gen/*
 pkg
 **/tmp
+/crates/builder/tests/fixtures/*
 
 /*.md
 !/README.md

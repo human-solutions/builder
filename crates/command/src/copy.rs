@@ -1,3 +1,4 @@
+use builder_mtimes::{InputFiles, OutputFiles};
 use camino_fs::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
@@ -46,5 +47,50 @@ impl CopyCmd {
     pub fn output(mut self, it: impl IntoIterator<Item = Output>) -> Self {
         self.output.extend(it);
         self
+    }
+}
+
+impl InputFiles for CopyCmd {
+    fn input_files(&self) -> Vec<Utf8PathBuf> {
+        use camino_fs::*;
+        let mut files = Vec::new();
+        if self.src_dir.exists() {
+            let recursive = self.recursive;
+            let iter = self
+                .src_dir
+                .ls()
+                .recurse_if(move |_| recursive)
+                .filter(|p| p.is_file());
+            for entry in iter {
+                if self.file_extensions.is_empty()
+                    || entry
+                        .extension()
+                        .is_some_and(|e| self.file_extensions.contains(&e.to_string()))
+                {
+                    files.push(entry);
+                }
+            }
+        }
+        files
+    }
+}
+
+impl OutputFiles for CopyCmd {
+    fn output_files(&self) -> Vec<Utf8PathBuf> {
+        self.output.iter().map(|out| out.dir.clone()).collect()
+    }
+}
+
+impl crate::CommandMetadata for CopyCmd {
+    fn output_dir(&self) -> &camino_fs::Utf8Path {
+        &self
+            .output
+            .first()
+            .expect("Copy command must have output")
+            .dir
+    }
+
+    fn name(&self) -> &'static str {
+        "copy"
     }
 }

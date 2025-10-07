@@ -10,6 +10,7 @@ version.workspace = true
 
 [dependencies]
 builder-assets = { path = "../assets" }
+builder-mtimes = { path = "../mtimes" }
 
 camino-fs.workspace = true
 fs-err.workspace = true

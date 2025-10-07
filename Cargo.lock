@@ -273,6 +273,7 @@ dependencies = [
  "builder-copy",
  "builder-fontforge",
  "builder-localized",
+ "builder-mtimes",
  "builder-sass",
  "builder-swift-package",
  "builder-uniffi",
@@ -282,6 +283,8 @@ dependencies = [
  "cargo_metadata 0.22.0",
  "common",
  "insta",
+ "log",
+ "serde",
  "serde_yaml",
 ]
 
@@ -299,6 +302,7 @@ name = "builder-command"
 version = "0.1.28"
 dependencies = [
  "builder-assets",
+ "builder-mtimes",
  "camino-fs",
  "fs-err 3.1.2",
  "icu_locid",
@@ -339,6 +343,19 @@ dependencies = [
  "common",
  "icu_locid",
  "log",
+]
+
+[[package]]
+name = "builder-mtimes"
+version = "0.1.28"
+dependencies = [
+ "anyhow",
+ "camino-fs",
+ "fs-err 3.1.2",
+ "fs4",
+ "log",
+ "tempfile",
+ "time",
 ]
 
 [[package]]
@@ -1103,6 +1120,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "44f150ffc8782f35521cec2b23727707cb4045706ba3c854e86bef66b3a8cdbd"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "fs4"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8640e34b88f7652208ce9e88b1a37a2ae95227d84abec377ccd3c5cfeb141ed4"
+dependencies = [
+ "rustix",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

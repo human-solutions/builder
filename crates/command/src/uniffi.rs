@@ -1,3 +1,4 @@
+use builder_mtimes::{InputFiles, OutputFiles};
 use camino_fs::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
@@ -58,5 +59,42 @@ impl UniffiCmd {
     pub fn swift(mut self, swift: bool) -> Self {
         self.swift = swift;
         self
+    }
+}
+
+impl InputFiles for UniffiCmd {
+    fn input_files(&self) -> Vec<Utf8PathBuf> {
+        let mut files = vec![self.udl_file.clone(), self.built_lib_file.clone()];
+        if let Some(ref config) = self.config_file {
+            files.push(config.clone());
+        }
+        files
+    }
+}
+
+impl OutputFiles for UniffiCmd {
+    fn output_files(&self) -> Vec<Utf8PathBuf> {
+        let mut files = Vec::new();
+        if self.swift {
+            files.push(self.out_dir.join(format!("{}.swift", self.library_name)));
+            files.push(
+                self.out_dir
+                    .join(format!("{}FFI.modulemap", self.library_name)),
+            );
+        }
+        if self.kotlin {
+            files.push(self.out_dir.join(format!("{}.kt", self.library_name)));
+        }
+        files
+    }
+}
+
+impl crate::CommandMetadata for UniffiCmd {
+    fn output_dir(&self) -> &camino_fs::Utf8Path {
+        &self.out_dir
+    }
+
+    fn name(&self) -> &'static str {
+        "uniffi"
     }
 }

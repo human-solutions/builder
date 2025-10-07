@@ -1,3 +1,4 @@
+use builder_mtimes::{InputFiles, OutputFiles};
 use camino_fs::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
@@ -18,5 +19,28 @@ impl SwiftPackageCmd {
     pub fn release(mut self, release: bool) -> Self {
         self.release = release;
         self
+    }
+}
+
+impl InputFiles for SwiftPackageCmd {
+    fn input_files(&self) -> Vec<Utf8PathBuf> {
+        vec![self.manifest_dir.join("Cargo.toml")]
+    }
+}
+
+impl OutputFiles for SwiftPackageCmd {
+    fn output_files(&self) -> Vec<Utf8PathBuf> {
+        let profile = if self.release { "release" } else { "debug" };
+        vec![self.manifest_dir.join("target").join(profile)]
+    }
+}
+
+impl crate::CommandMetadata for SwiftPackageCmd {
+    fn output_dir(&self) -> &camino_fs::Utf8Path {
+        &self.manifest_dir
+    }
+
+    fn name(&self) -> &'static str {
+        "swift-package"
     }
 }

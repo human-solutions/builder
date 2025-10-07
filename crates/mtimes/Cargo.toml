@@ -1,0 +1,17 @@
+[package]
+name = "builder-mtimes"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+camino-fs.workspace = true
+fs-err.workspace = true
+fs4 = "0.13"
+log.workspace = true
+time.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
