@@ -20,7 +20,6 @@ This is a Rust workspace containing a command-line tool for building web assets,
   - `swift_package/` - Swift package generation
 - **Common utilities**: `crates/common/` - Shared utilities including file system operations and logging
 - **Runtime library**: `crates/assets/` - Runtime support for generated asset code with content negotiation
-- **Examples**: `crates/examples/` - Working example demonstrating multi-provider asset generation
 
 The tool works by:
 1. Reading a YAML configuration file (builder.yaml format)
@@ -31,7 +30,7 @@ The tool works by:
 
 ### Building and Testing
 ```bash
-# Build the project (examples included in workspace)
+# Build the project
 cargo build
 
 # Run all tests
@@ -47,12 +46,9 @@ cargo test -p builder         # Integration tests (CLI + library)
 
 # Check code without building
 cargo check
-
-# Build examples (real-world usage)
-cd crates/examples && cargo build
 ```
 
-**Note**: The `builder` crate provides both a library and binary. Examples use `builder::execute()` directly (no subprocess spawning), eliminating cargo locking issues.
+**Note**: The `builder` crate provides both a library and binary, allowing direct in-process execution via `builder::execute()` (no subprocess spawning).
 
 ### Code Quality Checks
 
@@ -130,7 +126,6 @@ The builder uses YAML serialization via serde for configuration files, providing
 
 - **Unit tests**: In `crates/common/src/site_fs/tests/` and `crates/localized/src/tests/`
 - **Integration tests**: In `crates/builder/tests/cli_integration.rs` - tests both CLI and library execution
-- **Examples**: `crates/examples/` provides real-world usage in build.rs
 
 The architecture eliminates nested cargo calls by using direct library execution (`builder::execute()`) instead of spawning the binary.
 
@@ -161,7 +156,7 @@ use builder_assets::set_asset_base_path;
 set_asset_base_path("/path/to/assets");
 ```
 
-The generated code uses the `builder-assets` crate for runtime support. See `crates/examples/build.rs` for a complete working example with both providers.
+The generated code uses the `builder-assets` crate for runtime support.
 
 ## WASM Debug Symbols
 

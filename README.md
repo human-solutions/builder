@@ -164,7 +164,7 @@ debug_symbols=write_to:debug/my-app.debug.wasm
 ### Building and Testing
 
 ```bash
-# Build the project (examples included in workspace)
+# Build the project
 cargo build
 
 # Run all tests
@@ -174,12 +174,9 @@ cargo test
 cargo test -p common          # Common utilities
 cargo test -p localized       # Localization
 cargo test -p builder         # Integration tests
-
-# Build examples (real-world usage)
-cd crates/examples && cargo build
 ```
 
-The project uses a library + binary architecture where `builder` crate provides both `builder::execute()` for programmatic use and a CLI binary. This eliminates nested cargo calls and allows the examples to be part of the workspace.
+The project uses a library + binary architecture where `builder` crate provides both `builder::execute()` for programmatic use and a CLI binary.
 
 ### External Dependencies
 
