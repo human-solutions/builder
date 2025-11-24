@@ -25,4 +25,4 @@ cargo_metadata.workspace = true
 serde_yaml.workspace = true
 
 [dev-dependencies]
-insta = "1.43"
+insta = "1.44"
